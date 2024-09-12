@@ -185,7 +185,7 @@ export default function VideoPlayer({ id }: { id: number }) {
         <div className="flex flex-col items-center">
           <TabsList>
             <TabsTrigger value="vidlinkpro">Vidlink.pro</TabsTrigger>
-            <TabsTrigger value="vidsrccc">VidSrc.Pro</TabsTrigger>
+            <TabsTrigger value="vidsrccc">VidSrc.cc</TabsTrigger>
             <TabsTrigger value="autoembed">Autoembed</TabsTrigger>
             <TabsTrigger value="superembed">SuberEmbed</TabsTrigger>
           </TabsList>

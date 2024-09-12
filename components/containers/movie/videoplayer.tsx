@@ -24,7 +24,7 @@ type VideoSourceKey = "vidlinkpro" | "vidsrccc" | "vidsrcpro" | "superembed";
 
 export default function VideoPlayer({ id }: any) {
   const [selectedSource, setSelectedSource] =
-    useState<VideoSourceKey>("autoembed");
+    useState<VideoSourceKey>("vidlinkpro");
   const [loading, setLoading] = useState(false);
 
   const videoSources: Record<VideoSourceKey, string> = {

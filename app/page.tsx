@@ -23,18 +23,16 @@ export default async function Home() {
               Explore movies, tv series, and animes!
             </h1>
             <p className="text-sm leading-6 text-muted-foreground">
-              EnjoyTown is a streaming platform for lazy people who like to
+              456movie is a streaming platform for lazy people who like to
               <br />
               watch millions of movies, series and animes for free. Go down to
               watch
             </p>
             <div className="flex gap-2">
-              <Button disabled>
-                <Link href={`/auth/register`}>Sign up</Link>
+              <Button>
+                <Link href={`/movie`}>WATCH NOW</Link>
               </Button>
-              <Link href={`/changelog`}>
-                <Button variant="outline">Changelog</Button>
-              </Link>
+             
             </div>
           </div>
         </section>

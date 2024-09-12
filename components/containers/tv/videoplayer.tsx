@@ -181,7 +181,7 @@ export default function VideoPlayer({ id }: { id: number }) {
           </div>
         </div>
       </div>
-      <Tabs defaultValue="vidlinkpro">
+      <Tabs defaultValue="vidsrccc">
         <div className="flex flex-col items-center">
           <TabsList>
             <TabsTrigger value="vidlinkpro">Vidlink.pro</TabsTrigger>
@@ -203,7 +203,7 @@ export default function VideoPlayer({ id }: { id: number }) {
         </TabsContent>
         <TabsContent value="vidlinkpro">
           <iframe
-            src={`https://vidlink.pro/tv/${id}/${season}/${episode}`}
+            src={`https://vidlink.pro/tv/${id}/${season}/${episode}?primaryColor=ff0044&secondaryColor=f788a6&iconColor=ff0044&title=true&poster=true&autoplay=true&nextbutton=true`}
             referrerPolicy="origin"
             allowFullScreen
             width="100%"
@@ -214,7 +214,7 @@ export default function VideoPlayer({ id }: { id: number }) {
         </TabsContent>
         <TabsContent value="vidsrccc">
           <iframe
-            src={`https://vidsrc.cc/v2/embed/tv/${id}/${season}/${episode}`}
+            src={`https://vidsrc.cc/v3/embed/tv/${id}/${season}/${episode}?autoPlay=true&autoNext=true&poster=true`}
             referrerPolicy="origin"
             allowFullScreen
             width="100%"

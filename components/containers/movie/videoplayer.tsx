@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Download } from "lucide-react";
 
-type VideoSourceKey = "autoembed" | "vidsrcpro" | "vidsrc" | "superembed";
+type VideoSourceKey = "vidlinkpro" | "vidsrccc" | "vidsrcpro" | "superembed";
 
 export default function VideoPlayer({ id }: any) {
   const [selectedSource, setSelectedSource] =
@@ -28,9 +28,9 @@ export default function VideoPlayer({ id }: any) {
   const [loading, setLoading] = useState(false);
 
   const videoSources: Record<VideoSourceKey, string> = {
-    autoembed: `https://player.autoembed.cc/embed/movie/${id}`,
+    vidlinkpro: `https://vidlink.pro/movie/${id}`,
+    vidsrccc: `https://vidsrc.cc/v2/embed/movie/${id}`,
     vidsrcpro: `https://vidsrc.pro/embed/movie/${id}`,
-    vidsrc: `https://vidsrc.in/embed/movie/${id}`,
     superembed: `https://multiembed.mov/?video_id=${id}&tmdb=1`,
   };
 

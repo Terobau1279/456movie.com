@@ -57,7 +57,7 @@ export default function RootLayout({
         <meta name="msapplication-TileColor" content="#da532c" />
         <meta name="theme-color" content="#ffffff" />
       </head>
-      <GoogleAnalytics gaId="G-84Z171LN4N" />
+      <GoogleAnalytics gaId="G-YNFQPPZMEK" />
       <body className="min-h-screen bg-background font-sans antialiased">
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <NextTopLoader

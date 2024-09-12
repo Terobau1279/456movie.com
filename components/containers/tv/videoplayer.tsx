@@ -181,13 +181,13 @@ export default function VideoPlayer({ id }: { id: number }) {
           </div>
         </div>
       </div>
-      <Tabs defaultValue="vidsrccc">
+      <Tabs defaultValue="vidlinkpro">
         <div className="flex flex-col items-center">
           <TabsList>
-            <TabsTrigger value="vidlinkpro">Vidlink.pro</TabsTrigger>
-            <TabsTrigger value="vidsrccc">VidSrc.cc</TabsTrigger>
-            <TabsTrigger value="autoembed">Autoembed</TabsTrigger>
-            <TabsTrigger value="superembed">SuberEmbed</TabsTrigger>
+            <TabsTrigger value="vidlinkpro">Vidlink.pro(Auto-play)</TabsTrigger>
+            <TabsTrigger value="vidsrccc">VidSrc.cc(Auto-play&Auto-next)</TabsTrigger>
+            <TabsTrigger value="autoembed">Autoembed(contains ads)</TabsTrigger>
+            <TabsTrigger value="superembed">SuberEmbed(contains ads)</TabsTrigger>
           </TabsList>
         </div>
         <TabsContent value="autoembed">

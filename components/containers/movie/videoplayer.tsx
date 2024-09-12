@@ -68,10 +68,10 @@ export default function VideoPlayer({ id }: any) {
               <SelectValue placeholder="Select Video Source" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="autoembed">AutoEmbed</SelectItem>
+              <SelectItem value="vidlinkpro">Vidlink.pro</SelectItem>
+              <SelectItem value="vidsrccc">VidSrc.cc</SelectItem>
               <SelectItem value="vidsrcpro">VidSrc.pro</SelectItem>
-              <SelectItem value="vidsrc">VidSrc</SelectItem>
-              <SelectItem value="superembed">SuperEmbed</SelectItem>
+              <SelectItem value="superembed">SuperEmbed(CONTAINS ADS)</SelectItem>
             </SelectContent>
           </Select>
           <div className="pt-2">

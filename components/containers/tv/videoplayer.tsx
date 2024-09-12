@@ -184,9 +184,9 @@ export default function VideoPlayer({ id }: { id: number }) {
       <Tabs defaultValue="autoembed">
         <div className="flex flex-col items-center">
           <TabsList>
-            <TabsTrigger value="autoembed">AutoEmbed</TabsTrigger>
-            <TabsTrigger value="vidsrcpro">VidSrc.Pro</TabsTrigger>
-            <TabsTrigger value="vidsrc">VidSrc</TabsTrigger>
+            <TabsTrigger value="vidlinkpro">Vidlink.pro</TabsTrigger>
+            <TabsTrigger value="vidsrccc">VidSrc.Pro</TabsTrigger>
+            <TabsTrigger value="autoembed">Autoembed</TabsTrigger>
             <TabsTrigger value="superembed">SuberEmbed</TabsTrigger>
           </TabsList>
         </div>
@@ -201,9 +201,9 @@ export default function VideoPlayer({ id }: { id: number }) {
             className="max-w-3xl mx-auto px-4 pt-10"
           ></iframe>
         </TabsContent>
-        <TabsContent value="vidsrcpro">
+        <TabsContent value="vidlinkpro">
           <iframe
-            src={`https://vidsrc.pro/embed/tv/${id}/${season}/${episode}`}
+            src={`https://vidlink.pro/tv/${id}/${season}/${episode}`}
             referrerPolicy="origin"
             allowFullScreen
             width="100%"
@@ -212,9 +212,9 @@ export default function VideoPlayer({ id }: { id: number }) {
             className="max-w-3xl mx-auto px-4 pt-10"
           ></iframe>
         </TabsContent>
-        <TabsContent value="vidsrc">
+        <TabsContent value="vidsrccc">
           <iframe
-            src={`https://vidsrc.in/embed/tv/${id}/${season}/${episode}`}
+            src={`https://vidsrc.cc/v2/embed/tv/${id}/${season}/${episode}`}
             referrerPolicy="origin"
             allowFullScreen
             width="100%"

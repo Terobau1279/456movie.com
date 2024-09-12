@@ -21,7 +21,7 @@ export const Footer = () => {
             <div className="h-3 border-r" />
 
             <span className=" text-xs text-muted-foreground">
-              Data provided by Consumet and Tmdb API
+              Data provided by Consumet and Tmdb API. Just so you know—456movie.com doesn’t actually host any movies. We just share links. What you do with them is up to you!
             </span>
           </div>
 

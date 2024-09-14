@@ -45,6 +45,15 @@ export default function VideoPlayer({ id }: { id: number }) {
     }
   }, [season]);
 
+  React.useEffect(() => {
+    if (episodes.length > 0) {
+      const episodeExists = episodes.some(ep => ep.episode_number.toString() === episode);
+      if (!episodeExists) {
+        setEpisode(episodes[0].episode_number.toString());
+      }
+    }
+  }, [episodes]);
+
   async function fetchSeasons() {
     setIsLoading(true);
     setError(null);
@@ -188,16 +197,15 @@ export default function VideoPlayer({ id }: { id: number }) {
       <div className="flex justify-center pt-4">
         <div className="w-[300px]">
           <Select value={season} onValueChange={(e) => setSeason(e)} disabled={isLoading || seasons.length === 0}>
-            <SelectTrigger className="px-4 py-2 rounded-md bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-md hover:shadow-lg transition-shadow duration-300">
+            <SelectTrigger className="px-4 py-2 rounded-md">
               <SelectValue placeholder="Select Season" />
             </SelectTrigger>
-            <SelectContent className="bg-white rounded-md shadow-lg">
+            <SelectContent>
               {seasons.length > 0 ? (
                 seasons.map((s) => (
                   <SelectItem
                     key={s.season_number}
                     value={s.season_number.toString()}
-                    className="hover:bg-gray-100"
                   >
                     Season {s.season_number}
                   </SelectItem>
@@ -215,7 +223,7 @@ export default function VideoPlayer({ id }: { id: number }) {
         <Link href={`https://dl.vidsrc.vip/tv/${id}/${season}/${episode}`}>
           <Badge
             variant="outline"
-            className="cursor-pointer whitespace-nowrap bg-gradient-to-r from-green-400 to-blue-500 text-white shadow-md hover:shadow-lg transition-shadow duration-300"
+            className="cursor-pointer whitespace-nowrap"
           >
             <Download className="mr-1.5" size={12} />
             Download {season}-{episode}
@@ -227,14 +235,14 @@ export default function VideoPlayer({ id }: { id: number }) {
       <div className="flex justify-center pt-4">
         <div className="w-[300px]">
           <Select value={server} onValueChange={(e) => setServer(e)}>
-            <SelectTrigger className="px-4 py-2 rounded-md bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md hover:shadow-lg transition-shadow duration-300">
+            <SelectTrigger>
               <SelectValue placeholder="Select Server" />
             </SelectTrigger>
-            <SelectContent className="bg-white rounded-md shadow-lg">
-              <SelectItem value="vidsrccc" className="hover:bg-gray-100">VidSrc.cc</SelectItem>
-              <SelectItem value="vidlinkpro" className="hover:bg-gray-100">Vidlink.pro</SelectItem>
-              <SelectItem value="autoembed" className="hover:bg-gray-100">Autoembed</SelectItem>
-              <SelectItem value="superembed" className="hover:bg-gray-100">SuperEmbed</SelectItem>
+            <SelectContent>
+              <SelectItem value="vidsrc">VidSrc.cc</SelectItem>
+              <SelectItem value="vidlinkpro">Vidlink.pro</SelectItem>
+              <SelectItem value="autoembed">Autoembed</SelectItem>
+              <SelectItem value="superembed">SuperEmbed</SelectItem>
             </SelectContent>
           </Select>
         </div>

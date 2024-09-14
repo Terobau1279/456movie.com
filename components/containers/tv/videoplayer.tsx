@@ -48,7 +48,7 @@ export default function VideoPlayer({ id }: { id: number }) {
     setError(null);
     try {
       const response = await fetch(
-        `https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}`
+        https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}
       );
       const data = await response.json();
       if (data.success === false) {
@@ -75,7 +75,7 @@ export default function VideoPlayer({ id }: { id: number }) {
     setError(null);
     try {
       const response = await fetch(
-        `https://api.themoviedb.org/3/tv/${id}/season/${seasonNumber}?api_key=${API_KEY}`
+        https://api.themoviedb.org/3/tv/${id}/season/${seasonNumber}?api_key=${API_KEY}
       );
       const data = await response.json();
       if (data.success === false) {
@@ -103,6 +103,7 @@ export default function VideoPlayer({ id }: { id: number }) {
   }
 
   if (error) {
+    
     return (
       <div className="py-8 mx-auto max-w-5xl">
         <Skeleton className="mx-auto px-4 pt-6 w-full h-[500px]" />{" "}
@@ -115,15 +116,15 @@ export default function VideoPlayer({ id }: { id: number }) {
     <div className="py-8">
       <div className="pb-4">
         <div className="flex flex-col text-center items-center justify-center">
-          <div className="rounded-lg pl-4 flex w-full max-w-sm items-center space-x-2 bg-white shadow-lg p-4">
+          <div className="rounded-md pl-4 flex w-full max-w-sm items-center space-x-2">
             <div className="flex items-center space-x-2">
               <Select
                 value={season}
                 onValueChange={(e) => setSeason(e)}
                 disabled={isLoading || seasons.length === 0}
               >
-                <SelectTrigger className="px-4 py-2 rounded-md w-[180px] bg-gray-50 hover:bg-gray-100 transition-shadow shadow-sm">
-                  <SelectValue placeholder="Select Season" />
+                <SelectTrigger className="px-4 py-2 rounded-md w-[180px]">
+                  <SelectValue placeholder="Select Video Source" />
                 </SelectTrigger>
                 <SelectContent>
                   {seasons.length > 0 ? (
@@ -147,8 +148,8 @@ export default function VideoPlayer({ id }: { id: number }) {
                 onValueChange={(e) => setEpisode(e)}
                 disabled={isLoading || episodes.length === 0}
               >
-                <SelectTrigger className="px-4 py-2 rounded-md w-[180px] bg-gray-50 hover:bg-gray-100 transition-shadow shadow-sm">
-                  <SelectValue placeholder="Select Episode" />
+                <SelectTrigger className="px-4 py-2 rounded-md w-[180px]">
+                  <SelectValue placeholder="Select Video Source" />
                 </SelectTrigger>
                 <SelectContent>
                   {episodes.length > 0 ? (
@@ -167,11 +168,11 @@ export default function VideoPlayer({ id }: { id: number }) {
               </Select>
             </div>
           </div>
-          <div className="pt-4">
-            <Link href={`https://dl.vidsrc.vip/tv/${id}/${season}/${episode}`}>
+          <div className="pt-2">
+            <Link href={https://dl.vidsrc.vip/tv/${id}/${season}/${episode}}>
               <Badge
                 variant="outline"
-                className="cursor-pointer whitespace-nowrap bg-gray-100 hover:bg-gray-200 transition-colors px-4 py-2 rounded-md"
+                className="cursor-pointer whitespace-nowrap"
               >
                 <Download className="mr-1.5" size={12} />
                 Download {season}-{episode}
@@ -180,72 +181,62 @@ export default function VideoPlayer({ id }: { id: number }) {
           </div>
         </div>
       </div>
-
-      {/* Server List with Aesthetic Design */}
-      <div className="max-w-lg mx-auto">
-        <div className="border border-gray-200 rounded-xl p-6 max-h-[250px] overflow-y-auto shadow-md bg-white">
-          <Tabs defaultValue="vidsrccc">
-            <TabsList className="flex flex-col gap-4">
-              <TabsTrigger className="rounded-lg bg-gray-50 hover:bg-gray-100 transition-all p-3 shadow-sm text-gray-700" value="vidlinkpro">
-                Vidlink.pro (Auto-play)
-              </TabsTrigger>
-              <TabsTrigger className="rounded-lg bg-gray-50 hover:bg-gray-100 transition-all p-3 shadow-sm text-gray-700" value="vidsrccc">
-                VidSrc.cc (Auto-play & Auto-next)
-              </TabsTrigger>
-              <TabsTrigger className="rounded-lg bg-gray-50 hover:bg-gray-100 transition-all p-3 shadow-sm text-gray-700" value="autoembed">
-                Autoembed (Contains Ads)
-              </TabsTrigger>
-              <TabsTrigger className="rounded-lg bg-gray-50 hover:bg-gray-100 transition-all p-3 shadow-sm text-gray-700" value="superembed">
-                SuperEmbed (Contains Ads)
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="autoembed">
-              <iframe
-                src={`https://player.autoembed.cc/embed/tv/${id}/${season}/${episode}`}
-                referrerPolicy="origin"
-                allowFullScreen
-                width="100%"
-                height="450"
-                scrolling="no"
-                className="rounded-xl shadow-lg mt-6"
-              ></iframe>
-            </TabsContent>
-            <TabsContent value="vidlinkpro">
-              <iframe
-                src={`https://vidlink.pro/tv/${id}/${season}/${episode}?primaryColor=ff0044&secondaryColor=f788a6&iconColor=ff0044&title=true&poster=true&autoplay=true&nextbutton=true`}
-                referrerPolicy="origin"
-                allowFullScreen
-                width="100%"
-                height="450"
-                scrolling="no"
-                className="rounded-xl shadow-lg mt-6"
-              ></iframe>
-            </TabsContent>
-            <TabsContent value="vidsrccc">
-              <iframe
-                src={`https://vidsrc.cc/v3/embed/tv/${id}/${season}/${episode}?autoPlay=true&autoNext=true&poster=true`}
-                referrerPolicy="origin"
-                allowFullScreen
-                width="100%"
-                height="450"
-                scrolling="no"
-                className="rounded-xl shadow-lg mt-6"
-              ></iframe>
-            </TabsContent>
-            <TabsContent value="superembed">
-              <iframe
-                src={`https://multiembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}`}
-                referrerPolicy="origin"
-                allowFullScreen
-                width="100%"
-                height="450"
-                scrolling="no"
-                className="rounded-xl shadow-lg mt-6"
-              ></iframe>
-            </TabsContent>
-          </Tabs>
+      <Tabs defaultValue="vidsrccc">
+        <div className="flex flex-col items-center">
+          <TabsList>
+            <TabsTrigger value="vidlinkpro">Vidlink.pro(Auto-play)</TabsTrigger>
+            <TabsTrigger value="vidsrccc">VidSrc.cc(Auto-play&Auto-next)</TabsTrigger>
+            <TabsTrigger value="autoembed">Autoembed(contains ads)</TabsTrigger>
+            <TabsTrigger value="superembed">SuberEmbed(contains ads)</TabsTrigger>
+          </TabsList>
         </div>
-      </div>
+        <TabsContent value="autoembed">
+          <iframe
+            src={https://player.autoembed.cc/embed/tv/${id}/${season}/${episode}}
+            referrerPolicy="origin"
+            allowFullScreen
+            width="100%"
+            height="450"
+            scrolling="no"
+            className="max-w-3xl mx-auto px-4 pt-10"
+          ></iframe>
+        </TabsContent>
+        <TabsContent value="vidlinkpro">
+          <iframe
+            src={https://vidlink.pro/tv/${id}/${season}/${episode}?primaryColor=ff0044&secondaryColor=f788a6&iconColor=ff0044&title=true&poster=true&autoplay=true&nextbutton=true}
+            referrerPolicy="origin"
+            allowFullScreen
+            width="100%"
+            height="450"
+            scrolling="no"
+            className="max-w-3xl mx-auto px-4 pt-10"
+          ></iframe>
+        </TabsContent>
+        <TabsContent value="vidsrccc">
+          <iframe
+            src={https://vidsrc.cc/v3/embed/tv/${id}/${season}/${episode}?autoPlay=true&autoNext=true&poster=true}
+            referrerPolicy="origin"
+            allowFullScreen
+            width="100%"
+            height="450"
+            scrolling="no"
+            className="max-w-3xl mx-auto px-4 pt-10"
+          ></iframe>
+        </TabsContent>
+        <TabsContent value="superembed">
+          <iframe
+            src={https://multiembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}}
+            referrerPolicy="origin"
+            allowFullScreen
+            width="100%"
+            height="450"
+            scrolling="no"
+            className="max-w-3xl mx-auto px-4 pt-10"
+          ></iframe>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
+
+

@@ -254,8 +254,8 @@ export default function VideoPlayer({ id }: { id: number }) {
           {episodes.map((ep) => (
             <div
               key={ep.episode_number}
-              className={`relative cursor-pointer rounded-md overflow-hidden transform transition-transform duration-300 ${
-                ep.episode_number.toString() === episode ? "border-4 border-yellow-500 shadow-lg" : "border border-transparent"
+              className={`relative group cursor-pointer rounded-lg overflow-hidden border border-gray-300 shadow-md ${
+                episode === ep.episode_number.toString() ? "ring-4 ring-blue-500" : ""
               }`}
               onClick={() => handleEpisodeClick(ep.episode_number.toString())}
             >
@@ -264,14 +264,12 @@ export default function VideoPlayer({ id }: { id: number }) {
                 alt={ep.name}
                 className="w-full h-full object-cover"
               />
-              <div
-                className={`absolute inset-0 rounded-md ${
-                  ep.episode_number.toString() === episode ? "bg-gradient-to-t from-black via-transparent to-black opacity-50" : "opacity-0"
-                }`}
-              ></div>
-              <p className="text-center text-sm mt-1 font-semibold">
-                Episode {ep.episode_number}: {ep.name}
-              </p>
+              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="text-white text-center p-2">
+                  <div className="text-lg font-bold">Episode {ep.episode_number}</div>
+                  <div>{ep.name}</div>
+                </div>
+              </div>
             </div>
           ))}
         </div>

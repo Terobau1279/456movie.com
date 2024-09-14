@@ -115,15 +115,15 @@ export default function VideoPlayer({ id }: { id: number }) {
     <div className="py-8">
       <div className="pb-4">
         <div className="flex flex-col text-center items-center justify-center">
-          <div className="rounded-md pl-4 flex w-full max-w-sm items-center space-x-2">
+          <div className="rounded-lg pl-4 flex w-full max-w-sm items-center space-x-2 bg-white shadow-lg p-4">
             <div className="flex items-center space-x-2">
               <Select
                 value={season}
                 onValueChange={(e) => setSeason(e)}
                 disabled={isLoading || seasons.length === 0}
               >
-                <SelectTrigger className="px-4 py-2 rounded-md w-[180px]">
-                  <SelectValue placeholder="Select Video Source" />
+                <SelectTrigger className="px-4 py-2 rounded-md w-[180px] bg-gray-50 hover:bg-gray-100 transition-shadow shadow-sm">
+                  <SelectValue placeholder="Select Season" />
                 </SelectTrigger>
                 <SelectContent>
                   {seasons.length > 0 ? (
@@ -147,8 +147,8 @@ export default function VideoPlayer({ id }: { id: number }) {
                 onValueChange={(e) => setEpisode(e)}
                 disabled={isLoading || episodes.length === 0}
               >
-                <SelectTrigger className="px-4 py-2 rounded-md w-[180px]">
-                  <SelectValue placeholder="Select Video Source" />
+                <SelectTrigger className="px-4 py-2 rounded-md w-[180px] bg-gray-50 hover:bg-gray-100 transition-shadow shadow-sm">
+                  <SelectValue placeholder="Select Episode" />
                 </SelectTrigger>
                 <SelectContent>
                   {episodes.length > 0 ? (
@@ -167,11 +167,11 @@ export default function VideoPlayer({ id }: { id: number }) {
               </Select>
             </div>
           </div>
-          <div className="pt-2">
+          <div className="pt-4">
             <Link href={`https://dl.vidsrc.vip/tv/${id}/${season}/${episode}`}>
               <Badge
                 variant="outline"
-                className="cursor-pointer whitespace-nowrap"
+                className="cursor-pointer whitespace-nowrap bg-gray-100 hover:bg-gray-200 transition-colors px-4 py-2 rounded-md"
               >
                 <Download className="mr-1.5" size={12} />
                 Download {season}-{episode}
@@ -181,15 +181,23 @@ export default function VideoPlayer({ id }: { id: number }) {
         </div>
       </div>
 
-      {/* Server List in Box View */}
-      <div className="max-w-md mx-auto">
-        <div className="border rounded-md p-4 max-h-[200px] overflow-y-auto">
+      {/* Server List with Aesthetic Design */}
+      <div className="max-w-lg mx-auto">
+        <div className="border border-gray-200 rounded-xl p-6 max-h-[250px] overflow-y-auto shadow-md bg-white">
           <Tabs defaultValue="vidsrccc">
-            <TabsList className="flex flex-col">
-              <TabsTrigger value="vidlinkpro">Vidlink.pro (Auto-play)</TabsTrigger>
-              <TabsTrigger value="vidsrccc">VidSrc.cc (Auto-play & Auto-next)</TabsTrigger>
-              <TabsTrigger value="autoembed">Autoembed (contains ads)</TabsTrigger>
-              <TabsTrigger value="superembed">SuperEmbed (contains ads)</TabsTrigger>
+            <TabsList className="flex flex-col gap-4">
+              <TabsTrigger className="rounded-lg bg-gray-50 hover:bg-gray-100 transition-all p-3 shadow-sm text-gray-700" value="vidlinkpro">
+                Vidlink.pro (Auto-play)
+              </TabsTrigger>
+              <TabsTrigger className="rounded-lg bg-gray-50 hover:bg-gray-100 transition-all p-3 shadow-sm text-gray-700" value="vidsrccc">
+                VidSrc.cc (Auto-play & Auto-next)
+              </TabsTrigger>
+              <TabsTrigger className="rounded-lg bg-gray-50 hover:bg-gray-100 transition-all p-3 shadow-sm text-gray-700" value="autoembed">
+                Autoembed (Contains Ads)
+              </TabsTrigger>
+              <TabsTrigger className="rounded-lg bg-gray-50 hover:bg-gray-100 transition-all p-3 shadow-sm text-gray-700" value="superembed">
+                SuperEmbed (Contains Ads)
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="autoembed">
               <iframe
@@ -199,7 +207,7 @@ export default function VideoPlayer({ id }: { id: number }) {
                 width="100%"
                 height="450"
                 scrolling="no"
-                className="max-w-3xl mx-auto px-4 pt-10"
+                className="rounded-xl shadow-lg mt-6"
               ></iframe>
             </TabsContent>
             <TabsContent value="vidlinkpro">
@@ -210,7 +218,7 @@ export default function VideoPlayer({ id }: { id: number }) {
                 width="100%"
                 height="450"
                 scrolling="no"
-                className="max-w-3xl mx-auto px-4 pt-10"
+                className="rounded-xl shadow-lg mt-6"
               ></iframe>
             </TabsContent>
             <TabsContent value="vidsrccc">
@@ -221,7 +229,7 @@ export default function VideoPlayer({ id }: { id: number }) {
                 width="100%"
                 height="450"
                 scrolling="no"
-                className="max-w-3xl mx-auto px-4 pt-10"
+                className="rounded-xl shadow-lg mt-6"
               ></iframe>
             </TabsContent>
             <TabsContent value="superembed">
@@ -232,7 +240,7 @@ export default function VideoPlayer({ id }: { id: number }) {
                 width="100%"
                 height="450"
                 scrolling="no"
-                className="max-w-3xl mx-auto px-4 pt-10"
+                className="rounded-xl shadow-lg mt-6"
               ></iframe>
             </TabsContent>
           </Tabs>

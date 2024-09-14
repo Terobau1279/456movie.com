@@ -33,7 +33,7 @@ export default function VideoPlayer({ id }: { id: number }) {
   const [episode, setEpisode] = React.useState("1");
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
-  const [server, setServer] = React.useState("vidsrccc"); // Default server
+  const [server, setServer] = React.useState("vidlinkpro"); // Default server set to Vidlink Pro
 
   React.useEffect(() => {
     fetchSeasons();
@@ -149,7 +149,7 @@ export default function VideoPlayer({ id }: { id: number }) {
           scrolling="no"
         ></iframe>
       </div>
-      
+
       {/* Season Selector */}
       <div className="flex justify-center pt-4">
         <div className="w-[300px]">
@@ -211,13 +211,17 @@ export default function VideoPlayer({ id }: { id: number }) {
           {episodes.map((ep) => (
             <div
               key={ep.episode_number}
-              className="cursor-pointer"
+              className={`relative cursor-pointer ${
+                ep.episode_number.toString() === episode ? "border-2 border-yellow-500" : ""
+              }`}
               onClick={() => handleEpisodeClick(ep.episode_number.toString())}
             >
               <img
                 src={`https://image.tmdb.org/t/p/w500${ep.still_path}`}
                 alt={ep.name}
-                className="rounded-md"
+                className={`rounded-md transition-transform duration-300 ${
+                  ep.episode_number.toString() === episode ? "transform scale-105" : ""
+                }`}
               />
               <p className="text-center text-sm mt-1">
                 Episode {ep.episode_number}: {ep.name}

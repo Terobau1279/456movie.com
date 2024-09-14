@@ -138,92 +138,6 @@ export default function VideoPlayer({ id }: { id: number }) {
 
   return (
     <div className="py-8">
-      <div className="pb-4">
-        <div className="flex flex-col text-center items-center justify-center">
-          {/* Season Selector */}
-          <div className="rounded-md pl-4 flex w-full max-w-sm items-center space-x-2">
-            <div className="flex items-center space-x-2">
-              <Select
-                value={season}
-                onValueChange={(e) => setSeason(e)}
-                disabled={isLoading || seasons.length === 0}
-              >
-                <SelectTrigger className="px-4 py-2 rounded-md w-[180px]">
-                  <SelectValue placeholder="Select Season" />
-                </SelectTrigger>
-                <SelectContent>
-                  {seasons.length > 0 ? (
-                    seasons.map((s) => (
-                      <SelectItem
-                        key={s.season_number}
-                        value={s.season_number.toString()}
-                      >
-                        Season {s.season_number}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <></>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-            {/* Episode Selector */}
-            <div className="flex items-center space-x-2">
-              <Select
-                value={episode}
-                onValueChange={(e) => setEpisode(e)}
-                disabled={isLoading || episodes.length === 0}
-              >
-                <SelectTrigger className="px-4 py-2 rounded-md w-[180px]">
-                  <SelectValue placeholder="Select Episode" />
-                </SelectTrigger>
-                <SelectContent>
-                  {episodes.length > 0 ? (
-                    episodes.map((s) => (
-                      <SelectItem
-                        key={s.episode_number}
-                        value={s.episode_number.toString()}
-                      >
-                        Episode {s.episode_number}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <></>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          {/* Download Button */}
-          <div className="pt-2">
-            <Link href={`https://dl.vidsrc.vip/tv/${id}/${season}/${episode}`}>
-              <Badge
-                variant="outline"
-                className="cursor-pointer whitespace-nowrap"
-              >
-                <Download className="mr-1.5" size={12} />
-                Download {season}-{episode}
-              </Badge>
-            </Link>
-          </div>
-          {/* Server Selector */}
-          <div className="pt-4">
-            <div className="w-[200px]">
-              <Select value={server} onValueChange={(e) => setServer(e)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Server" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="vidsrccc">VidSrc.cc</SelectItem>
-                  <SelectItem value="vidlinkpro">Vidlink.pro</SelectItem>
-                  <SelectItem value="autoembed">Autoembed</SelectItem>
-                  <SelectItem value="superembed">SuperEmbed</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-      </div>
       {/* Video Player */}
       <div className="max-w-3xl mx-auto px-4 pt-10">
         <iframe
@@ -235,6 +149,62 @@ export default function VideoPlayer({ id }: { id: number }) {
           scrolling="no"
         ></iframe>
       </div>
+      
+      {/* Season Selector */}
+      <div className="flex justify-center pt-4">
+        <div className="w-[300px]">
+          <Select value={season} onValueChange={(e) => setSeason(e)} disabled={isLoading || seasons.length === 0}>
+            <SelectTrigger className="px-4 py-2 rounded-md">
+              <SelectValue placeholder="Select Season" />
+            </SelectTrigger>
+            <SelectContent>
+              {seasons.length > 0 ? (
+                seasons.map((s) => (
+                  <SelectItem
+                    key={s.season_number}
+                    value={s.season_number.toString()}
+                  >
+                    Season {s.season_number}
+                  </SelectItem>
+                ))
+              ) : (
+                <></>
+              )}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Download Button */}
+      <div className="pt-4 text-center">
+        <Link href={`https://dl.vidsrc.vip/tv/${id}/${season}/${episode}`}>
+          <Badge
+            variant="outline"
+            className="cursor-pointer whitespace-nowrap"
+          >
+            <Download className="mr-1.5" size={12} />
+            Download {season}-{episode}
+          </Badge>
+        </Link>
+      </div>
+
+      {/* Server Selector */}
+      <div className="flex justify-center pt-4">
+        <div className="w-[300px]">
+          <Select value={server} onValueChange={(e) => setServer(e)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select Server" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="vidsrccc">VidSrc.cc</SelectItem>
+              <SelectItem value="vidlinkpro">Vidlink.pro</SelectItem>
+              <SelectItem value="autoembed">Autoembed</SelectItem>
+              <SelectItem value="superembed">SuperEmbed</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       {/* Episode Thumbnails */}
       <div className="max-w-4xl mx-auto px-4 pt-10">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">

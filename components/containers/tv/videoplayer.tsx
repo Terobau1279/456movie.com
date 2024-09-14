@@ -273,6 +273,9 @@ export default function VideoPlayer({ id }: { id: number }) {
             </div>
           ))}
         </div>
+        <div className="text-center text-sm text-gray-500 pt-4">
+          Changing the episode inside the player may cause the spotlight to mismatch with the current episode. Please select an episode from the list to keep the spotlight in sync.
+        </div>
       </div>
     </div>
   );

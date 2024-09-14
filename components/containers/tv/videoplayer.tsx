@@ -48,7 +48,7 @@ export default function VideoPlayer({ id }: { id: number }) {
     setError(null);
     try {
       const response = await fetch(
-        https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}
+        `https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}`
       );
       const data = await response.json();
       if (data.success === false) {
@@ -75,7 +75,7 @@ export default function VideoPlayer({ id }: { id: number }) {
     setError(null);
     try {
       const response = await fetch(
-        https://api.themoviedb.org/3/tv/${id}/season/${seasonNumber}?api_key=${API_KEY}
+        `https://api.themoviedb.org/3/tv/${id}/season/${seasonNumber}?api_key=${API_KEY}`
       );
       const data = await response.json();
       if (data.success === false) {
@@ -103,7 +103,6 @@ export default function VideoPlayer({ id }: { id: number }) {
   }
 
   if (error) {
-    
     return (
       <div className="py-8 mx-auto max-w-5xl">
         <Skeleton className="mx-auto px-4 pt-6 w-full h-[500px]" />{" "}
@@ -169,7 +168,7 @@ export default function VideoPlayer({ id }: { id: number }) {
             </div>
           </div>
           <div className="pt-2">
-            <Link href={https://dl.vidsrc.vip/tv/${id}/${season}/${episode}}>
+            <Link href={`https://dl.vidsrc.vip/tv/${id}/${season}/${episode}`}>
               <Badge
                 variant="outline"
                 className="cursor-pointer whitespace-nowrap"
@@ -187,12 +186,12 @@ export default function VideoPlayer({ id }: { id: number }) {
             <TabsTrigger value="vidlinkpro">Vidlink.pro(Auto-play)</TabsTrigger>
             <TabsTrigger value="vidsrccc">VidSrc.cc(Auto-play&Auto-next)</TabsTrigger>
             <TabsTrigger value="autoembed">Autoembed(contains ads)</TabsTrigger>
-            <TabsTrigger value="superembed">SuberEmbed(contains ads)</TabsTrigger>
+            <TabsTrigger value="superembed">SuperEmbed(contains ads)</TabsTrigger>
           </TabsList>
         </div>
         <TabsContent value="autoembed">
           <iframe
-            src={https://player.autoembed.cc/embed/tv/${id}/${season}/${episode}}
+            src={`https://player.autoembed.cc/embed/tv/${id}/${season}/${episode}`}
             referrerPolicy="origin"
             allowFullScreen
             width="100%"
@@ -203,7 +202,7 @@ export default function VideoPlayer({ id }: { id: number }) {
         </TabsContent>
         <TabsContent value="vidlinkpro">
           <iframe
-            src={https://vidlink.pro/tv/${id}/${season}/${episode}?primaryColor=ff0044&secondaryColor=f788a6&iconColor=ff0044&title=true&poster=true&autoplay=true&nextbutton=true}
+            src={`https://vidlink.pro/tv/${id}/${season}/${episode}?primaryColor=ff0044&secondaryColor=f788a6&iconColor=ff0044&title=true&poster=true&autoplay=true&nextbutton=true`}
             referrerPolicy="origin"
             allowFullScreen
             width="100%"
@@ -214,7 +213,7 @@ export default function VideoPlayer({ id }: { id: number }) {
         </TabsContent>
         <TabsContent value="vidsrccc">
           <iframe
-            src={https://vidsrc.cc/v3/embed/tv/${id}/${season}/${episode}?autoPlay=true&autoNext=true&poster=true}
+            src={`https://vidsrc.cc/v3/embed/tv/${id}/${season}/${episode}?autoPlay=true&autoNext=true&poster=true`}
             referrerPolicy="origin"
             allowFullScreen
             width="100%"
@@ -225,7 +224,7 @@ export default function VideoPlayer({ id }: { id: number }) {
         </TabsContent>
         <TabsContent value="superembed">
           <iframe
-            src={https://multiembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}}
+            src={`https://multiembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}`}
             referrerPolicy="origin"
             allowFullScreen
             width="100%"

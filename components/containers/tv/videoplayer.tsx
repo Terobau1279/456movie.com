@@ -103,7 +103,6 @@ export default function VideoPlayer({ id }: { id: number }) {
   }
 
   if (error) {
-    
     return (
       <div className="py-8 mx-auto max-w-5xl">
         <Skeleton className="mx-auto px-4 pt-6 w-full h-[500px]" />{" "}
@@ -181,60 +180,64 @@ export default function VideoPlayer({ id }: { id: number }) {
           </div>
         </div>
       </div>
-      <Tabs defaultValue="vidsrccc">
-        <div className="flex flex-col items-center">
-          <TabsList>
-            <TabsTrigger value="vidlinkpro">Vidlink.pro(Auto-play)</TabsTrigger>
-            <TabsTrigger value="vidsrccc">VidSrc.cc(Auto-play&Auto-next)</TabsTrigger>
-            <TabsTrigger value="autoembed">Autoembed(contains ads)</TabsTrigger>
-            <TabsTrigger value="superembed">SuberEmbed(contains ads)</TabsTrigger>
-          </TabsList>
+
+      {/* Server List in Box View */}
+      <div className="max-w-md mx-auto">
+        <div className="border rounded-md p-4 max-h-[200px] overflow-y-auto">
+          <Tabs defaultValue="vidsrccc">
+            <TabsList className="flex flex-col">
+              <TabsTrigger value="vidlinkpro">Vidlink.pro (Auto-play)</TabsTrigger>
+              <TabsTrigger value="vidsrccc">VidSrc.cc (Auto-play & Auto-next)</TabsTrigger>
+              <TabsTrigger value="autoembed">Autoembed (contains ads)</TabsTrigger>
+              <TabsTrigger value="superembed">SuperEmbed (contains ads)</TabsTrigger>
+            </TabsList>
+            <TabsContent value="autoembed">
+              <iframe
+                src={`https://player.autoembed.cc/embed/tv/${id}/${season}/${episode}`}
+                referrerPolicy="origin"
+                allowFullScreen
+                width="100%"
+                height="450"
+                scrolling="no"
+                className="max-w-3xl mx-auto px-4 pt-10"
+              ></iframe>
+            </TabsContent>
+            <TabsContent value="vidlinkpro">
+              <iframe
+                src={`https://vidlink.pro/tv/${id}/${season}/${episode}?primaryColor=ff0044&secondaryColor=f788a6&iconColor=ff0044&title=true&poster=true&autoplay=true&nextbutton=true`}
+                referrerPolicy="origin"
+                allowFullScreen
+                width="100%"
+                height="450"
+                scrolling="no"
+                className="max-w-3xl mx-auto px-4 pt-10"
+              ></iframe>
+            </TabsContent>
+            <TabsContent value="vidsrccc">
+              <iframe
+                src={`https://vidsrc.cc/v3/embed/tv/${id}/${season}/${episode}?autoPlay=true&autoNext=true&poster=true`}
+                referrerPolicy="origin"
+                allowFullScreen
+                width="100%"
+                height="450"
+                scrolling="no"
+                className="max-w-3xl mx-auto px-4 pt-10"
+              ></iframe>
+            </TabsContent>
+            <TabsContent value="superembed">
+              <iframe
+                src={`https://multiembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}`}
+                referrerPolicy="origin"
+                allowFullScreen
+                width="100%"
+                height="450"
+                scrolling="no"
+                className="max-w-3xl mx-auto px-4 pt-10"
+              ></iframe>
+            </TabsContent>
+          </Tabs>
         </div>
-        <TabsContent value="autoembed">
-          <iframe
-            src={`https://player.autoembed.cc/embed/tv/${id}/${season}/${episode}`}
-            referrerPolicy="origin"
-            allowFullScreen
-            width="100%"
-            height="450"
-            scrolling="no"
-            className="max-w-3xl mx-auto px-4 pt-10"
-          ></iframe>
-        </TabsContent>
-        <TabsContent value="vidlinkpro">
-          <iframe
-            src={`https://vidlink.pro/tv/${id}/${season}/${episode}?primaryColor=ff0044&secondaryColor=f788a6&iconColor=ff0044&title=true&poster=true&autoplay=true&nextbutton=true`}
-            referrerPolicy="origin"
-            allowFullScreen
-            width="100%"
-            height="450"
-            scrolling="no"
-            className="max-w-3xl mx-auto px-4 pt-10"
-          ></iframe>
-        </TabsContent>
-        <TabsContent value="vidsrccc">
-          <iframe
-            src={`https://vidsrc.cc/v3/embed/tv/${id}/${season}/${episode}?autoPlay=true&autoNext=true&poster=true`}
-            referrerPolicy="origin"
-            allowFullScreen
-            width="100%"
-            height="450"
-            scrolling="no"
-            className="max-w-3xl mx-auto px-4 pt-10"
-          ></iframe>
-        </TabsContent>
-        <TabsContent value="superembed">
-          <iframe
-            src={`https://multiembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}`}
-            referrerPolicy="origin"
-            allowFullScreen
-            width="100%"
-            height="450"
-            scrolling="no"
-            className="max-w-3xl mx-auto px-4 pt-10"
-          ></iframe>
-        </TabsContent>
-      </Tabs>
+      </div>
     </div>
   );
 }

@@ -6,7 +6,7 @@ import {
   SelectContent,
   SelectItem,
   SelectValue,
-} from "@/components/ui/select"; // Make sure the select component allows passing custom styles if needed
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Download } from "lucide-react";
@@ -52,6 +52,9 @@ export default function VideoPlayer({ id }: { id: number }) {
       const response = await fetch(
         `https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}`
       );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
       if (data.success === false) {
         throw new Error(data.status_message || "Failed to fetch seasons");
@@ -79,6 +82,9 @@ export default function VideoPlayer({ id }: { id: number }) {
       const response = await fetch(
         `https://api.themoviedb.org/3/tv/${id}/season/${seasonNumber}?api_key=${API_KEY}`
       );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
       if (data.success === false) {
         throw new Error(data.status_message || "Failed to fetch episodes");
@@ -243,7 +249,9 @@ export default function VideoPlayer({ id }: { id: number }) {
                 alt={ep.name}
                 className="rounded-md"
               />
-              <p className="text-center text-sm mt-1">{ep.name}</p>
+              <p className="text-center text-sm mt-1">
+                Episode {ep.episode_number}: {ep.name}
+              </p>
             </div>
           ))}
         </div>

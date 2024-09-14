@@ -7,7 +7,6 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Download } from "lucide-react";
@@ -30,6 +29,7 @@ export default function VideoPlayer({ id }: { id: number }) {
   const [episodes, setEpisodes] = React.useState<Episode[]>([]);
   const [season, setSeason] = React.useState("1");
   const [episode, setEpisode] = React.useState("1");
+  const [selectedServer, setSelectedServer] = React.useState("vidlinkpro");
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -94,6 +94,28 @@ export default function VideoPlayer({ id }: { id: number }) {
     }
   }
 
+  const serverOptions = [
+    { value: "vidlinkpro", label: "Vidlink.pro (Auto-play)" },
+    { value: "vidsrccc", label: "VidSrc.cc (Auto-play & Auto-next)" },
+    { value: "autoembed", label: "Autoembed (contains ads)" },
+    { value: "superembed", label: "SuperEmbed (contains ads)" },
+  ];
+
+  const getIframeSrc = () => {
+    switch (selectedServer) {
+      case "vidlinkpro":
+        return `https://vidlink.pro/tv/${id}/${season}/${episode}?primaryColor=ff0044&secondaryColor=f788a6&iconColor=ff0044&title=true&poster=true&autoplay=true&nextbutton=true`;
+      case "vidsrccc":
+        return `https://vidsrc.cc/v3/embed/tv/${id}/${season}/${episode}?autoPlay=true&autoNext=true&poster=true`;
+      case "autoembed":
+        return `https://player.autoembed.cc/embed/tv/${id}/${season}/${episode}`;
+      case "superembed":
+        return `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}`;
+      default:
+        return "";
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="py-8 mx-auto max-w-5xl">
@@ -123,7 +145,7 @@ export default function VideoPlayer({ id }: { id: number }) {
                 disabled={isLoading || seasons.length === 0}
               >
                 <SelectTrigger className="px-4 py-2 rounded-md w-[180px]">
-                  <SelectValue placeholder="Select Video Source" />
+                  <SelectValue placeholder="Select Season" />
                 </SelectTrigger>
                 <SelectContent>
                   {seasons.length > 0 ? (
@@ -148,7 +170,7 @@ export default function VideoPlayer({ id }: { id: number }) {
                 disabled={isLoading || episodes.length === 0}
               >
                 <SelectTrigger className="px-4 py-2 rounded-md w-[180px]">
-                  <SelectValue placeholder="Select Video Source" />
+                  <SelectValue placeholder="Select Episode" />
                 </SelectTrigger>
                 <SelectContent>
                   {episodes.length > 0 ? (
@@ -180,60 +202,39 @@ export default function VideoPlayer({ id }: { id: number }) {
           </div>
         </div>
       </div>
-      <Tabs defaultValue="vidsrccc">
-        <div className="flex flex-col items-center">
-          <TabsList>
-            <TabsTrigger value="vidlinkpro">Vidlink.pro(Auto-play)</TabsTrigger>
-            <TabsTrigger value="vidsrccc">VidSrc.cc(Auto-play&Auto-next)</TabsTrigger>
-            <TabsTrigger value="autoembed">Autoembed(contains ads)</TabsTrigger>
-            <TabsTrigger value="superembed">SuperEmbed(contains ads)</TabsTrigger>
-          </TabsList>
-        </div>
-        <TabsContent value="autoembed">
-          <iframe
-            src={`https://player.autoembed.cc/embed/tv/${id}/${season}/${episode}`}
-            referrerPolicy="origin"
-            allowFullScreen
-            width="100%"
-            height="450"
-            scrolling="no"
-            className="max-w-3xl mx-auto px-4 pt-10"
-          ></iframe>
-        </TabsContent>
-        <TabsContent value="vidlinkpro">
-          <iframe
-            src={`https://vidlink.pro/tv/${id}/${season}/${episode}?primaryColor=ff0044&secondaryColor=f788a6&iconColor=ff0044&title=true&poster=true&autoplay=true&nextbutton=true`}
-            referrerPolicy="origin"
-            allowFullScreen
-            width="100%"
-            height="450"
-            scrolling="no"
-            className="max-w-3xl mx-auto px-4 pt-10"
-          ></iframe>
-        </TabsContent>
-        <TabsContent value="vidsrccc">
-          <iframe
-            src={`https://vidsrc.cc/v3/embed/tv/${id}/${season}/${episode}?autoPlay=true&autoNext=true&poster=true`}
-            referrerPolicy="origin"
-            allowFullScreen
-            width="100%"
-            height="450"
-            scrolling="no"
-            className="max-w-3xl mx-auto px-4 pt-10"
-          ></iframe>
-        </TabsContent>
-        <TabsContent value="superembed">
-          <iframe
-            src={`https://multiembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}`}
-            referrerPolicy="origin"
-            allowFullScreen
-            width="100%"
-            height="450"
-            scrolling="no"
-            className="max-w-3xl mx-auto px-4 pt-10"
-          ></iframe>
-        </TabsContent>
-      </Tabs>
+
+      {/* Server selection dropdown */}
+      <div className="flex justify-center pt-4">
+        <Select
+          value={selectedServer}
+          onValueChange={(e) => setSelectedServer(e)}
+          disabled={isLoading}
+        >
+          <SelectTrigger className="px-4 py-2 rounded-md w-[180px]">
+            <SelectValue placeholder="Select Server" />
+          </SelectTrigger>
+          <SelectContent>
+            {serverOptions.map((server) => (
+              <SelectItem key={server.value} value={server.value}>
+                {server.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Iframe display based on selected server */}
+      <div className="pt-4">
+        <iframe
+          src={getIframeSrc()}
+          referrerPolicy="origin"
+          allowFullScreen
+          width="100%"
+          height="450"
+          scrolling="no"
+          className="max-w-3xl mx-auto px-4 pt-10"
+        ></iframe>
+      </div>
     </div>
   );
 }

@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Download } from "lucide-react";
+import { Download, ArrowLeft, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { API_KEY } from "@/config/url";
 
@@ -119,6 +119,21 @@ export default function VideoPlayer({ id }: { id: number }) {
     setEpisode(episodeNumber);
   };
 
+  const handlePreviousEpisode = () => {
+    const currentEpisodeNumber = Number(episode);
+    if (currentEpisodeNumber > 1) {
+      setEpisode((currentEpisodeNumber - 1).toString());
+    }
+  };
+
+  const handleNextEpisode = () => {
+    const currentEpisodeNumber = Number(episode);
+    const nextEpisode = episodes.find(ep => ep.episode_number === currentEpisodeNumber + 1);
+    if (nextEpisode) {
+      setEpisode((currentEpisodeNumber + 1).toString());
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="py-8 mx-auto max-w-5xl">
@@ -139,7 +154,7 @@ export default function VideoPlayer({ id }: { id: number }) {
   return (
     <div className="py-8">
       {/* Video Player */}
-      <div className="max-w-3xl mx-auto px-4 pt-10">
+      <div className="relative max-w-3xl mx-auto px-4 pt-10">
         <iframe
           src={getIframeSrc()}
           referrerPolicy="origin"
@@ -147,22 +162,42 @@ export default function VideoPlayer({ id }: { id: number }) {
           width="100%"
           height="450"
           scrolling="no"
+          className="rounded-lg shadow-lg border border-gray-300"
         ></iframe>
+      </div>
+
+      {/* Navigation Buttons */}
+      <div className="flex justify-center pt-4">
+        <button
+          onClick={handlePreviousEpisode}
+          className="px-4 py-2 rounded-md bg-gray-800 text-white shadow-md hover:bg-gray-700 transition-colors duration-300 flex items-center"
+        >
+          <ArrowLeft size={16} className="mr-2" />
+          Previous Episode
+        </button>
+        <button
+          onClick={handleNextEpisode}
+          className="px-4 py-2 rounded-md bg-gray-800 text-white shadow-md hover:bg-gray-700 transition-colors duration-300 flex items-center ml-4"
+        >
+          Next Episode
+          <ArrowRight size={16} className="ml-2" />
+        </button>
       </div>
 
       {/* Season Selector */}
       <div className="flex justify-center pt-4">
         <div className="w-[300px]">
           <Select value={season} onValueChange={(e) => setSeason(e)} disabled={isLoading || seasons.length === 0}>
-            <SelectTrigger className="px-4 py-2 rounded-md">
+            <SelectTrigger className="px-4 py-2 rounded-md bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-md hover:shadow-lg transition-shadow duration-300">
               <SelectValue placeholder="Select Season" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-white rounded-md shadow-lg">
               {seasons.length > 0 ? (
                 seasons.map((s) => (
                   <SelectItem
                     key={s.season_number}
                     value={s.season_number.toString()}
+                    className="hover:bg-gray-100"
                   >
                     Season {s.season_number}
                   </SelectItem>
@@ -180,7 +215,7 @@ export default function VideoPlayer({ id }: { id: number }) {
         <Link href={`https://dl.vidsrc.vip/tv/${id}/${season}/${episode}`}>
           <Badge
             variant="outline"
-            className="cursor-pointer whitespace-nowrap"
+            className="cursor-pointer whitespace-nowrap bg-gradient-to-r from-green-400 to-blue-500 text-white shadow-md hover:shadow-lg transition-shadow duration-300"
           >
             <Download className="mr-1.5" size={12} />
             Download {season}-{episode}
@@ -192,14 +227,14 @@ export default function VideoPlayer({ id }: { id: number }) {
       <div className="flex justify-center pt-4">
         <div className="w-[300px]">
           <Select value={server} onValueChange={(e) => setServer(e)}>
-            <SelectTrigger>
+            <SelectTrigger className="px-4 py-2 rounded-md bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md hover:shadow-lg transition-shadow duration-300">
               <SelectValue placeholder="Select Server" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="vidsrccc">VidSrc.cc</SelectItem>
-              <SelectItem value="vidlinkpro">Vidlink.pro</SelectItem>
-              <SelectItem value="autoembed">Autoembed</SelectItem>
-              <SelectItem value="superembed">SuperEmbed</SelectItem>
+            <SelectContent className="bg-white rounded-md shadow-lg">
+              <SelectItem value="vidsrccc" className="hover:bg-gray-100">VidSrc.cc</SelectItem>
+              <SelectItem value="vidlinkpro" className="hover:bg-gray-100">Vidlink.pro</SelectItem>
+              <SelectItem value="autoembed" className="hover:bg-gray-100">Autoembed</SelectItem>
+              <SelectItem value="superembed" className="hover:bg-gray-100">SuperEmbed</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -211,19 +246,22 @@ export default function VideoPlayer({ id }: { id: number }) {
           {episodes.map((ep) => (
             <div
               key={ep.episode_number}
-              className={`relative cursor-pointer ${
-                ep.episode_number.toString() === episode ? "border-2 border-yellow-500" : ""
+              className={`relative cursor-pointer rounded-md overflow-hidden transform transition-transform duration-300 ${
+                ep.episode_number.toString() === episode ? "border-4 border-yellow-500 shadow-lg" : "border border-transparent"
               }`}
               onClick={() => handleEpisodeClick(ep.episode_number.toString())}
             >
               <img
                 src={`https://image.tmdb.org/t/p/w500${ep.still_path}`}
                 alt={ep.name}
-                className={`rounded-md transition-transform duration-300 ${
-                  ep.episode_number.toString() === episode ? "transform scale-105" : ""
-                }`}
+                className="w-full h-full object-cover"
               />
-              <p className="text-center text-sm mt-1">
+              <div
+                className={`absolute inset-0 rounded-md ${
+                  ep.episode_number.toString() === episode ? "bg-gradient-to-t from-black via-transparent to-black opacity-50" : "opacity-0"
+                }`}
+              ></div>
+              <p className="text-center text-sm mt-1 font-semibold">
                 Episode {ep.episode_number}: {ep.name}
               </p>
             </div>

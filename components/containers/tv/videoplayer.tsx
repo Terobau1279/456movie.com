@@ -6,7 +6,7 @@ import {
   SelectContent,
   SelectItem,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select"; // Make sure the select component allows passing custom styles if needed
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Download } from "lucide-react";
@@ -17,12 +17,13 @@ interface Season {
   season_number: number;
   name: string;
   episode_count: number;
+  still_path: string;
 }
 
 interface Episode {
   episode_number: number;
   name: string;
-  still_path: string | null; // For episode thumbnail
+  still_path: string;
 }
 
 export default function VideoPlayer({ id }: { id: number }) {
@@ -108,8 +109,8 @@ export default function VideoPlayer({ id }: { id: number }) {
     }
   };
 
-  const handleEpisodeClick = (epNumber: string) => {
-    setEpisode(epNumber);
+  const handleEpisodeClick = (episodeNumber: string) => {
+    setEpisode(episodeNumber);
   };
 
   if (isLoading) {
@@ -133,7 +134,7 @@ export default function VideoPlayer({ id }: { id: number }) {
     <div className="py-8">
       <div className="pb-4">
         <div className="flex flex-col text-center items-center justify-center">
-          {/* Season and Episode Dropdowns */}
+          {/* Season Selector */}
           <div className="rounded-md pl-4 flex w-full max-w-sm items-center space-x-2">
             <div className="flex items-center space-x-2">
               <Select
@@ -160,6 +161,7 @@ export default function VideoPlayer({ id }: { id: number }) {
                 </SelectContent>
               </Select>
             </div>
+            {/* Episode Selector */}
             <div className="flex items-center space-x-2">
               <Select
                 value={episode}
@@ -200,21 +202,19 @@ export default function VideoPlayer({ id }: { id: number }) {
           </div>
           {/* Server Selector */}
           <div className="pt-4">
-            <Select
-              value={server}
-              onValueChange={(e) => setServer(e)}
-              className="w-[200px]"
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select Server" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="vidsrccc">VidSrc.cc</SelectItem>
-                <SelectItem value="vidlinkpro">Vidlink.pro</SelectItem>
-                <SelectItem value="autoembed">Autoembed</SelectItem>
-                <SelectItem value="superembed">SuperEmbed</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="w-[200px]">
+              <Select value={server} onValueChange={(e) => setServer(e)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Server" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="vidsrccc">VidSrc.cc</SelectItem>
+                  <SelectItem value="vidlinkpro">Vidlink.pro</SelectItem>
+                  <SelectItem value="autoembed">Autoembed</SelectItem>
+                  <SelectItem value="superembed">SuperEmbed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </div>
@@ -229,8 +229,8 @@ export default function VideoPlayer({ id }: { id: number }) {
           scrolling="no"
         ></iframe>
       </div>
-      {/* Thumbnails Section */}
-      <div className="max-w-5xl mx-auto px-4 pt-10">
+      {/* Episode Thumbnails */}
+      <div className="max-w-4xl mx-auto px-4 pt-10">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {episodes.map((ep) => (
             <div
@@ -240,10 +240,10 @@ export default function VideoPlayer({ id }: { id: number }) {
             >
               <img
                 src={`https://image.tmdb.org/t/p/w500${ep.still_path}`}
-                alt={`Episode ${ep.episode_number}`}
-                className="w-full h-32 object-cover rounded-lg"
+                alt={ep.name}
+                className="rounded-md"
               />
-              <p className="text-center text-sm mt-2">Episode {ep.episode_number}: {ep.name}</p>
+              <p className="text-center text-sm mt-1">{ep.name}</p>
             </div>
           ))}
         </div>

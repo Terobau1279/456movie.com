@@ -29,9 +29,9 @@ export default function VideoPlayer({ id }: { id: number }) {
   const [episodes, setEpisodes] = React.useState<Episode[]>([]);
   const [season, setSeason] = React.useState("1");
   const [episode, setEpisode] = React.useState("1");
-  const [selectedServer, setSelectedServer] = React.useState("vidlinkpro");
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [server, setServer] = React.useState("vidsrccc"); // Default server
 
   React.useEffect(() => {
     fetchSeasons();
@@ -94,25 +94,16 @@ export default function VideoPlayer({ id }: { id: number }) {
     }
   }
 
-  const serverOptions = [
-    { value: "vidlinkpro", label: "Vidlink.pro (Auto-play)" },
-    { value: "vidsrccc", label: "VidSrc.cc (Auto-play & Auto-next)" },
-    { value: "autoembed", label: "Autoembed (contains ads)" },
-    { value: "superembed", label: "SuperEmbed (contains ads)" },
-  ];
-
   const getIframeSrc = () => {
-    switch (selectedServer) {
+    switch (server) {
       case "vidlinkpro":
         return `https://vidlink.pro/tv/${id}/${season}/${episode}?primaryColor=ff0044&secondaryColor=f788a6&iconColor=ff0044&title=true&poster=true&autoplay=true&nextbutton=true`;
-      case "vidsrccc":
-        return `https://vidsrc.cc/v3/embed/tv/${id}/${season}/${episode}?autoPlay=true&autoNext=true&poster=true`;
       case "autoembed":
         return `https://player.autoembed.cc/embed/tv/${id}/${season}/${episode}`;
       case "superembed":
         return `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}`;
       default:
-        return "";
+        return `https://vidsrc.cc/v3/embed/tv/${id}/${season}/${episode}?autoPlay=true&autoNext=true&poster=true`;
     }
   };
 
@@ -200,31 +191,26 @@ export default function VideoPlayer({ id }: { id: number }) {
               </Badge>
             </Link>
           </div>
+          <div className="pt-4">
+            <Select
+              value={server}
+              onValueChange={(e) => setServer(e)}
+              className="w-[200px]"
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select Server" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="vidsrccc">VidSrc.cc</SelectItem>
+                <SelectItem value="vidlinkpro">Vidlink.pro</SelectItem>
+                <SelectItem value="autoembed">Autoembed</SelectItem>
+                <SelectItem value="superembed">SuperEmbed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
-
-      {/* Server selection dropdown */}
-      <div className="flex justify-center pt-4">
-        <Select
-          value={selectedServer}
-          onValueChange={(e) => setSelectedServer(e)}
-          disabled={isLoading}
-        >
-          <SelectTrigger className="px-4 py-2 rounded-md w-[180px]">
-            <SelectValue placeholder="Select Server" />
-          </SelectTrigger>
-          <SelectContent>
-            {serverOptions.map((server) => (
-              <SelectItem key={server.value} value={server.value}>
-                {server.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Iframe display based on selected server */}
-      <div className="pt-4">
+      <div className="max-w-3xl mx-auto px-4 pt-10">
         <iframe
           src={getIframeSrc()}
           referrerPolicy="origin"
@@ -232,7 +218,6 @@ export default function VideoPlayer({ id }: { id: number }) {
           width="100%"
           height="450"
           scrolling="no"
-          className="max-w-3xl mx-auto px-4 pt-10"
         ></iframe>
       </div>
     </div>

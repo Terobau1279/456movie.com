@@ -160,8 +160,19 @@ export default function VideoPlayer({ id }: { id: number }) {
     );
   }
 
+  const currentEpisode = episodes.find(ep => ep.episode_number.toString() === episode);
+
   return (
     <div className="py-8">
+      {/* Current Episode Info */}
+      {currentEpisode && (
+        <div className="text-center mb-4">
+          <h2 className="text-xl font-semibold">
+            Episode {currentEpisode.episode_number}: {currentEpisode.name}
+          </h2>
+        </div>
+      )}
+
       {/* Video Player */}
       <div className="relative max-w-3xl mx-auto px-4 pt-10">
         <iframe
@@ -255,8 +266,8 @@ export default function VideoPlayer({ id }: { id: number }) {
           {episodes.map((ep) => (
             <div
               key={ep.episode_number}
-              className={`relative group cursor-pointer rounded-lg overflow-hidden border border-gray-300 shadow-md ${
-                episode === ep.episode_number.toString() ? "ring-4 ring-blue-500" : ""
+              className={`relative group cursor-pointer rounded-lg overflow-hidden ${
+                episode === ep.episode_number.toString() ? "ring-4 ring-blue-500" : "shadow-md"
               }`}
               onClick={() => handleEpisodeClick(ep.episode_number.toString())}
             >
@@ -265,12 +276,14 @@ export default function VideoPlayer({ id }: { id: number }) {
                 alt={ep.name}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div className="text-white text-center p-2">
-                  <div className="text-lg font-bold">Episode {ep.episode_number}</div>
-                  <div>{ep.name}</div>
+              {episode === ep.episode_number.toString() && (
+                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white text-lg font-bold">
+                  <div className="text-center">
+                    <div>Episode {ep.episode_number}</div>
+                    <div>{ep.name}</div>
+                  </div>
                 </div>
-              </div>
+              )}
               <div className="absolute bottom-2 left-0 right-0 text-center text-white bg-black bg-opacity-60 p-1">
                 Episode {ep.episode_number}
               </div>

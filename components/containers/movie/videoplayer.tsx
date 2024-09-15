@@ -157,7 +157,7 @@ export default function VideoPlayer({ id }: any) {
                   href={platform.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 bg-gray-800 text-white rounded-full hover:bg-gray-600"
+                  className="p-2 bg-gray-800 text-white rounded-full hover:bg-gray-600 transition-colors"
                   title={`Share on ${platform.name}`}
                 >
                   <i className={`fab fa-${platform.icon}`} style={{ fontSize: '16px' }}></i>
@@ -166,17 +166,20 @@ export default function VideoPlayer({ id }: any) {
             </div>
           </div>
           <div className="pt-8">
-            <h2 className="text-lg font-semibold text-center">Related Movies</h2>
+            <h2 className="text-lg font-semibold text-center mb-4">Related Movies</h2>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               {relatedMovies.slice(0, 8).map((movie) => (
                 <Link href={`/movie/${movie.id}`} key={movie.id}>
-                  <a className="block">
+                  <a className="relative block group">
                     <img
                       src={`https://image.tmdb.org/t/p/original${movie.poster_path}`}
                       alt={movie.title}
-                      className="w-full h-auto rounded-lg"
+                      className="w-full h-auto rounded-lg transition-transform transform group-hover:scale-105"
                     />
-                    <p className="text-center mt-2">{movie.title}</p>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-50 group-hover:opacity-75 transition-opacity rounded-lg"></div>
+                    <p className="absolute bottom-0 left-0 right-0 p-2 text-center text-white font-bold bg-black bg-opacity-50 rounded-b-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                      {movie.title}
+                    </p>
                   </a>
                 </Link>
               ))}

@@ -12,11 +12,11 @@ type Movie = {
   vote_average: number;
   vote_count: number;
   overview: string;
+  poster_path: string | null; // Added property
+  release_date: string | null; // Added property
 };
 
-type MovieData = {
-  results: Movie[];
-};
+type MovieData = Movie; // Updated MovieData to directly match Movie type
 
 type Params = {
   id: string;
@@ -24,7 +24,7 @@ type Params = {
 
 const Info: React.FC<{ params: Params }> = ({ params }) => {
   const { id } = params;
-  const [data, setData] = React.useState<Movie | null>(null); // Change MovieData to Movie | null
+  const [data, setData] = React.useState<Movie | null>(null); // Updated to Movie | null
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -45,7 +45,7 @@ const Info: React.FC<{ params: Params }> = ({ params }) => {
           throw new Error(`Error: ${res.status} ${res.statusText}`);
         }
 
-        const data: Movie = await res.json(); // Adjust type to Movie
+        const data: Movie = await res.json(); // Fetches Movie type
         setData(data);
       } catch (err: any) {
         setError(err.message);

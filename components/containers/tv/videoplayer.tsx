@@ -232,49 +232,48 @@ export default function VideoPlayer({ id }: { id: number }) {
       {/* Season Selector */}
       <div className="flex justify-center pt-4">
         <div className="w-[300px]">
-          <Select value={season} onValueChange={setSeason}>
-            <SelectTrigger className="text-lg font-medium">
-              Season {season}
+          <Select value={season} onValueChange={(e) => setSeason(e)} disabled={isLoading || seasons.length === 0}>
+            <SelectTrigger className="px-4 py-2 rounded-md">
+              <SelectValue placeholder="Select Season" />
             </SelectTrigger>
             <SelectContent>
-              {seasons.map((s) => (
-                <SelectItem key={s.season_number} value={s.season_number.toString()}>
-                  Season {s.season_number} - {s.name}
-                </SelectItem>
-              ))}
+              {seasons.length > 0 ? (
+                seasons.map((s) => (
+                  <SelectItem
+                    key={s.season_number}
+                    value={s.season_number.toString()}
+                  >
+                    Season {s.season_number}
+                  </SelectItem>
+                ))
+              ) : (
+                <></>
+              )}
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      {/* Episode Selector */}
-      <div className="flex justify-center pt-4">
-        <div className="w-[300px]">
-          <Select value={episode} onValueChange={setEpisode}>
-            <SelectTrigger className="text-lg font-medium">
-              Episode {episode}
-            </SelectTrigger>
-            <SelectContent>
-              {episodes.map((e) => (
-                <SelectItem
-                  key={e.episode_number}
-                  value={e.episode_number.toString()}
-                  onClick={() => handleEpisodeClick(e.episode_number.toString())}
-                >
-                  Episode {e.episode_number} - {e.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      {/* Download Button */}
+      <div className="pt-4 text-center">
+        <Link href={`https://dl.vidsrc.vip/tv/${id}/${season}/${episode}`}>
+          <Badge
+            variant="outline"
+            className="cursor-pointer whitespace-nowrap"
+          >
+            <Download className="mr-1.5" size={12} />
+            Download {season}-{episode}
+          </Badge>
+        </Link>
       </div>
 
-      {/* Server Selector */}
+     
+     {/* Server Selector */}
       <div className="flex justify-center pt-4">
         <div className="w-[300px]">
-          <Select value={server} onValueChange={setServer}>
-            <SelectTrigger className="text-lg font-medium">
-              Server: {server}
+          <Select value={server} onValueChange={(e) => setServer(e)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select Server" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="vidlinkpro">Vidlink Pro</SelectItem>
@@ -292,6 +291,44 @@ export default function VideoPlayer({ id }: { id: number }) {
               <SelectItem value="vidsrctop">Vidsrc Top</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+      </div>
+
+      {/* Episode Thumbnails */}
+      <div className="max-w-4xl mx-auto px-4 pt-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {episodes.map((ep) => (
+            <div
+              key={ep.episode_number}
+              className={`relative group cursor-pointer rounded-lg overflow-hidden border border-gray-300 shadow-md ${
+                episode === ep.episode_number.toString() ? "ring-4 ring-yellow-500" : "" // Shiny spotlight effect
+              }`}
+              onClick={() => handleEpisodeClick(ep.episode_number.toString())}
+            >
+              <img
+                src={`https://image.tmdb.org/t/p/w500${ep.still_path}`}
+                alt={ep.name}
+                className="w-full h-full object-cover"
+              />
+              <div
+                className={`absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+                  episode === ep.episode_number.toString() ? "ring-4 ring-yellow-500" : "" // Shiny spotlight effect
+                }`}
+              >
+                <div className="text-white text-center p-2">
+                  <div className="text-lg font-bold">Episode {ep.episode_number}</div>
+                  <div>{ep.name}</div>
+                </div>
+              </div>
+              {/* Small Episode Number */}
+              <div className="absolute top-2 left-2 bg-black text-white text-xs px-1 rounded">
+                {ep.episode_number}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="text-center text-sm text-gray-500 pt-4">
+          Changing the episode inside the player may cause the spotlight to mismatch with the current episode. Please select an episode from the list to keep the spotlight in sync.
         </div>
       </div>
     </div>

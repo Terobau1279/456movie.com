@@ -1,4 +1,3 @@
-"use client";
 import { useState, useEffect, useRef } from "react";
 import {
   Select,
@@ -93,6 +92,17 @@ export default function VideoPlayer({ id }: any) {
     setShowRelatedMovies(prev => !prev);
   };
 
+  const handleBookmark = () => {
+    const savedBookmarks = localStorage.getItem("bookmarkedMovies");
+    const bookmarks = savedBookmarks ? JSON.parse(savedBookmarks) : [];
+
+    if (!bookmarks.some((movie: any) => movie.id === id)) {
+      const newBookmark = { id, title: movieTitle, poster_path: "" }; // Add poster path if available
+      bookmarks.push(newBookmark);
+      localStorage.setItem("bookmarkedMovies", JSON.stringify(bookmarks));
+    }
+  };
+
   return (
     <div className="py-8 mx-auto max-w-5xl">
       <div className="flex flex-col text-center items-center justify-center">
@@ -132,90 +142,95 @@ export default function VideoPlayer({ id }: any) {
                 VidSrc.cc <span className="text-green-400 text-sm">No Ads, Auto-Play, Auto-Next</span>
               </SelectItem>
               <SelectItem value="vidsrcpro">
-                VidSrc.pro <span className="text-green-400 text-sm">Casting Options</span>
+                VidSrc.pro <span className="text-green-400 text-sm">No Ads, Auto-Play</span>
               </SelectItem>
               <SelectItem value="superembed">
-                SuperEmbed <span className="text-red-400 text-sm">Contains Ads</span>
+                SuperEmbed <span className="text-green-400 text-sm">No Ads, Auto-Play</span>
               </SelectItem>
               <SelectItem value="vidbinge4K">
-                VidBinge 4K <span className="text-green-400 text-sm">4K Stream, Auto-Play, Shared Stream</span>
+                VidBinge 4K <span className="text-green-400 text-sm">4K Quality</span>
               </SelectItem>
               <SelectItem value="smashystream">
-                Smashy Stream <span className="text-green-400 text-sm">No Ads, Shared Stream</span>
+                SmashyStream <span className="text-green-400 text-sm">No Ads</span>
               </SelectItem>
               <SelectItem value="vidsrcicu">
-                VidSrc ICU <span className="text-green-400 text-sm">Casting Options</span>
+                VidSrc.icu <span className="text-green-400 text-sm">Hindi Server Available</span>
               </SelectItem>
               <SelectItem value="vidsrcnl">
-                VidSrc NL
+                VidSrc.nl <span className="text-green-400 text-sm">Hindi Server Available</span>
               </SelectItem>
               <SelectItem value="nontongo">
-                Nontongo <span className="text-green-400 text-sm">Casting Options</span>
+                Nontongo <span className="text-green-400 text-sm">No Ads, Auto-Play</span>
               </SelectItem>
               <SelectItem value="vidsrcxyz">
-                VidSrc XYZ
+                VidSrc.xyz <span className="text-green-400 text-sm">No Ads, Auto-Play</span>
               </SelectItem>
               <SelectItem value="embedccMovie">
-                Embed CC Movie
+                2Embed <span className="text-green-400 text-sm">No Ads, Auto-Play</span>
               </SelectItem>
               <SelectItem value="twoembed">
-                TwoEmbed
+                2Embed.org <span className="text-green-400 text-sm">No Ads, Auto-Play</span>
               </SelectItem>
               <SelectItem value="vidsrctop">
-                VidSrc Top
+                VidSrc.top <span className="text-green-400 text-sm">No Ads, Auto-Play</span>
               </SelectItem>
             </SelectContent>
           </Select>
+          <div className="relative mt-4">
+            {loading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-900 opacity-75">
+                <Skeleton className="h-24 w-32" />
+              </div>
+            )}
+            <iframe
+              ref={iframeRef}
+              className="w-full h-[500px] border-none rounded-md"
+              src={videoSources[selectedSource]}
+              allowFullScreen
+              title="Video Player"
+            ></iframe>
+          </div>
         </div>
       </div>
 
-      {loading ? (
-        <Skeleton className="mx-auto px-4 pt-6 w-full h-[500px]" />
-      ) : (
-        <iframe
-          src={videoSources[selectedSource]}
-          ref={iframeRef}
-          referrerPolicy="origin"
-          allowFullScreen
-          width="100%"
-          height="450"
-          scrolling="no"
-          className="max-w-3xl mx-auto px-4 pt-6"
-        />
-      )}
+      <div className="flex justify-center mt-4">
+        <button
+          onClick={handleBookmark}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-300"
+        >
+          Bookmark This Movie
+        </button>
+      </div>
 
       {/* Related Movies Section */}
-      <div className="pt-10">
-        <button
-          onClick={toggleRelatedMovies}
-          className="px-4 py-2 rounded-md bg-gray-700 text-white border border-gray-600 hover:bg-gray-600 transition-colors"
-        >
-          {showRelatedMovies ? "Hide Related Movies" : "Show Related Movies"}
-        </button>
-        {showRelatedMovies && (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 mt-4">
-            {relatedMovies.map((movie) => (
-              <Link href={`/movie/${movie.id}`} key={movie.id}>
-                <div
-                  className="relative group cursor-pointer overflow-hidden rounded-lg shadow-lg hover:scale-105 transition-transform duration-300"
-                >
-                  <Image
-                    src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-                    alt={movie.title}
-                    width={200}
-                    height={300}
-                    className="object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60 group-hover:opacity-0 transition-opacity duration-300"></div>
-                  <div className="absolute bottom-0 left-0 p-2 text-white bg-gradient-to-t from-black to-transparent">
-                    {movie.title}
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
+      {relatedMovies.length > 0 && (
+        <div className="mt-8">
+          <button
+            onClick={toggleRelatedMovies}
+            className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition-colors duration-300"
+          >
+            {showRelatedMovies ? "Hide Related Movies" : "Show Related Movies"}
+          </button>
+          {showRelatedMovies && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
+              {relatedMovies.map((movie) => (
+                <Link href={`/movie/${movie.id}`} key={movie.id}>
+                  <a className="group relative block">
+                    <img
+                      src={`https://image.tmdb.org/t/p/w200${movie.poster_path}`}
+                      alt={movie.title}
+                      className="w-full h-auto rounded-lg"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <span className="text-white">{movie.title}</span>
+                    </div>
+                  </a>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

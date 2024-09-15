@@ -15,10 +15,10 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import Link from 'next/link'
+import Link from 'next/link';
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Download } from "lucide-react";
+import { Download, Cast } from "lucide-react";
 
 type VideoSourceKey = "vidlinkpro" | "vidsrccc" | "vidsrcpro" | "superembed";
 
@@ -42,6 +42,11 @@ export default function VideoPlayer({ id }: any) {
     }, 1000);
   };
 
+  const handleCastClick = () => {
+    // Placeholder function for casting functionality
+    alert("Casting to available devices...");
+  };
+
   return (
     <div className="py-8 mx-auto max-w-5xl">
       <div className="flex flex-col text-center items-center justify-center">
@@ -50,7 +55,7 @@ export default function VideoPlayer({ id }: any) {
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink href={`/movie/${id}`}>
-                Movie -  {id.charAt(0).toUpperCase() + id.slice(1)}
+                  Movie - {id.charAt(0).toUpperCase() + id.slice(1)}
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
@@ -60,45 +65,54 @@ export default function VideoPlayer({ id }: any) {
             </BreadcrumbList>
           </Breadcrumb>
         </div>
+        <div className="text-xl font-bold mb-4">
+          Currently Watching: <span className="text-blue-500">{id.charAt(0).toUpperCase() + id.slice(1)}</span>
+        </div>
       </div>
-      <div className="flex flex-row items-center justify-center w-full">
-        <div className="flex flex-col text-center">
+      <div className="flex flex-row items-center justify-center w-full mb-4">
+        <div className="flex flex-col text-center w-full max-w-xs mx-auto">
           <Select onValueChange={handleSelectChange} value={selectedSource}>
-            <SelectTrigger className="px-4 py-2 rounded-md w-[280px]">
+            <SelectTrigger className="px-4 py-2 rounded-md w-full bg-gray-800 text-white">
               <SelectValue placeholder="Select Video Source" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="vidlinkpro">Vidlink.pro</SelectItem>
               <SelectItem value="vidsrccc">VidSrc.cc</SelectItem>
               <SelectItem value="vidsrcpro">VidSrc.pro</SelectItem>
-              <SelectItem value="superembed">SuperEmbed(CONTAINS ADS)</SelectItem>
+              <SelectItem value="superembed">SuperEmbed (Contains Ads)</SelectItem>
             </SelectContent>
           </Select>
-          <div className="pt-2">
+          <div className="pt-2 flex justify-center items-center space-x-4">
             <Link href={`https://dl.vidsrc.vip/movie/${id}`}>
               <Badge
                 variant="outline"
-                className="cursor-pointer whitespace-nowrap"
+                className="cursor-pointer whitespace-nowrap bg-gray-800 text-white border-gray-600"
               >
-                <Download className="mr-1.5" size={12} />
+                <Download className="mr-1.5" size={16} />
                 Download Movie
               </Badge>
             </Link>
+            <button onClick={handleCastClick} className="flex items-center px-4 py-2 rounded-md bg-gray-800 text-white hover:bg-gray-700 transition">
+              <Cast className="mr-2" size={16} />
+              Cast to Screen
+            </button>
           </div>
         </div>
       </div>
       {loading ? (
         <Skeleton className="mx-auto px-4 pt-6 w-full h-[500px]" />
       ) : (
-        <iframe
-          src={videoSources[selectedSource]}
-          referrerPolicy="origin"
-          allowFullScreen
-          width="100%"
-          height="450"
-          scrolling="no"
-          className="max-w-3xl mx-auto px-4 pt-6"
-        />
+        <div className="relative w-full max-w-3xl mx-auto px-4 pt-6">
+          <iframe
+            src={videoSources[selectedSource]}
+            referrerPolicy="origin"
+            allowFullScreen
+            width="100%"
+            height="450"
+            scrolling="no"
+            className="rounded-lg shadow-lg"
+          />
+        </div>
       )}
     </div>
   );

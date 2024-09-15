@@ -115,43 +115,43 @@ export default function VideoPlayer({ id }: any) {
       </div>
 
       {/* Currently Watching Section */}
-      <h2 className="text-lg font-bold mb-4 text-center">
+      <h2 className="text-lg font-bold mb-4 text-center text-white">
         Currently Watching: {movieTitle}
       </h2>
 
       <div className="flex flex-row items-center justify-center w-full">
         <div className="flex flex-col text-center">
           <Select onValueChange={handleSelectChange} value={selectedSource}>
-            <SelectTrigger className="px-4 py-2 rounded-md w-[280px]">
+            <SelectTrigger className="px-4 py-2 rounded-md w-[280px] bg-gray-800 text-white border border-gray-700">
               <SelectValue placeholder="Select Video Source" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-gray-800 text-white border border-gray-700">
               <SelectItem value="vidlinkpro">
-                Vidlink.pro <span style={{color: 'green', fontSize: '0.9em'}}>No Ads, Auto-Play</span>
+                Vidlink.pro <span className="text-green-400 text-sm">No Ads, Auto-Play</span>
               </SelectItem>
               <SelectItem value="vidsrccc">
-                VidSrc.cc <span style={{color: 'green', fontSize: '0.9em'}}>No Ads, Auto-Play, Auto-Next</span>
+                VidSrc.cc <span className="text-green-400 text-sm">No Ads, Auto-Play, Auto-Next</span>
               </SelectItem>
               <SelectItem value="vidsrcpro">
-                VidSrc.pro <span style={{color: 'green', fontSize: '0.9em'}}>Casting Options</span>
+                VidSrc.pro <span className="text-green-400 text-sm">Casting Options</span>
               </SelectItem>
               <SelectItem value="superembed">
-                SuperEmbed <span style={{color: 'red', fontSize: '0.9em'}}>Contains Ads</span>
+                SuperEmbed <span className="text-red-400 text-sm">Contains Ads</span>
               </SelectItem>
               <SelectItem value="vidbinge4K">
-                VidBinge 4K <span style={{color: 'green', fontSize: '0.9em'}}>4K Stream, Auto-Play, Shared Stream</span>
+                VidBinge 4K <span className="text-green-400 text-sm">4K Stream, Auto-Play, Shared Stream</span>
               </SelectItem>
               <SelectItem value="smashystream">
-                Smashy Stream <span style={{color: 'green', fontSize: '0.9em'}}>No Ads, Shared Stream</span>
+                Smashy Stream <span className="text-green-400 text-sm">No Ads, Shared Stream</span>
               </SelectItem>
               <SelectItem value="vidsrcicu">
-                VidSrc ICU <span style={{color: 'green', fontSize: '0.9em'}}>Casting Options</span>
+                VidSrc ICU <span className="text-green-400 text-sm">Casting Options</span>
               </SelectItem>
               <SelectItem value="vidsrcnl">
                 VidSrc NL
               </SelectItem>
               <SelectItem value="nontongo">
-                Nontongo <span style={{color: 'green', fontSize: '0.9em'}}>Casting Options</span>
+                Nontongo <span className="text-green-400 text-sm">Casting Options</span>
               </SelectItem>
               <SelectItem value="vidsrcxyz">
                 VidSrc XYZ
@@ -188,11 +188,10 @@ export default function VideoPlayer({ id }: any) {
       {/* Related Movies Section */}
       <div className="pt-10">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-center">Related Movies</h3>
+          <h3 className="text-lg font-semibold text-center text-white">Related Movies</h3>
           <button
             onClick={toggleRelatedMovies}
-            className="px-4 py-2 rounded-md text-white"
-            style={{ backgroundColor: '#1a202c', borderColor: '#2d3748' }}
+            className="px-4 py-2 rounded-md bg-gray-700 text-white border border-gray-600 hover:bg-gray-600 transition-colors"
           >
             {showRelatedMovies ? "Hide Related Movies" : "Show Related Movies"}
           </button>

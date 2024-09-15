@@ -197,6 +197,12 @@ export default function VideoPlayer({ id }: { id: number }) {
 
   const currentSeason = seasons.find(s => s.season_number.toString() === season);
   const currentEpisode = episodes.find(ep => ep.episode_number.toString() === episode);
+  
+  const filteredServers = feature
+    ? Object.keys(serverFeatures).filter(
+        (serverKey) => serverFeatures[serverKey].includes(feature)
+      )
+    : Object.keys(serverFeatures);
 
   return (
     <div className="py-8">
@@ -244,30 +250,7 @@ export default function VideoPlayer({ id }: { id: number }) {
         </button>
       </div>
 
-      {/* Season Selector */}
-      <div className="flex justify-center pt-4">
-        <div className="w-[300px]">
-          <Select value={season} onValueChange={(e) => setSeason(e)} disabled={isLoading || seasons.length === 0}>
-            <SelectTrigger className="px-4 py-2 rounded-md">
-              <SelectValue placeholder="Select Season" />
-            </SelectTrigger>
-            <SelectContent>
-              {seasons.length > 0 ? (
-                seasons.map((s) => (
-                  <SelectItem
-                    key={s.season_number}
-                    value={s.season_number.toString()}
-                  >
-                    Season {s.season_number}
-                  </SelectItem>
-                ))
-              ) : (
-                <></>
-              )}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+  
 
       {/* Download Button */}
       <div className="pt-4 text-center">

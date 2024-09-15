@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import {
   Select,
   SelectTrigger,
@@ -15,17 +16,18 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import Link from 'next/link'
+import Link from 'next/link';
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Download } from "lucide-react";
 
 type VideoSourceKey = "vidlinkpro" | "vidsrccc" | "vidsrcpro" | "superembed";
 
-export default function VideoPlayer({ id }: any) {
+export default function VideoPlayer({ id }: { id: string }) {
   const [selectedSource, setSelectedSource] =
     useState<VideoSourceKey>("vidlinkpro");
   const [loading, setLoading] = useState(false);
+  const [movieDetails, setMovieDetails] = useState<any>(null);
 
   const videoSources: Record<VideoSourceKey, string> = {
     vidlinkpro: `https://vidlink.pro/movie/${id}`,
@@ -42,6 +44,19 @@ export default function VideoPlayer({ id }: any) {
     }, 1000);
   };
 
+  useEffect(() => {
+    async function loadMovieDetails() {
+      try {
+        const response = await axios.get(`https://api.themoviedb.org/3/movie/${id}?api_key=a46c50a0ccb1bafe2b15665df7fad7e1`);
+        setMovieDetails(response.data);
+      } catch (error) {
+        console.error("Error fetching movie details:", error);
+        setMovieDetails(null);
+      }
+    }
+    loadMovieDetails();
+  }, [id]);
+
   return (
     <div className="py-8 mx-auto max-w-5xl">
       <div className="flex flex-col text-center items-center justify-center">
@@ -50,7 +65,7 @@ export default function VideoPlayer({ id }: any) {
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink href={`/movie/${id}`}>
-                Movie -  {id.charAt(0).toUpperCase() + id.slice(1)}
+                  Movie - {movieDetails ? movieDetails.title : id.charAt(0).toUpperCase() + id.slice(1)}
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
@@ -86,6 +101,10 @@ export default function VideoPlayer({ id }: any) {
             </Link>
           </div>
         </div>
+      </div>
+      <div className="pt-4 text-center">
+        <h2 className="text-xl font-bold">Currently Watching: {movieDetails ? movieDetails.title : "Loading..."}</h2>
+        <p className="mt-2 text-gray-700">{movieDetails ? movieDetails.overview : "Loading movie details..."}</p>
       </div>
       {loading ? (
         <Skeleton className="mx-auto px-4 pt-6 w-full h-[500px]" />

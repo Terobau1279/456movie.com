@@ -13,6 +13,36 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { API_KEY } from "@/config/url";
 
+// Define types
+type ReleaseDate = {
+  type: number;
+  release_date: string;
+};
+
+type ReleaseDatesResult = {
+  release_dates: ReleaseDate[];
+};
+
+type WatchProvidersResult = {
+  results?: {
+    US?: {
+      flatrate?: any[];
+    };
+  };
+};
+
+type MovieData = {
+  id: number;
+  title: string;
+  backdrop_path: string | null;
+  poster_path: string | null;
+  release_date: string;
+  genres: { id: number; name: string }[];
+  vote_average: number;
+  vote_count: number;
+  overview: string;
+};
+
 // Function to fetch the media quality
 const getReleaseType = async (mediaId: number, mediaType: string): Promise<string> => {
   try {
@@ -22,10 +52,10 @@ const getReleaseType = async (mediaId: number, mediaType: string): Promise<strin
     ]);
 
     if (releaseDatesResponse.ok && watchProvidersResponse.ok) {
-      const releaseDatesData = await releaseDatesResponse.json();
-      const watchProvidersData = await watchProvidersResponse.json();
+      const releaseDatesData: { results: ReleaseDatesResult[] } = await releaseDatesResponse.json();
+      const watchProvidersData: WatchProvidersResult = await watchProvidersResponse.json();
 
-      const releases = releaseDatesData.results.flatMap(result => result.release_dates);
+      const releases = releaseDatesData.results.flatMap((result: ReleaseDatesResult) => result.release_dates);
       const currentDate = new Date();
 
       const isDigitalRelease = releases.some(release =>
@@ -75,7 +105,7 @@ const getReleaseType = async (mediaId: number, mediaType: string): Promise<strin
   }
 };
 
-const DetailsContainer = ({ data, id, embed }: any) => {
+const DetailsContainer = ({ data, id, embed }: { data: MovieData; id: number; embed?: boolean }) => {
   // Fetch media quality asynchronously
   const [quality, setQuality] = React.useState<string>("Unknown Quality");
   
@@ -124,7 +154,7 @@ const DetailsContainer = ({ data, id, embed }: any) => {
               <div className="flex flex-wrap items-center gap-2">
                 {data.genres.length > 0 && (
                   <>
-                    {data.genres.map((genre: any) => {
+                    {data.genres.map((genre) => {
                       return (
                         <Badge
                           key={genre.id}

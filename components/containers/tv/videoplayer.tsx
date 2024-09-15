@@ -25,6 +25,7 @@ interface Episode {
   name: string;
   still_path: string;
 }
+type ServerKey = keyof typeof serverFeatures;
 const serverFeatures = {
   vidlinkpro: ["No Ads", "Auto-Play", "Auto-Next"],
   vidsrc: ["No Ads", "Auto-Play", "Auto-Next"],
@@ -198,11 +199,12 @@ export default function VideoPlayer({ id }: { id: number }) {
   const currentSeason = seasons.find(s => s.season_number.toString() === season);
   const currentEpisode = episodes.find(ep => ep.episode_number.toString() === episode);
   
-  const filteredServers = feature
-    ? Object.keys(serverFeatures).filter(
-        (serverKey) => serverFeatures[serverKey].includes(feature)
-      )
-    : Object.keys(serverFeatures);
+const filteredServers = feature
+  ? (Object.keys(serverFeatures) as ServerKey[]).filter(
+      (serverKey) => serverFeatures[serverKey].includes(feature)
+    )
+  : (Object.keys(serverFeatures) as ServerKey[]);
+
 
   return (
     <div className="py-8">

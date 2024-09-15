@@ -25,6 +25,20 @@ interface Episode {
   name: string;
   still_path: string;
 }
+const serverFeatures = {
+  vidlinkpro: ["No Ads", "Auto-Play", "Auto-Next"],
+  vidsrc: ["No Ads", "Auto-Play", "Auto-Next"],
+  vidbinge4K: ["4K Stream", "Download Option", "Shared Stream"],
+  smashystream: ["No Ads", "Shared Stream"],
+  vidsrcpro: ["Casting Options"],
+  vidsrcicu: ["Casting Options"],
+  vidsrcnl: ["Casting Options"],
+  nontongo: ["Casting Options"],
+  vidsrcxyz: [],
+  embedcctv: [],
+  twoembed: [],
+  vidsrctop: [],
+};
 
 export default function VideoPlayer({ id }: { id: number }) {
   const [seasons, setSeasons] = React.useState<Season[]>([]);
@@ -34,6 +48,7 @@ export default function VideoPlayer({ id }: { id: number }) {
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [server, setServer] = React.useState("vidlinkpro"); // Default server set to Vidlink Pro
+  const [feature, setFeature] = React.useState<string>("")
 
   React.useEffect(() => {
     fetchSeasons();
@@ -268,30 +283,36 @@ export default function VideoPlayer({ id }: { id: number }) {
       </div>
 
      
-     {/* Server Selector */}
-      <div className="flex justify-center pt-4">
-        <div className="w-[300px]">
-          <Select value={server} onValueChange={(e) => setServer(e)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select Server" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="vidlinkpro">Vidlink Pro</SelectItem>
-              <SelectItem value="vidsrc">Vidsrc</SelectItem>
-              <SelectItem value="vidbinge4K">Vid Binge 4K</SelectItem>
-              <SelectItem value="smashystream">SmashyStream</SelectItem>
-              <SelectItem value="vidsrcpro">Vidsrc Pro</SelectItem>
-              <SelectItem value="superembed">SuperEmbed</SelectItem>
-              <SelectItem value="vidsrcicu">Vidsrc ICU</SelectItem>
-              <SelectItem value="vidsrcnl">Vidsrc NL</SelectItem>
-              <SelectItem value="nontongo">Nontongo</SelectItem>
-              <SelectItem value="vidsrcxyz">Vidsrc XYZ</SelectItem>
-              <SelectItem value="embedcctv">EmbedCC TV</SelectItem>
-              <SelectItem value="twoembed">TwoEmbed</SelectItem>
-              <SelectItem value="vidsrctop">Vidsrc Top</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+          {/* Server Selection Dropdown */}
+      <div className="mt-4 text-center">
+        <Select onValueChange={setServer} defaultValue={server}>
+          <SelectTrigger className="w-[180px] mx-auto">
+            <SelectValue placeholder="Select a server" />
+          </SelectTrigger>
+          <SelectContent>
+            {filteredServers.map((serverKey) => (
+              <SelectItem key={serverKey} value={serverKey}>
+                {serverKey}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Feature Filter */}
+      <div className="mt-4 text-center">
+        <Select onValueChange={setFeature} defaultValue={feature}>
+          <SelectTrigger className="w-[180px] mx-auto">
+            <SelectValue placeholder="Filter by feature" />
+          </SelectTrigger>
+          <SelectContent>
+            {["No Ads", "Auto-Play", "Auto-Next", "4K Stream", "Download Option", "Shared Stream", "Casting Options"].map((f) => (
+              <SelectItem key={f} value={f}>
+                {f}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Episode Thumbnails */}

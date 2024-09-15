@@ -59,10 +59,10 @@ export default function VideoPlayer({ id }: { id: number }) {
     setError(null);
     try {
       const response = await fetch(
-        `https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}`
+        https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}
       );
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(HTTP error! status: ${response.status});
       }
       const data = await response.json();
       if (data.success === false) {
@@ -89,10 +89,10 @@ export default function VideoPlayer({ id }: { id: number }) {
     setError(null);
     try {
       const response = await fetch(
-        `https://api.themoviedb.org/3/tv/${id}/season/${seasonNumber}?api_key=${API_KEY}`
+        https://api.themoviedb.org/3/tv/${id}/season/${seasonNumber}?api_key=${API_KEY}
       );
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(HTTP error! status: ${response.status});
       }
       const data = await response.json();
       if (data.success === false) {
@@ -114,13 +114,13 @@ export default function VideoPlayer({ id }: { id: number }) {
   const getIframeSrc = () => {
     switch (server) {
       case "vidlinkpro":
-        return `https://vidlink.pro/tv/${id}/${season}/${episode}?primaryColor=ff0044&secondaryColor=f788a6&iconColor=ff0044&title=true&poster=true&autoplay=true&nextbutton=true`;
+        return https://vidlink.pro/tv/${id}/${season}/${episode}?primaryColor=ff0044&secondaryColor=f788a6&iconColor=ff0044&title=true&poster=true&autoplay=true&nextbutton=true;
       case "autoembed":
-        return `https://player.autoembed.cc/embed/tv/${id}/${season}/${episode}`;
+        return https://player.autoembed.cc/embed/tv/${id}/${season}/${episode};
       case "superembed":
-        return `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}`;
+        return https://multiembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode};
       default:
-        return `https://vidsrc.cc/v3/embed/tv/${id}/${season}/${episode}?autoPlay=true&autoNext=true&poster=true`;
+        return https://vidsrc.cc/v3/embed/tv/${id}/${season}/${episode}?autoPlay=true&autoNext=true&poster=true;
     }
   };
 
@@ -236,7 +236,7 @@ export default function VideoPlayer({ id }: { id: number }) {
 
       {/* Download Button */}
       <div className="pt-4 text-center">
-        <Link href={`https://dl.vidsrc.vip/tv/${id}/${season}/${episode}`}>
+        <Link href={https://dl.vidsrc.vip/tv/${id}/${season}/${episode}}>
           <Badge
             variant="outline"
             className="cursor-pointer whitespace-nowrap"
@@ -255,11 +255,50 @@ export default function VideoPlayer({ id }: { id: number }) {
               <SelectValue placeholder="Select Server" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="vidlinkpro">Vidlink Pro</SelectItem>
+              <SelectItem value="vidsrc">VidSrc.cc</SelectItem>
+              <SelectItem value="vidlinkpro">Vidlink.pro</SelectItem>
               <SelectItem value="autoembed">Autoembed</SelectItem>
-              <SelectItem value="superembed">Superembed</SelectItem>
+              <SelectItem value="superembed">SuperEmbed</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+      </div>
+
+      {/* Episode Thumbnails */}
+      <div className="max-w-4xl mx-auto px-4 pt-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {episodes.map((ep) => (
+            <div
+              key={ep.episode_number}
+              className={relative group cursor-pointer rounded-lg overflow-hidden border border-gray-300 shadow-md ${
+                episode === ep.episode_number.toString() ? "ring-4 ring-yellow-500" : "" // Shiny spotlight effect
+              }}
+              onClick={() => handleEpisodeClick(ep.episode_number.toString())}
+            >
+              <img
+                src={https://image.tmdb.org/t/p/w500${ep.still_path}}
+                alt={ep.name}
+                className="w-full h-full object-cover"
+              />
+              <div
+                className={absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+                  episode === ep.episode_number.toString() ? "ring-4 ring-yellow-500" : "" // Shiny spotlight effect
+                }}
+              >
+                <div className="text-white text-center p-2">
+                  <div className="text-lg font-bold">Episode {ep.episode_number}</div>
+                  <div>{ep.name}</div>
+                </div>
+              </div>
+              {/* Small Episode Number */}
+              <div className="absolute top-2 left-2 bg-black text-white text-xs px-1 rounded">
+                {ep.episode_number}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="text-center text-sm text-gray-500 pt-4">
+          Changing the episode inside the player may cause the spotlight to mismatch with the current episode. Please select an episode from the list to keep the spotlight in sync.
         </div>
       </div>
     </div>

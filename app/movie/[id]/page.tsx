@@ -1,34 +1,29 @@
-"use client";
+"use client"
 import { getInfoURL } from "@/config/url";
 import DetailsContainer from "@/components/containers/movie/details";
 import * as React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { API_KEY } from "@/config/url";
 
-// Type definitions
 type Movie = {
   id: number;
   title: string;
   backdrop_path: string | null;
-  poster_path: string | null;
   vote_average: number;
   vote_count: number;
   overview: string;
-  release_date: string | null;
-  genres: { id: number; name: string }[];
 };
 
-interface MovieData {
+type MovieData = {
   results: Movie[];
-}
-
+};
 type Params = {
   id: string;
 };
 
 const Info: React.FC<{ params: Params }> = ({ params }) => {
   const { id } = params;
-  const [data, setData] = React.useState<Movie | null>(null); // Use Movie type here
+  const [data, setData] = React.useState<MovieData | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -49,7 +44,7 @@ const Info: React.FC<{ params: Params }> = ({ params }) => {
           throw new Error(`Error: ${res.status} ${res.statusText}`);
         }
 
-        const data: Movie = await res.json(); // Ensure correct type
+        const data = await res.json();
         setData(data);
       } catch (err: any) {
         setError(err.message);
@@ -91,10 +86,13 @@ const Info: React.FC<{ params: Params }> = ({ params }) => {
               </div>
               <Skeleton className="h-96 w-full " />
             </div>
+
           </div>
         </div>
       ) : (
-        data && <DetailsContainer data={data} id={id} embed="false" />
+        <>
+          <DetailsContainer data={data} id={id} embed="false" />
+        </>
       )}
     </>
   );

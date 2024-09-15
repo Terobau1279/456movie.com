@@ -109,14 +109,14 @@ export default function TopRated() {
                       <ImageIcon className="text-muted" />
                     )}
                     <div
-                      className={`absolute top-0 left-0 m-2 px-3 py-1 rounded-full text-xs font-semibold text-white shadow-lg ${
+                      className={`absolute top-2 left-2 px-3 py-1 rounded-full text-xs font-semibold text-white shadow-md border ${
                         item.quality === "HD"
-                          ? "bg-gradient-to-r from-green-400 to-green-600"
+                          ? "bg-gradient-to-r from-green-500 to-green-700 border-green-800"
                           : item.quality === "Cam Quality"
-                          ? "bg-gradient-to-r from-red-400 to-red-600"
+                          ? "bg-gradient-to-r from-red-500 to-red-700 border-red-800"
                           : item.quality === "Not Released Yet"
-                          ? "bg-gradient-to-r from-yellow-400 to-yellow-600"
-                          : "bg-gradient-to-r from-gray-400 to-gray-600"
+                          ? "bg-gradient-to-r from-yellow-500 to-yellow-700 border-yellow-800"
+                          : "bg-gradient-to-r from-gray-500 to-gray-700 border-gray-800"
                       }`}
                     >
                       {item.quality}

@@ -1,300 +1,184 @@
 "use client";
-import * as React from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Select,
   SelectTrigger,
   SelectContent,
   SelectItem,
   SelectValue,
+  SelectProps, // Make sure to import SelectProps if needed
 } from "@/components/ui/select";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Download, ArrowLeft, ArrowRight } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
-import { API_KEY } from "@/config/url";
 
-interface Season {
-  season_number: number;
-  name: string;
-  episode_count: number;
-  still_path: string;
-}
+// Update the VideoSourceKey to include all the sources
+type VideoSourceKey =
+  | "vidlinkpro"
+  | "vidsrccc"
+  | "vidbinge4K"
+  | "smashystream"
+  | "vidsrcpro"
+  | "superembed"
+  | "vidsrcIcu"
+  | "vidsrcNl"
+  | "nontongo"
+  | "vidsrcxyz"
+  | "embedccMovie"
+  | "twoembed"
+  | "vidsrcTop";
 
-interface Episode {
-  episode_number: number;
-  name: string;
-  still_path: string;
-}
+export default function VideoPlayer({ id }: any) {
+  const [selectedSource, setSelectedSource] = useState<VideoSourceKey>("vidlinkpro");
+  const [loading, setLoading] = useState(false);
+  const [movieTitle, setMovieTitle] = useState("");
+  const [relatedMovies, setRelatedMovies] = useState<any[]>([]);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
-export default function VideoPlayer({ id }: { id: number }) {
-  const [seasons, setSeasons] = React.useState<Season[]>([]);
-  const [episodes, setEpisodes] = React.useState<Episode[]>([]);
-  const [season, setSeason] = React.useState("1");
-  const [episode, setEpisode] = React.useState("1");
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
-  const [server, setServer] = React.useState("vidlinkpro"); // Default server set to Vidlink Pro
-
-  React.useEffect(() => {
-    fetchSeasons();
-  }, []);
-
-  React.useEffect(() => {
-    if (season) {
-      fetchEpisodes(Number(season));
-    }
-  }, [season]);
-
-  React.useEffect(() => {
-    if (episodes.length > 0) {
-      const episodeExists = episodes.some(ep => ep.episode_number.toString() === episode);
-      if (!episodeExists) {
-        setEpisode(episodes[0].episode_number.toString());
-      }
-    }
-  }, [episodes]);
-
-  async function fetchSeasons() {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(
-        `https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}`
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      if (data.success === false) {
-        throw new Error(data.status_message || "Failed to fetch seasons");
-      }
-      const relevantSeasons = data.seasons.filter(
-        (s: any) => s.season_number > 0
-      );
-      setSeasons(relevantSeasons || []);
-      if (relevantSeasons.length > 0) {
-        setSeason(relevantSeasons[0].season_number.toString());
-      }
-    } catch (error: unknown) {
-      console.error("Error fetching seasons:", error);
-      setError(error instanceof Error ? error.message : String(error));
-      setSeasons([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  async function fetchEpisodes(seasonNumber: number) {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(
-        `https://api.themoviedb.org/3/tv/${id}/season/${seasonNumber}?api_key=${API_KEY}`
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      if (data.success === false) {
-        throw new Error(data.status_message || "Failed to fetch episodes");
-      }
-      setEpisodes(data.episodes || []);
-      if (data.episodes.length > 0) {
-        setEpisode(data.episodes[0].episode_number.toString());
-      }
-    } catch (error: unknown) {
-      console.error("Error fetching episodes:", error);
-      setError(error instanceof Error ? error.message : String(error));
-      setEpisodes([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  const getIframeSrc = () => {
-    switch (server) {
-      case "vidlinkpro":
-        return `https://vidlink.pro/tv/${id}/${season}/${episode}?primaryColor=ff0044&secondaryColor=f788a6&iconColor=ff0044&title=true&poster=true&autoplay=true&nextbutton=true`;
-      case "vidsrc":
-        return `https://vidsrc.cc/v3/embed/tv/${id}/${season}/${episode}?autoPlay=true&autoNext=true&poster=true`;
-      case "vidbinge4K":
-        return `https://vidbinge.dev/embed/tv/${id}/${season}/${episode}`; // 4K Available, Auto Play & Auto Next
-      case "smashystream":
-        return `https://player.smashy.stream/tv/${id}?s=${season}&e=${episode}`; // Smashy Stream server
-      case "vidsrcpro":
-        return `https://vidsrc.pro/embed/tv/${id}/${season}/${episode}`;
-      case "superembed":
-        return `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}`;
-      case "vidsrcIcu":
-        return `https://vidsrc.icu/embed/tv/${id}/${season}/${episode}`;
-      case "vidsrcNl":
-        return `https://player.vidsrc.nl/embed/tv/${id}/${season}/${episode}?server=hindi`;
-      case "nontongo":
-        return `https://www.nontongo.win/embed/tv/${id}/${season}/${episode}`;
-      case "vidsrcxyz":
-        return `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${season}&episode=${episode}`; // Vidsrc.xyz TV API
-      case "embedccTV":
-        return `https://www.2embed.cc/embed/tv/${id}/${season}/${episode}`; // 2Embed.cc TV Embed
-      case "twoembed":
-        return `https://2embed.org/embed/tv/${id}/${season}/${episode}`; // 2Embed.org TV Embed
-      case "vidsrcTop":
-        return `https://vidsrc.top/embed/tv/tmdb/${id}/${season}`;
-      default:
-        return `https://vidlink.pro/tv/${id}/${season}/${episode}?primaryColor=ff0044&secondaryColor=f788a6&iconColor=ff0044&title=true&poster=true&autoplay=true&nextbutton=true`; // Default to Vidlink Pro
-    }
+  const videoSources: Record<VideoSourceKey, string> = {
+    vidlinkpro: `https://vidlink.pro/movie/${id}`,
+    vidsrccc: `https://vidsrc.cc/v2/embed/movie/${id}`,
+    vidbinge4K: `https://vidbinge.dev/embed/movie/${id}`, // 4K Available, Auto Play & Auto Next
+    smashystream: `https://player.smashy.stream/movie/${id}`, // Smashy Stream server
+    vidsrcpro: `https://vidsrc.pro/embed/movie/${id}`,
+    superembed: `https://multiembed.mov/?video_id=${id}&tmdb=1`,
+    vidsrcIcu: `https://vidsrc.icu/embed/movie/${id}`,
+    vidsrcNl: `https://player.vidsrc.nl/embed/movie/${id}?server=hindi`,
+    nontongo: `https://www.nontongo.win/embed/movie/${id}`,
+    vidsrcxyz: `https://vidsrc.xyz/embed/movie?tmdb=${id}`, // Vidsrc.xyz movie API
+    embedccMovie: `https://www.2embed.cc/embed/${id}`, // 2Embed.cc Movie Embed
+    twoembed: `https://2embed.org/embed/movie/${id}`, // 2Embed.org Movie Embed
+    vidsrcTop: `https://vidsrc.top/embed/movie/tmdb/${id}`, // Vidsrc.top Movie API
   };
 
-  const handleEpisodeClick = (episodeNumber: string) => {
-    setEpisode(episodeNumber);
+  // Fetch movie details from TMDb API
+  useEffect(() => {
+    const fetchMovieDetails = async () => {
+      try {
+        const response = await fetch(
+          `https://api.themoviedb.org/3/movie/${id}?api_key=a46c50a0ccb1bafe2b15665df7fad7e1`
+        );
+        const data = await response.json();
+        setMovieTitle(data.title || "Unknown Movie");
+
+        // Fetch related movies
+        const relatedResponse = await fetch(
+          `https://api.themoviedb.org/3/movie/${id}/similar?api_key=a46c50a0ccb1bafe2b15665df7fad7e1`
+        );
+        const relatedData = await relatedResponse.json();
+        setRelatedMovies(relatedData.results.slice(0, 8)); // Fetch 8 related movies
+      } catch (error) {
+        console.error("Error fetching movie details:", error);
+      }
+    };
+    fetchMovieDetails();
+  }, [id]);
+
+  const handleSelectChange = (value: VideoSourceKey) => {
+    setLoading(true);
+    setTimeout(() => {
+      setSelectedSource(value);
+      setLoading(false);
+    }, 1000);
   };
-
-  const handlePreviousEpisode = () => {
-    const currentEpisodeNumber = Number(episode);
-    if (currentEpisodeNumber > 1) {
-      setEpisode((currentEpisodeNumber - 1).toString());
-    }
-  };
-
-  const handleNextEpisode = () => {
-    const currentEpisodeNumber = Number(episode);
-    const nextEpisode = episodes.find(ep => ep.episode_number === currentEpisodeNumber + 1);
-    if (nextEpisode) {
-      setEpisode((currentEpisodeNumber + 1).toString());
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="py-8 mx-auto max-w-5xl">
-        <Skeleton className="mx-auto px-4 pt-6 w-full h-[500px]" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="py-8 mx-auto max-w-5xl">
-        <Skeleton className="mx-auto px-4 pt-6 w-full h-[500px]" />{" "}
-        <div className="text-center text-red-500">Error: {error}</div>
-      </div>
-    );
-  }
-
-  const currentSeason = seasons.find(s => s.season_number.toString() === season);
-  const currentEpisode = episodes.find(ep => ep.episode_number.toString() === episode);
 
   return (
-    <div className="py-8">
-      {/* Currently Watching Section */}
-      <div className="text-center mb-4">
-        <h2 className="text-xl font-bold">Currently Watching:</h2>
-        {currentSeason && currentEpisode ? (
-          <div>
-            <div className="text-lg font-semibold">{currentSeason.name}</div>
-            <div>Episode {currentEpisode.episode_number}: {currentEpisode.name}</div>
-          </div>
-        ) : (
-          <div>No episode selected</div>
-        )}
+    <div className="py-8 mx-auto max-w-5xl">
+      <div className="flex flex-col text-center items-center justify-center">
+        <div className="flex flex-col flex-wrap pb-4">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href={`/movie/${id}`}>
+                  Movie - {movieTitle}
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Watch</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
       </div>
 
-      {/* Video Player */}
-      <div className="relative max-w-3xl mx-auto px-4 pt-10">
+      {/* Currently Watching Section */}
+      <h2 className="text-lg font-bold mb-4 text-center">
+        Currently Watching: {movieTitle}
+      </h2>
+
+      <div className="flex flex-row items-center justify-center w-full">
+        <div className="flex flex-col text-center">
+          <Select onValueChange={handleSelectChange} value={selectedSource} className="my-custom-class">
+            <SelectTrigger className="px-4 py-2 rounded-md w-[280px]">
+              <SelectValue placeholder="Select Video Source" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="vidlinkpro">Vidlink.pro</SelectItem>
+              <SelectItem value="vidsrccc">VidSrc.cc</SelectItem>
+              <SelectItem value="vidbinge4K">VidBinge (4K)</SelectItem>
+              <SelectItem value="smashystream">Smashy Stream</SelectItem>
+              <SelectItem value="vidsrcpro">VidSrc.pro</SelectItem>
+              <SelectItem value="superembed">SuperEmbed (CONTAINS ADS)</SelectItem>
+              <SelectItem value="vidsrcIcu">VidSrc.icu</SelectItem>
+              <SelectItem value="vidsrcNl">VidSrc.nl (Hindi)</SelectItem>
+              <SelectItem value="nontongo">Nontongo</SelectItem>
+              <SelectItem value="vidsrcxyz">VidSrc.xyz</SelectItem>
+              <SelectItem value="embedccMovie">2Embed.cc</SelectItem>
+              <SelectItem value="twoembed">2Embed.org</SelectItem>
+              <SelectItem value="vidsrcTop">VidSrc.top</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {loading ? (
+        <Skeleton className="mx-auto px-4 pt-6 w-full h-[500px]" />
+      ) : (
         <iframe
-          src={getIframeSrc()}
+          src={videoSources[selectedSource]}
+          ref={iframeRef}
           referrerPolicy="origin"
           allowFullScreen
           width="100%"
           height="450"
           scrolling="no"
-          className="rounded-lg shadow-lg border border-gray-300"
-        ></iframe>
-      </div>
+          className="max-w-3xl mx-auto px-4 pt-6"
+        />
+      )}
 
-      {/* Navigation Buttons */}
-      <div className="flex justify-center pt-4">
-        <button
-          onClick={handlePreviousEpisode}
-          className="px-4 py-2 rounded-md bg-gray-800 text-white shadow-md hover:bg-gray-700 transition-colors duration-300 flex items-center"
-        >
-          <ArrowLeft size={16} className="mr-2" />
-          Previous Episode
-        </button>
-        <button
-          onClick={handleNextEpisode}
-          className="px-4 py-2 rounded-md bg-gray-800 text-white shadow-md hover:bg-gray-700 transition-colors duration-300 flex items-center ml-4"
-        >
-          Next Episode
-          <ArrowRight size={16} className="ml-2" />
-        </button>
-      </div>
-
-      {/* Season Selector */}
-      <div className="mt-4 flex justify-center">
-        <Select
-          value={season}
-          onValueChange={(value) => setSeason(value)}
-          className="w-48"
-        >
-          <SelectTrigger>
-            <SelectValue>{`Season ${season}`}</SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {seasons.map((season) => (
-              <SelectItem key={season.season_number} value={season.season_number.toString()}>
-                {season.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Episode Selector */}
-      <div className="mt-4 flex justify-center">
-        <Select
-          value={episode}
-          onValueChange={(value) => setEpisode(value)}
-          className="w-48"
-        >
-          <SelectTrigger>
-            <SelectValue>{`Episode ${episode}`}</SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {episodes.map((ep) => (
-              <SelectItem key={ep.episode_number} value={ep.episode_number.toString()}>
-                {ep.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Server Selector */}
-      <div className="mt-4 flex justify-center">
-        <Select
-          value={server}
-          onValueChange={(value) => setServer(value)}
-          className="w-48"
-        >
-          <SelectTrigger>
-            <SelectValue>{server}</SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="vidlinkpro">Vidlink Pro</SelectItem>
-            <SelectItem value="vidsrc">Vidsrc</SelectItem>
-            <SelectItem value="vidbinge4K">VidBinge 4K</SelectItem>
-            <SelectItem value="smashystream">Smashy Stream</SelectItem>
-            <SelectItem value="vidsrcpro">Vidsrc Pro</SelectItem>
-            <SelectItem value="superembed">SuperEmbed</SelectItem>
-            <SelectItem value="vidsrcIcu">Vidsrc Icu</SelectItem>
-            <SelectItem value="vidsrcNl">Vidsrc NL</SelectItem>
-            <SelectItem value="nontongo">Nontongo</SelectItem>
-            <SelectItem value="vidsrcxyz">Vidsrc XYZ</SelectItem>
-            <SelectItem value="embedccTV">EmbedCC TV</SelectItem>
-            <SelectItem value="twoembed">TwoEmbed</SelectItem>
-            <SelectItem value="vidsrcTop">Vidsrc Top</SelectItem>
-          </SelectContent>
-        </Select>
+      {/* Related Movies Section */}
+      <div className="pt-10">
+        <h3 className="text-lg font-semibold text-center mb-4">Related Movies</h3>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          {relatedMovies.map((movie) => (
+            <Link href={`/movie/${movie.id}`} key={movie.id}>
+              <div
+                className="relative group cursor-pointer overflow-hidden rounded-lg shadow-lg hover:scale-105 transition-transform duration-300"
+              >
+                <Image
+                  src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                  alt={movie.title}
+                  width={200}
+                  height={300}
+                  className="rounded-lg object-cover"
+                />
+                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <h4 className="text-white text-center px-2 text-lg font-bold">{movie.title}</h4>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -22,95 +22,28 @@ type Movie = {
   vote_average: number;
   vote_count: number;
   overview: string;
-  quality: string; // Added for quality indicator
+  release_date: string;
+  quality: string;
 };
 
 type MovieData = {
   results: Movie[];
 };
 
-// Define types for API responses
-interface ReleaseDate {
-  release_dates: {
-    iso_3166_1: string;
-    release_dates: {
-      type: number;
-      release_date: string;
-    }[];
-  }[];
-}
+// Updated function to determine media quality
+const getMediaQuality = (releaseDate: string): string => {
+  const now = new Date();
+  const release = new Date(releaseDate);
+  const diffMonths = (now.getFullYear() - release.getFullYear()) * 12 + now.getMonth() - release.getMonth();
+  const monthsToHD = 6; // HD available within 6 months of release
 
-interface WatchProviders {
-  results: {
-    US?: {
-      flatrate: { provider_name: string }[];
-    };
-  };
-}
-
-// Function to determine the media quality
-const getReleaseType = async (mediaId: number, mediaType: string): Promise<string> => {
-  try {
-    const [releaseDatesResponse, watchProvidersResponse] = await Promise.all([
-      fetch(`https://api.themoviedb.org/3/${mediaType}/${mediaId}/release_dates?api_key=${API_KEY}`),
-      fetch(`https://api.themoviedb.org/3/${mediaType}/${mediaId}/watch/providers?api_key=${API_KEY}`)
-    ]);
-
-    if (releaseDatesResponse.ok && watchProvidersResponse.ok) {
-      const releaseDatesData: ReleaseDate = await releaseDatesResponse.json();
-      const watchProvidersData: WatchProviders = await watchProvidersResponse.json();
-
-      const releases = releaseDatesData.release_dates.flatMap(release => release.release_dates);
-      const currentDate = new Date();
-
-      const isDigitalRelease = releases.some(release =>
-        (release.type === 4 || release.type === 6) && new Date(release.release_date) <= currentDate
-      );
-
-      const isInTheaters = mediaType === 'movie' && releases.some(release =>
-        release.type === 3 && new Date(release.release_date) <= currentDate
-      );
-
-      const hasFutureRelease = releases.some(release =>
-        new Date(release.release_date) > currentDate
-      );
-
-      const streamingProviders = watchProvidersData.results?.US?.flatrate || [];
-      const isStreamingAvailable = streamingProviders.length > 0;
-
-      if (isStreamingAvailable) {
-        return "Streaming (HD)";
-      } else if (isDigitalRelease) {
-        return "HD";
-      } else if (isInTheaters && mediaType === 'movie') {
-        const theatricalRelease = releases.find(release => release.type === 3);
-        if (theatricalRelease && new Date(theatricalRelease.release_date) <= currentDate) {
-          const releaseDate = new Date(theatricalRelease.release_date);
-          const oneYearLater = new Date(releaseDate);
-          oneYearLater.setFullYear(releaseDate.getFullYear() + 1);
-
-          if (currentDate >= oneYearLater) {
-            return "HD";
-          } else {
-            return "Cam Quality";
-          }
-        }
-      } else if (hasFutureRelease) {
-        return "Not Released Yet";
-      }
-
-      return "Unknown Quality";
-    } else {
-      console.error('Failed to fetch release type or watch providers.');
-      return "Unknown Quality";
-    }
-  } catch (error) {
-    console.error('An error occurred while fetching release type.', error);
-    return "Unknown Quality";
-  }
+  if (now < release) return "Not Released Yet";
+  if (diffMonths > monthsToHD) return "HD";
+  if (diffMonths > 0) return "Cam Quality";
+  return "HD";
 };
 
-export default function TopRated() {
+export default function NowPlayingMovies() {
   const [data, setData] = React.useState<MovieData | null>(null);
   const [loading, setLoading] = React.useState(true);
 
@@ -123,13 +56,15 @@ export default function TopRated() {
       );
       const data = await res.json();
 
-      // Fetch and add quality to each movie
-      const resultsWithQuality = await Promise.all(data.results.map(async (movie: Movie) => {
-        const quality = await getReleaseType(movie.id, 'movie');
-        return { ...movie, quality };
-      }));
-      
-      const updatedData = { ...data, results: resultsWithQuality };
+      // Adding quality to each movie
+      const updatedData = {
+        ...data,
+        results: data.results.map((movie: any) => ({
+          ...movie,
+          quality: getMediaQuality(movie.release_date),
+        })),
+      };
+
       FetchMovieInfo(updatedData);
       setData(updatedData);
       setLoading(false);
@@ -143,8 +78,7 @@ export default function TopRated() {
       <div className="flex items-center justify-between">
         <div className="grid w-full grid-cols-1 gap-x-4 gap-y-8 md:grid-cols-3">
           {loading
-            ? // Skeleton component while loading
-              Array.from({ length: 18 }).map((_, index) => (
+            ? Array.from({ length: 18 }).map((_, index) => (
                 <div key={index} className="w-full space-y-2">
                   <Skeleton className="aspect-video w-full rounded-md" />
                   <div className="space-y-1.5">
@@ -162,7 +96,7 @@ export default function TopRated() {
                   className="w-full cursor-pointer space-y-2"
                   data-testid="movie-card"
                 >
-                  <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-md border bg-background/50 shadow">
+                  <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-md border bg-background/50 shadow-lg">
                     {item.backdrop_path ? (
                       <Image
                         fill
@@ -174,31 +108,36 @@ export default function TopRated() {
                     ) : (
                       <ImageIcon className="text-muted" />
                     )}
-                    <div className={`absolute top-0 left-0 p-2 text-white text-xs font-bold bg-black ${item.quality === "Streaming (HD)" ? "bg-green-500" : item.quality === "HD" ? "bg-blue-500" : item.quality === "Cam Quality" ? "bg-red-500" : item.quality === "Not Released Yet" ? "bg-yellow-500" : "bg-gray-500"}`}>
+                    <div
+                      className={`absolute top-2 left-2 px-3 py-1 rounded-full text-xs font-semibold text-white shadow-md border ${
+                        item.quality === "HD"
+                          ? "bg-gradient-to-r from-green-500 to-green-700 border-green-800"
+                          : item.quality === "Cam Quality"
+                          ? "bg-gradient-to-r from-red-500 to-red-700 border-red-800"
+                          : item.quality === "Not Released Yet"
+                          ? "bg-gradient-to-r from-yellow-500 to-yellow-700 border-yellow-800"
+                          : "bg-gradient-to-r from-gray-500 to-gray-700 border-gray-800"
+                      }`}
+                    >
                       {item.quality}
                     </div>
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex items-start justify-between gap-1">
                       <span className="">{item.title}</span>
-
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger>
                             <Badge variant="outline">
-                              {item.vote_average
-                                ? item.vote_average.toFixed(1)
-                                : "?"}
+                              {item.vote_average ? item.vote_average.toFixed(1) : "?"}
                             </Badge>
                           </TooltipTrigger>
-
                           <TooltipContent>
                             <p>{item.vote_count} votes</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
                     </div>
-
                     <p className="line-clamp-3 text-xs text-muted-foreground">
                       {item.overview}
                     </p>

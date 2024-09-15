@@ -6,7 +6,7 @@ import {
   SelectContent,
   SelectItem,
   SelectValue,
-  SelectProps, // Make sure to import SelectProps if needed
+  SelectGroup, // Updated import based on your diagnosis
 } from "@/components/ui/select";
 import {
   Breadcrumb,

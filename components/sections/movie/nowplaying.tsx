@@ -15,6 +15,23 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
+type ReleaseDate = {
+  type: number;
+  release_date: string;
+};
+
+type ReleaseDatesResult = {
+  release_dates: ReleaseDate[];
+};
+
+type WatchProvidersResult = {
+  results?: {
+    US?: {
+      flatrate?: any[];
+    };
+  };
+};
+
 type Movie = {
   id: number;
   title: string;
@@ -22,49 +39,92 @@ type Movie = {
   vote_average: number;
   vote_count: number;
   overview: string;
-  release_date: string;
-  quality: string;
+  quality: string; // Added for quality indicator
 };
 
 type MovieData = {
   results: Movie[];
 };
 
-// Updated function to determine media quality
-const getMediaQuality = (releaseDate: string): string => {
-  const now = new Date();
-  const release = new Date(releaseDate);
-  const diffMonths = (now.getFullYear() - release.getFullYear()) * 12 + now.getMonth() - release.getMonth();
-  const monthsToHD = 6; // HD available within 6 months of release
+// Function to determine the media quality
+const getReleaseType = async (mediaId: number, mediaType: string): Promise<string> => {
+  try {
+    const [releaseDatesResponse, watchProvidersResponse] = await Promise.all([
+      fetch(`https://api.themoviedb.org/3/${mediaType}/${mediaId}/release_dates?api_key=${API_KEY}`),
+      fetch(`https://api.themoviedb.org/3/${mediaType}/${mediaId}/watch/providers?api_key=${API_KEY}`)
+    ]);
 
-  if (now < release) return "Not Released Yet";
-  if (diffMonths > monthsToHD) return "HD";
-  if (diffMonths > 0) return "Cam Quality";
-  return "HD";
+    if (releaseDatesResponse.ok && watchProvidersResponse.ok) {
+      const releaseDatesData: { results: ReleaseDatesResult[] } = await releaseDatesResponse.json();
+      const watchProvidersData: WatchProvidersResult = await watchProvidersResponse.json();
+
+      const releases = releaseDatesData.results.flatMap(result => result.release_dates);
+      const currentDate = new Date();
+
+      const isDigitalRelease = releases.some(release =>
+        (release.type === 4 || release.type === 6) && new Date(release.release_date) <= currentDate
+      );
+
+      const isInTheaters = mediaType === 'movie' && releases.some(release =>
+        release.type === 3 && new Date(release.release_date) <= currentDate
+      );
+
+      const hasFutureRelease = releases.some(release =>
+        new Date(release.release_date) > currentDate
+      );
+
+      const streamingProviders = watchProvidersData.results?.US?.flatrate || [];
+      const isStreamingAvailable = streamingProviders.length > 0;
+
+      if (isStreamingAvailable) {
+        return "Streaming (HD)";
+      } else if (isDigitalRelease) {
+        return "HD";
+      } else if (isInTheaters && mediaType === 'movie') {
+        const theatricalRelease = releases.find(release => release.type === 3);
+        if (theatricalRelease && new Date(theatricalRelease.release_date) <= currentDate) {
+          const releaseDate = new Date(theatricalRelease.release_date);
+          const sixMonthsLater = new Date(releaseDate);
+          sixMonthsLater.setMonth(releaseDate.getMonth() + 6);
+
+          if (currentDate >= sixMonthsLater) {
+            return "HD";
+          } else {
+            return "Cam Quality";
+          }
+        }
+      } else if (hasFutureRelease) {
+        return "Not Released Yet";
+      }
+
+      return "Unknown Quality";
+    } else {
+      console.error('Failed to fetch release type or watch providers.');
+      return "Unknown Quality";
+    }
+  } catch (error) {
+    console.error('An error occurred while fetching release type.', error);
+    return "Unknown Quality";
+  }
 };
 
-export default function NowPlayingMovies() {
+export default function NowPlaying() {
   const [data, setData] = React.useState<MovieData | null>(null);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const res = await fetch(
-        `https://api.themoviedb.org/3/movie/now_playing?api_key=${API_KEY}`,
-        { next: { revalidate: 21600 } }
-      );
+      const res = await fetch(`https://api.themoviedb.org/3/movie/now_playing?api_key=${API_KEY}`);
       const data = await res.json();
 
-      // Adding quality to each movie
-      const updatedData = {
-        ...data,
-        results: data.results.map((movie: any) => ({
-          ...movie,
-          quality: getMediaQuality(movie.release_date),
-        })),
-      };
+      // Fetch and add quality to each movie
+      const resultsWithQuality = await Promise.all(data.results.map(async (movie: any) => {
+        const quality = await getReleaseType(movie.id, 'movie');
+        return { ...movie, quality };
+      }));
 
+      const updatedData: MovieData = { ...data, results: resultsWithQuality };
       FetchMovieInfo(updatedData);
       setData(updatedData);
       setLoading(false);
@@ -94,7 +154,6 @@ export default function NowPlayingMovies() {
                   href={`/movie/${encodeURIComponent(item.id)}`}
                   key={item.id}
                   className="w-full cursor-pointer space-y-2"
-                  data-testid="movie-card"
                 >
                   <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-md border bg-background/50 shadow-lg">
                     {item.backdrop_path ? (
@@ -103,28 +162,18 @@ export default function NowPlayingMovies() {
                         className="object-cover"
                         src={`https://sup-proxy.zephex0-f6c.workers.dev/api-content?url=https://image.tmdb.org/t/p/original${item.backdrop_path}`}
                         alt={item.title}
-                        sizes="100%"
                       />
                     ) : (
                       <ImageIcon className="text-muted" />
                     )}
-                    <div
-                      className={`absolute top-2 left-2 px-3 py-1 rounded-full text-xs font-semibold text-white shadow-md border ${
-                        item.quality === "HD"
-                          ? "bg-gradient-to-r from-green-500 to-green-700 border-green-800"
-                          : item.quality === "Cam Quality"
-                          ? "bg-gradient-to-r from-red-500 to-red-700 border-red-800"
-                          : item.quality === "Not Released Yet"
-                          ? "bg-gradient-to-r from-yellow-500 to-yellow-700 border-yellow-800"
-                          : "bg-gradient-to-r from-gray-500 to-gray-700 border-gray-800"
-                      }`}
-                    >
+                    <div className={`absolute top-2 left-2 px-3 py-1 rounded-full text-xs font-semibold text-white shadow-md border ${item.quality === "Streaming (HD)" ? "bg-gradient-to-r from-green-500 to-green-700 border-green-800" : item.quality === "HD" ? "bg-gradient-to-r from-blue-500 to-blue-700 border-blue-800" : item.quality === "Cam Quality" ? "bg-gradient-to-r from-red-500 to-red-700 border-red-800" : item.quality === "Not Released Yet" ? "bg-gradient-to-r from-yellow-500 to-yellow-700 border-yellow-800" : "bg-gradient-to-r from-gray-500 to-gray-700 border-gray-800"}`}>
                       {item.quality}
                     </div>
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex items-start justify-between gap-1">
-                      <span className="">{item.title}</span>
+                      <span>{item.title}</span>
+
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger>
@@ -132,12 +181,14 @@ export default function NowPlayingMovies() {
                               {item.vote_average ? item.vote_average.toFixed(1) : "?"}
                             </Badge>
                           </TooltipTrigger>
+
                           <TooltipContent>
                             <p>{item.vote_count} votes</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
                     </div>
+
                     <p className="line-clamp-3 text-xs text-muted-foreground">
                       {item.overview}
                     </p>

@@ -160,8 +160,24 @@ export default function VideoPlayer({ id }: { id: number }) {
     );
   }
 
+  const currentSeason = seasons.find(s => s.season_number.toString() === season);
+  const currentEpisode = episodes.find(ep => ep.episode_number.toString() === episode);
+
   return (
     <div className="py-8">
+      {/* Currently Watching Section */}
+      <div className="text-center mb-4">
+        <h2 className="text-xl font-bold">Currently Watching:</h2>
+        {currentSeason && currentEpisode ? (
+          <div>
+            <div className="text-lg font-semibold">{currentSeason.name}</div>
+            <div>Episode {currentEpisode.episode_number}: {currentEpisode.name}</div>
+          </div>
+        ) : (
+          <div>No episode selected</div>
+        )}
+      </div>
+
       {/* Video Player */}
       <div className="relative max-w-3xl mx-auto px-4 pt-10">
         <iframe
@@ -255,7 +271,7 @@ export default function VideoPlayer({ id }: { id: number }) {
             <div
               key={ep.episode_number}
               className={`relative group cursor-pointer rounded-lg overflow-hidden border border-gray-300 shadow-md ${
-                episode === ep.episode_number.toString() ? "ring-4 ring-blue-500" : ""
+                episode === ep.episode_number.toString() ? "ring-4 ring-yellow-500" : "" // Shiny spotlight effect
               }`}
               onClick={() => handleEpisodeClick(ep.episode_number.toString())}
             >
@@ -264,7 +280,11 @@ export default function VideoPlayer({ id }: { id: number }) {
                 alt={ep.name}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div
+                className={`absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+                  episode === ep.episode_number.toString() ? "ring-4 ring-yellow-500" : "" // Shiny spotlight effect
+                }`}
+              >
                 <div className="text-white text-center p-2">
                   <div className="text-lg font-bold">Episode {ep.episode_number}</div>
                   <div>{ep.name}</div>

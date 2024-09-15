@@ -117,12 +117,12 @@ export default function VideoPlayer({ id }: { id: number }) {
         return `https://vidlink.pro/tv/${id}/${season}/${episode}?primaryColor=ff0044&secondaryColor=f788a6&iconColor=ff0044&title=true&poster=true&autoplay=true&nextbutton=true`;
       case "vidsrc":
         return `https://vidsrc.cc/v3/embed/tv/${id}/${season}/${episode}?autoPlay=true&autoNext=true&poster=true`;
-      case "vidsrcpro":
-        return `https://vidsrc.pro/embed/tv/${id}/${season}/${episode}`;
-      case "vidbinge4k":
+      case "vidbinge4K":
         return `https://vidbinge.dev/embed/tv/${id}/${season}/${episode}`;
       case "smashystream":
         return `https://player.smashy.stream/tv/${id}?s=${season}&e=${episode}`;
+      case "vidsrcpro":
+        return `https://vidsrc.pro/embed/tv/${id}/${season}/${episode}`;
       case "superembed":
         return `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}`;
       case "vidsrcicu":
@@ -232,14 +232,14 @@ export default function VideoPlayer({ id }: { id: number }) {
       {/* Season Selector */}
       <div className="flex justify-center pt-4">
         <div className="w-[300px]">
-          <Select value={season} onValueChange={(e) => setSeason(e)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select a Season" />
+          <Select value={season} onValueChange={setSeason}>
+            <SelectTrigger className="text-lg font-medium">
+              Season {season}
             </SelectTrigger>
             <SelectContent>
               {seasons.map((s) => (
                 <SelectItem key={s.season_number} value={s.season_number.toString()}>
-                  {s.name}
+                  Season {s.season_number} - {s.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -250,14 +250,18 @@ export default function VideoPlayer({ id }: { id: number }) {
       {/* Episode Selector */}
       <div className="flex justify-center pt-4">
         <div className="w-[300px]">
-          <Select value={episode} onValueChange={(e) => handleEpisodeClick(e)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select an Episode" />
+          <Select value={episode} onValueChange={setEpisode}>
+            <SelectTrigger className="text-lg font-medium">
+              Episode {episode}
             </SelectTrigger>
             <SelectContent>
-              {episodes.map((ep) => (
-                <SelectItem key={ep.episode_number} value={ep.episode_number.toString()}>
-                  Episode {ep.episode_number}: {ep.name}
+              {episodes.map((e) => (
+                <SelectItem
+                  key={e.episode_number}
+                  value={e.episode_number.toString()}
+                  onClick={() => handleEpisodeClick(e.episode_number.toString())}
+                >
+                  Episode {e.episode_number} - {e.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -268,23 +272,23 @@ export default function VideoPlayer({ id }: { id: number }) {
       {/* Server Selector */}
       <div className="flex justify-center pt-4">
         <div className="w-[300px]">
-          <Select value={server} onValueChange={(e) => setServer(e)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select a Server" />
+          <Select value={server} onValueChange={setServer}>
+            <SelectTrigger className="text-lg font-medium">
+              Server: {server}
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="vidlinkpro">Vidlink Pro</SelectItem>
               <SelectItem value="vidsrc">Vidsrc</SelectItem>
-              <SelectItem value="vidsrcpro">Vidsrc Pro</SelectItem>
-              <SelectItem value="vidbinge4k">Vid Binge 4K</SelectItem>
+              <SelectItem value="vidbinge4K">Vid Binge 4K</SelectItem>
               <SelectItem value="smashystream">SmashyStream</SelectItem>
+              <SelectItem value="vidsrcpro">Vidsrc Pro</SelectItem>
               <SelectItem value="superembed">SuperEmbed</SelectItem>
               <SelectItem value="vidsrcicu">Vidsrc ICU</SelectItem>
               <SelectItem value="vidsrcnl">Vidsrc NL</SelectItem>
               <SelectItem value="nontongo">Nontongo</SelectItem>
               <SelectItem value="vidsrcxyz">Vidsrc XYZ</SelectItem>
-              <SelectItem value="embedcctv">Embed CC TV</SelectItem>
-              <SelectItem value="twoembed">Two Embed</SelectItem>
+              <SelectItem value="embedcctv">EmbedCC TV</SelectItem>
+              <SelectItem value="twoembed">TwoEmbed</SelectItem>
               <SelectItem value="vidsrctop">Vidsrc Top</SelectItem>
             </SelectContent>
           </Select>

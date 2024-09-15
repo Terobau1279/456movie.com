@@ -229,47 +229,72 @@ export default function VideoPlayer({ id }: { id: number }) {
         </button>
       </div>
 
-      {/* Season and Episode Select */}
-      <div className="pt-4 flex justify-center space-x-4">
-        <Select value={season} onValueChange={(value) => setSeason(value)}>
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Select Season" />
+      {/* Season Selector */}
+      <div className="mt-4 flex justify-center">
+        <Select
+          value={season}
+          onValueChange={(value) => setSeason(value)}
+          className="w-48"
+        >
+          <SelectTrigger>
+            <SelectValue>{`Season ${season}`}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {seasons.map((season) => (
               <SelectItem key={season.season_number} value={season.season_number.toString()}>
-                Season {season.season_number}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={episode} onValueChange={(value) => handleEpisodeClick(value)}>
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Select Episode" />
-          </SelectTrigger>
-          <SelectContent>
-            {episodes.map((episode) => (
-              <SelectItem key={episode.episode_number} value={episode.episode_number.toString()}>
-                Episode {episode.episode_number}: {episode.name}
+                {season.name}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      {/* Links to Previous and Next Episodes */}
-      <div className="pt-4 text-center">
-        {episodes.length > 0 && (
-          <Link href={`/tv/${id}/season/${season}/episode/${Number(episode) - 1}`} passHref>
-            <a className="text-blue-500 hover:underline">Previous Episode</a>
-          </Link>
-        )}
-        {episodes.length > 0 && (
-          <Link href={`/tv/${id}/season/${season}/episode/${Number(episode) + 1}`} passHref>
-            <a className="text-blue-500 hover:underline ml-4">Next Episode</a>
-          </Link>
-        )}
+      {/* Episode Selector */}
+      <div className="mt-4 flex justify-center">
+        <Select
+          value={episode}
+          onValueChange={(value) => setEpisode(value)}
+          className="w-48"
+        >
+          <SelectTrigger>
+            <SelectValue>{`Episode ${episode}`}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {episodes.map((ep) => (
+              <SelectItem key={ep.episode_number} value={ep.episode_number.toString()}>
+                {ep.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Server Selector */}
+      <div className="mt-4 flex justify-center">
+        <Select
+          value={server}
+          onValueChange={(value) => setServer(value)}
+          className="w-48"
+        >
+          <SelectTrigger>
+            <SelectValue>{server}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="vidlinkpro">Vidlink Pro</SelectItem>
+            <SelectItem value="vidsrc">Vidsrc</SelectItem>
+            <SelectItem value="vidbinge4K">VidBinge 4K</SelectItem>
+            <SelectItem value="smashystream">Smashy Stream</SelectItem>
+            <SelectItem value="vidsrcpro">Vidsrc Pro</SelectItem>
+            <SelectItem value="superembed">SuperEmbed</SelectItem>
+            <SelectItem value="vidsrcIcu">Vidsrc Icu</SelectItem>
+            <SelectItem value="vidsrcNl">Vidsrc NL</SelectItem>
+            <SelectItem value="nontongo">Nontongo</SelectItem>
+            <SelectItem value="vidsrcxyz">Vidsrc XYZ</SelectItem>
+            <SelectItem value="embedccTV">EmbedCC TV</SelectItem>
+            <SelectItem value="twoembed">TwoEmbed</SelectItem>
+            <SelectItem value="vidsrcTop">Vidsrc Top</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );

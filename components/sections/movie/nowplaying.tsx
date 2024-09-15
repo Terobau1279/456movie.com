@@ -199,4 +199,5 @@ export default function NowPlaying() {
       </div>
     </main>
   );
+  
 }

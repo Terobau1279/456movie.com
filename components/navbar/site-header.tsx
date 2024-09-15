@@ -1,12 +1,8 @@
 import Link from "next/link";
 
-import { siteConfig } from "@/config/site";
-import { cn } from "@/lib/utils";
-import { Icons } from "@/components/common/icons";
 import { MainNav } from "@/components/navbar/main-nav";
 import { MobileNav } from "@/components/navbar/mobile-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { buttonVariants } from "@/components/ui/button";
 import { CommandSearch } from "../command-search";
 
 export function SiteHeader() {
@@ -16,13 +12,18 @@ export function SiteHeader() {
         <MainNav />
         <MobileNav />
         <div className="flex flex-1 items-center space-x-2 justify-end">
-          <nav className="flex items-center">
+          <nav className="flex items-center space-x-4">
             <CommandSearch />
-            
-            
-             
-
             <ThemeToggle />
+            {/* Plain Text Link to Discord */}
+            <a
+              href="https://discord.gg/e5BEVDnp"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted hover:text-primary"
+            >
+              Join Discord
+            </a>
           </nav>
         </div>
       </div>

@@ -22,7 +22,7 @@ type Movie = {
   vote_average: number;
   vote_count: number;
   overview: string;
-  release_date: string; // Added for release date
+  release_date: string;
   quality: string; // Added for quality indicator
 };
 
@@ -56,7 +56,7 @@ export default function TopRated() {
       const data = await res.json();
       
       // Adding quality to each movie
-      const updatedData = {
+      const updatedData: MovieData = {
         ...data,
         results: data.results.map((movie: any) => ({
           ...movie,

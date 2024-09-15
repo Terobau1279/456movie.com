@@ -15,6 +15,37 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
+type ReleaseDate = {
+  type: number;
+  release_date: string;
+};
+
+type ReleaseDatesResult = {
+  release_dates: ReleaseDate[];
+};
+
+type WatchProvidersResult = {
+  results?: {
+    US?: {
+      flatrate?: any[];
+    };
+  };
+};
+
+type Movie = {
+  id: number;
+  title: string;
+  backdrop_path: string | null;
+  vote_average: number;
+  vote_count: number;
+  overview: string;
+  quality: string; // Added for quality indicator
+};
+
+type MovieData = {
+  results: Movie[];
+};
+
 // Function to determine the media quality
 const getReleaseType = async (mediaId: number, mediaType: string): Promise<string> => {
   try {
@@ -24,8 +55,8 @@ const getReleaseType = async (mediaId: number, mediaType: string): Promise<strin
     ]);
 
     if (releaseDatesResponse.ok && watchProvidersResponse.ok) {
-      const releaseDatesData = await releaseDatesResponse.json();
-      const watchProvidersData = await watchProvidersResponse.json();
+      const releaseDatesData: { results: ReleaseDatesResult[] } = await releaseDatesResponse.json();
+      const watchProvidersData: WatchProvidersResult = await watchProvidersResponse.json();
 
       const releases = releaseDatesData.results.flatMap(result => result.release_dates);
       const currentDate = new Date();
@@ -77,20 +108,6 @@ const getReleaseType = async (mediaId: number, mediaType: string): Promise<strin
   }
 };
 
-type Movie = {
-  id: number;
-  title: string;
-  backdrop_path: string | null;
-  vote_average: number;
-  vote_count: number;
-  overview: string;
-  quality: string; // Added for quality indicator
-};
-
-type MovieData = {
-  results: Movie[];
-};
-
 export default function Popular() {
   const [data, setData] = React.useState<MovieData | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -110,7 +127,7 @@ export default function Popular() {
         return { ...movie, quality };
       }));
 
-      const updatedData = { ...data, results: resultsWithQuality };
+      const updatedData: MovieData = { ...data, results: resultsWithQuality };
       FetchMovieInfo(updatedData);
       setData(updatedData);
       setLoading(false);
@@ -155,19 +172,7 @@ export default function Popular() {
                     ) : (
                       <ImageIcon className="text-muted" />
                     )}
-                    <div
-                      className={`absolute top-2 left-2 px-3 py-1 rounded-full text-xs font-semibold text-white shadow-md border ${
-                        item.quality === "Streaming (HD)"
-                          ? "bg-gradient-to-r from-green-500 to-green-700 border-green-800"
-                          : item.quality === "HD"
-                          ? "bg-gradient-to-r from-blue-500 to-blue-700 border-blue-800"
-                          : item.quality === "Cam Quality"
-                          ? "bg-gradient-to-r from-red-500 to-red-700 border-red-800"
-                          : item.quality === "Not Released Yet"
-                          ? "bg-gradient-to-r from-yellow-500 to-yellow-700 border-yellow-800"
-                          : "bg-gradient-to-r from-gray-500 to-gray-700 border-gray-800"
-                      }`}
-                    >
+                    <div className={`absolute top-2 left-2 px-3 py-1 rounded-full text-xs font-semibold text-white shadow-md border ${item.quality === "Streaming (HD)" ? "bg-gradient-to-r from-green-500 to-green-700 border-green-800" : item.quality === "HD" ? "bg-gradient-to-r from-blue-500 to-blue-700 border-blue-800" : item.quality === "Cam Quality" ? "bg-gradient-to-r from-red-500 to-red-700 border-red-800" : item.quality === "Not Released Yet" ? "bg-gradient-to-r from-yellow-500 to-yellow-700 border-yellow-800" : "bg-gradient-to-r from-gray-500 to-gray-700 border-gray-800"}`}>
                       {item.quality}
                     </div>
                   </div>

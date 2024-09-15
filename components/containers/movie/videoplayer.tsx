@@ -1,6 +1,12 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import StyledSelect from "@/components/ui/styled-select";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,24 +15,12 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import Link from "next/link";
 
-type VideoSourceKey =
-  | "vidlinkpro"
-  | "vidsrccc"
-  | "vidbinge4K"
-  | "smashystream"
-  | "vidsrcpro"
-  | "superembed"
-  | "vidsrcIcu"
-  | "vidsrcNl"
-  | "nontongo"
-  | "vidsrcxyz"
-  | "embedccMovie"
-  | "twoembed"
-  | "vidsrcTop";
+type VideoSourceKey = "vidlinkpro" | "vidsrccc" | "vidsrcpro" | "superembed";
 
 export default function VideoPlayer({ id }: any) {
   const [selectedSource, setSelectedSource] = useState<VideoSourceKey>("vidlinkpro");
@@ -38,17 +32,8 @@ export default function VideoPlayer({ id }: any) {
   const videoSources: Record<VideoSourceKey, string> = {
     vidlinkpro: `https://vidlink.pro/movie/${id}`,
     vidsrccc: `https://vidsrc.cc/v2/embed/movie/${id}`,
-    vidbinge4K: `https://vidbinge.dev/embed/movie/${id}`, // 4K Available, Auto Play & Auto Next
-    smashystream: `https://player.smashy.stream/movie/${id}`, // Smashy Stream server
     vidsrcpro: `https://vidsrc.pro/embed/movie/${id}`,
     superembed: `https://multiembed.mov/?video_id=${id}&tmdb=1`,
-    vidsrcIcu: `https://vidsrc.icu/embed/movie/${id}`,
-    vidsrcNl: `https://player.vidsrc.nl/embed/movie/${id}?server=hindi`,
-    nontongo: `https://www.nontongo.win/embed/movie/${id}`,
-    vidsrcxyz: `https://vidsrc.xyz/embed/movie?tmdb=${id}`, // Vidsrc.xyz movie API
-    embedccMovie: `https://www.2embed.cc/embed/${id}`, // 2Embed.cc Movie Embed
-    twoembed: `https://2embed.org/embed/movie/${id}`, // 2Embed.org Movie Embed
-    vidsrcTop: `https://vidsrc.top/embed/movie/tmdb/${id}`, // Vidsrc.top Movie API
   };
 
   // Fetch movie details from TMDb API
@@ -109,25 +94,17 @@ export default function VideoPlayer({ id }: any) {
 
       <div className="flex flex-row items-center justify-center w-full">
         <div className="flex flex-col text-center">
-          <StyledSelect
-            onValueChange={handleSelectChange}
-            value={selectedSource}
-            className="my-custom-class" // Apply custom class here
-          >
-            <SelectItem value="vidlinkpro">Vidlink.pro</SelectItem>
-            <SelectItem value="vidsrccc">VidSrc.cc</SelectItem>
-            <SelectItem value="vidbinge4K">VidBinge (4K)</SelectItem>
-            <SelectItem value="smashystream">Smashy Stream</SelectItem>
-            <SelectItem value="vidsrcpro">VidSrc.pro</SelectItem>
-            <SelectItem value="superembed">SuperEmbed (CONTAINS ADS)</SelectItem>
-            <SelectItem value="vidsrcIcu">VidSrc.icu</SelectItem>
-            <SelectItem value="vidsrcNl">VidSrc.nl (Hindi)</SelectItem>
-            <SelectItem value="nontongo">Nontongo</SelectItem>
-            <SelectItem value="vidsrcxyz">VidSrc.xyz</SelectItem>
-            <SelectItem value="embedccMovie">2Embed.cc</SelectItem>
-            <SelectItem value="twoembed">2Embed.org</SelectItem>
-            <SelectItem value="vidsrcTop">VidSrc.top</SelectItem>
-          </StyledSelect>
+          <Select onValueChange={handleSelectChange} value={selectedSource}>
+            <SelectTrigger className="px-4 py-2 rounded-md w-[280px]">
+              <SelectValue placeholder="Select Video Source" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="vidlinkpro">Vidlink.pro</SelectItem>
+              <SelectItem value="vidsrccc">VidSrc.cc</SelectItem>
+              <SelectItem value="vidsrcpro">VidSrc.pro</SelectItem>
+              <SelectItem value="superembed">SuperEmbed (CONTAINS ADS)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

@@ -271,63 +271,45 @@ export default function VideoPlayer({ id }: { id: number }) {
 
 {/* Server Selector */}
 <div className="flex justify-center pt-4">
-  <div className="w-[300px]">
+  <div className="relative w-[300px]">
     <Select value={server} onValueChange={(e) => setServer(e)}>
-      <SelectTrigger>
+      <SelectTrigger className="border rounded-md bg-gray-900 text-white focus:ring-2 focus:ring-blue-500">
         <SelectValue placeholder="Select Server" />
       </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="vidlinkpro">
-          Vidlink Pro
-          <span className="ml-2 text-sm text-green-500">No Ads</span>
-        </SelectItem>
-        <SelectItem value="vidsrc">
-          Vidsrc
-          <span className="ml-2 text-sm text-green-500">No Ads, Auto-Play</span>
-        </SelectItem>
-        <SelectItem value="vidbinge4K">
-          Vid Binge 4K
-          <span className="ml-2 text-sm text-green-500">4K Stream, Download Option, Shared Stream</span>
-        </SelectItem>
-        <SelectItem value="smashystream">
-          SmashyStream
-          <span className="ml-2 text-sm text-green-500">No Ads, Shared Stream</span>
-        </SelectItem>
-        <SelectItem value="vidsrcpro">
-          Vidsrc Pro
-          <span className="ml-2 text-sm text-green-500">Casting Options</span>
-        </SelectItem>
-        <SelectItem value="superembed">
-          SuperEmbed
-        </SelectItem>
-        <SelectItem value="vidsrcicu">
-          Vidsrc ICU
-          <span className="ml-2 text-sm text-green-500">Casting Options</span>
-        </SelectItem>
-        <SelectItem value="vidsrcnl">
-          Vidsrc NL
-          <span className="ml-2 text-sm text-green-500">No Ads</span>
-        </SelectItem>
-        <SelectItem value="nontongo">
-          Nontongo
-          <span className="ml-2 text-sm text-green-500">Casting Options</span>
-        </SelectItem>
-        <SelectItem value="vidsrcxyz">
-          Vidsrc XYZ
-        </SelectItem>
-        <SelectItem value="embedcctv">
-          EmbedCC TV
-        </SelectItem>
-        <SelectItem value="twoembed">
-          TwoEmbed
-        </SelectItem>
-        <SelectItem value="vidsrctop">
-          Vidsrc Top
-        </SelectItem>
+      <SelectContent className="absolute z-10 mt-2 bg-gray-800 border border-gray-700 rounded-md shadow-lg">
+        {[
+          { value: "vidlinkpro", label: "Vidlink Pro", tags: ["No Ads"] },
+          { value: "vidsrc", label: "Vidsrc", tags: ["No Ads", "Auto-Play"] },
+          { value: "vidbinge4K", label: "Vid Binge 4K", tags: ["4K Stream", "Download Option", "Shared Stream"] },
+          { value: "smashystream", label: "SmashyStream", tags: ["No Ads", "Shared Stream"] },
+          { value: "vidsrcpro", label: "Vidsrc Pro", tags: ["Casting Options"] },
+          { value: "superembed", label: "SuperEmbed", tags: [] },
+          { value: "vidsrcicu", label: "Vidsrc ICU", tags: ["Casting Options"] },
+          { value: "vidsrcnl", label: "Vidsrc NL", tags: ["No Ads"] },
+          { value: "nontongo", label: "Nontongo", tags: ["Casting Options"] },
+          { value: "vidsrcxyz", label: "Vidsrc XYZ", tags: [] },
+          { value: "embedcctv", label: "EmbedCC TV", tags: [] },
+          { value: "twoembed", label: "TwoEmbed", tags: [] },
+          { value: "vidsrctop", label: "Vidsrc Top", tags: [] }
+        ].map(({ value, label, tags }) => (
+          <SelectItem key={value} value={value} className="relative px-4 py-2 hover:bg-gray-700 rounded-md transition-colors">
+            {label}
+            {tags.length > 0 && (
+              <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex space-x-2">
+                {tags.map(tag => (
+                  <span key={tag} className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   </div>
 </div>
+
 
 
       {/* Episode Thumbnails */}

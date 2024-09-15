@@ -108,4 +108,48 @@ export const Icons = {
       ></path>
     </svg>
   ),
+  qualityLabel: (props: { releaseDate?: string; availableOnStreaming?: boolean; digitalRelease?: boolean; } & LucideProps) => {
+    // Determine the media quality based on provided information
+    const getQualityLabel = () => {
+      if (props.availableOnStreaming) return "Streaming (HD)";
+      if (props.digitalRelease) return "HD";
+      if (props.releaseDate) {
+        const releaseDate = new Date(props.releaseDate);
+        const currentDate = new Date();
+        const differenceInYears = (currentDate.getFullYear() - releaseDate.getFullYear()) + (currentDate.getMonth() - releaseDate.getMonth()) / 12;
+        if (differenceInYears < 1) return "Cam Quality";
+        return "HD";
+      }
+      if (new Date(props.releaseDate) > new Date()) return "Not Released Yet";
+      return "Unknown Quality";
+    };
+
+    const quality = getQualityLabel();
+    let labelColor;
+    switch (quality) {
+      case "Streaming (HD)":
+        labelColor = "text-green-500";
+        break;
+      case "HD":
+        labelColor = "text-blue-500";
+        break;
+      case "Cam Quality":
+        labelColor = "text-yellow-500";
+        break;
+      case "Not Released Yet":
+        labelColor = "text-gray-500";
+        break;
+      case "Unknown Quality":
+        labelColor = "text-red-500";
+        break;
+      default:
+        labelColor = "text-gray-500";
+    }
+
+    return (
+      <span className={`text-sm ${labelColor}`} {...props}>
+        {quality}
+      </span>
+    );
+  },
 };

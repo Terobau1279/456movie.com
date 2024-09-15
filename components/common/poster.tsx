@@ -24,7 +24,7 @@ export const Poster = ({ url, alt, className, ...props }: PosterProps) => {
           loading="lazy"
           sizes="100%"
           alt={alt}
-          src={https://image.tmdb.org/t/p/original${url}}
+          src={`https://image.tmdb.org/t/p/original${url}`}
         />
       ) : (
         <LucideImage size={24} />

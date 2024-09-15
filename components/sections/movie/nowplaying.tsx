@@ -29,6 +29,25 @@ type MovieData = {
   results: Movie[];
 };
 
+// Define types for API responses
+interface ReleaseDate {
+  release_dates: {
+    iso_3166_1: string;
+    release_dates: {
+      type: number;
+      release_date: string;
+    }[];
+  }[];
+}
+
+interface WatchProviders {
+  results: {
+    US?: {
+      flatrate: { provider_name: string }[];
+    };
+  };
+}
+
 // Function to determine the media quality
 const getReleaseType = async (mediaId: number, mediaType: string): Promise<string> => {
   try {
@@ -38,10 +57,10 @@ const getReleaseType = async (mediaId: number, mediaType: string): Promise<strin
     ]);
 
     if (releaseDatesResponse.ok && watchProvidersResponse.ok) {
-      const releaseDatesData = await releaseDatesResponse.json();
-      const watchProvidersData = await watchProvidersResponse.json();
+      const releaseDatesData: ReleaseDate = await releaseDatesResponse.json();
+      const watchProvidersData: WatchProviders = await watchProvidersResponse.json();
 
-      const releases = releaseDatesData.results.flatMap(result => result.release_dates);
+      const releases = releaseDatesData.release_dates.flatMap(release => release.release_dates);
       const currentDate = new Date();
 
       const isDigitalRelease = releases.some(release =>
@@ -105,7 +124,7 @@ export default function TopRated() {
       const data = await res.json();
 
       // Fetch and add quality to each movie
-      const resultsWithQuality = await Promise.all(data.results.map(async (movie: any) => {
+      const resultsWithQuality = await Promise.all(data.results.map(async (movie: Movie) => {
         const quality = await getReleaseType(movie.id, 'movie');
         return { ...movie, quality };
       }));

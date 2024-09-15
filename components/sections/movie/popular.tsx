@@ -42,7 +42,7 @@ const getMediaQuality = (releaseDate: string): string => {
   return "HD";
 };
 
-export default function TopRated() {
+export default function Popular() {
   const [data, setData] = React.useState<MovieData | null>(null);
   const [loading, setLoading] = React.useState(true);
 
@@ -50,11 +50,11 @@ export default function TopRated() {
     const fetchData = async () => {
       setLoading(true);
       const res = await fetch(
-        `https://api.themoviedb.org/3/movie/now_playing?api_key=${API_KEY}`,
+        `https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}`,
         { next: { revalidate: 21600 } }
       );
       const data = await res.json();
-      
+
       // Adding quality to each movie
       const updatedData = {
         ...data,
@@ -63,7 +63,7 @@ export default function TopRated() {
           quality: getMediaQuality(movie.release_date),
         })),
       };
-      
+
       FetchMovieInfo(updatedData);
       setData(updatedData);
       setLoading(false);

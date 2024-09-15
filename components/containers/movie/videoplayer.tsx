@@ -33,12 +33,12 @@ type VideoSourceKey =
   | "twoembed"
   | "vidsrctop";
 
-export default function VideoPlayer({ id }: any) {
+export default function VideoPlayer({ id }: { id: string }) {
   const [selectedSource, setSelectedSource] = useState<VideoSourceKey>("vidlinkpro");
   const [loading, setLoading] = useState(false);
   const [movieTitle, setMovieTitle] = useState("");
   const [relatedMovies, setRelatedMovies] = useState<any[]>([]);
-  const [showRelatedMovies, setShowRelatedMovies] = useState(false); // Hide by default
+  const [showRelatedMovies, setShowRelatedMovies] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   const videoSources: Record<VideoSourceKey, string> = {
@@ -57,7 +57,6 @@ export default function VideoPlayer({ id }: any) {
     vidsrctop: `https://vidsrc.top/embed/movie/tmdb/${id}`,
   };
 
-  // Fetch movie details from TMDb API
   useEffect(() => {
     const fetchMovieDetails = async () => {
       try {
@@ -67,12 +66,11 @@ export default function VideoPlayer({ id }: any) {
         const data = await response.json();
         setMovieTitle(data.title || "Unknown Movie");
 
-        // Fetch related movies
         const relatedResponse = await fetch(
           `https://api.themoviedb.org/3/movie/${id}/similar?api_key=a46c50a0ccb1bafe2b15665df7fad7e1`
         );
         const relatedData = await relatedResponse.json();
-        setRelatedMovies(relatedData.results.slice(0, 8)); // Fetch 8 related movies
+        setRelatedMovies(relatedData.results.slice(0, 8));
       } catch (error) {
         console.error("Error fetching movie details:", error);
       }
@@ -97,7 +95,7 @@ export default function VideoPlayer({ id }: any) {
     const bookmarks = savedBookmarks ? JSON.parse(savedBookmarks) : [];
 
     if (!bookmarks.some((movie: any) => movie.id === id)) {
-      const newBookmark = { id, title: movieTitle, poster_path: "" }; // Add poster path if available
+      const newBookmark = { id, title: movieTitle, poster_path: "" };
       bookmarks.push(newBookmark);
       localStorage.setItem("bookmarkedMovies", JSON.stringify(bookmarks));
     }
@@ -123,7 +121,6 @@ export default function VideoPlayer({ id }: any) {
         </div>
       </div>
 
-      {/* Currently Watching Section */}
       <h2 className="text-lg font-bold mb-4 text-center text-white">
         Currently Watching: {movieTitle}
       </h2>
@@ -135,45 +132,19 @@ export default function VideoPlayer({ id }: any) {
               <SelectValue placeholder="Select Video Source" />
             </SelectTrigger>
             <SelectContent className="bg-gray-800 text-white border border-gray-700">
-              <SelectItem value="vidlinkpro">
-                Vidlink.pro <span className="text-green-400 text-sm">No Ads, Auto-Play</span>
-              </SelectItem>
-              <SelectItem value="vidsrccc">
-                VidSrc.cc <span className="text-green-400 text-sm">No Ads, Auto-Play, Auto-Next</span>
-              </SelectItem>
-              <SelectItem value="vidsrcpro">
-                VidSrc.pro <span className="text-green-400 text-sm">No Ads, Auto-Play</span>
-              </SelectItem>
-              <SelectItem value="superembed">
-                SuperEmbed <span className="text-green-400 text-sm">No Ads, Auto-Play</span>
-              </SelectItem>
-              <SelectItem value="vidbinge4K">
-                VidBinge 4K <span className="text-green-400 text-sm">4K Quality</span>
-              </SelectItem>
-              <SelectItem value="smashystream">
-                SmashyStream <span className="text-green-400 text-sm">No Ads</span>
-              </SelectItem>
-              <SelectItem value="vidsrcicu">
-                VidSrc.icu <span className="text-green-400 text-sm">Hindi Server Available</span>
-              </SelectItem>
-              <SelectItem value="vidsrcnl">
-                VidSrc.nl <span className="text-green-400 text-sm">Hindi Server Available</span>
-              </SelectItem>
-              <SelectItem value="nontongo">
-                Nontongo <span className="text-green-400 text-sm">No Ads, Auto-Play</span>
-              </SelectItem>
-              <SelectItem value="vidsrcxyz">
-                VidSrc.xyz <span className="text-green-400 text-sm">No Ads, Auto-Play</span>
-              </SelectItem>
-              <SelectItem value="embedccMovie">
-                2Embed <span className="text-green-400 text-sm">No Ads, Auto-Play</span>
-              </SelectItem>
-              <SelectItem value="twoembed">
-                2Embed.org <span className="text-green-400 text-sm">No Ads, Auto-Play</span>
-              </SelectItem>
-              <SelectItem value="vidsrctop">
-                VidSrc.top <span className="text-green-400 text-sm">No Ads, Auto-Play</span>
-              </SelectItem>
+              <SelectItem value="vidlinkpro">VidLinkPro</SelectItem>
+              <SelectItem value="vidsrccc">VidSrc CCC</SelectItem>
+              <SelectItem value="vidsrcpro">VidSrc Pro</SelectItem>
+              <SelectItem value="superembed">SuperEmbed</SelectItem>
+              <SelectItem value="vidbinge4K">VidBinge 4K</SelectItem>
+              <SelectItem value="smashystream">SmashyStream</SelectItem>
+              <SelectItem value="vidsrcicu">VidSrc ICU</SelectItem>
+              <SelectItem value="vidsrcnl">VidSrc NL</SelectItem>
+              <SelectItem value="nontongo">Nontongo</SelectItem>
+              <SelectItem value="vidsrcxyz">VidSrc XYZ</SelectItem>
+              <SelectItem value="embedccMovie">EmbedCC Movie</SelectItem>
+              <SelectItem value="twoembed">TwoEmbed</SelectItem>
+              <SelectItem value="vidsrctop">VidSrc Top</SelectItem>
             </SelectContent>
           </Select>
           <div className="relative mt-4">
@@ -202,7 +173,6 @@ export default function VideoPlayer({ id }: any) {
         </button>
       </div>
 
-      {/* Related Movies Section */}
       {relatedMovies.length > 0 && (
         <div className="mt-8">
           <button

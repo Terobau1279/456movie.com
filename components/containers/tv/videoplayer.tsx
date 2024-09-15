@@ -143,67 +143,6 @@ export default function VideoPlayer({ id }: { id: number }) {
         return `https://vidsrc.cc/v3/embed/tv/${id}/${season}/${episode}?autoPlay=true&autoNext=true&poster=true`;
     }
   };
-   {/* Feature Mapping */}
-const serverFeatures = {
-  vidlinkpro: ["Zero Ads", "Auto-Play", "Recommended"],
-  vidsrc: ["Zero Ads", "Auto-Play", "Auto-Next", "Recommended"],
-  vidbinge4K: ["4K Stream", "Auto-Play", "Auto-Next", "Shared Stream", "Download", "Recommended"],
-  smashystream: ["Zero Ads", "Shared Stream"],
-  vidsrcpro: ["Casting Options"],
-  superembed: [],
-  vidsrcicu: ["Casting Options"],
-  vidsrcnl: [],
-  nontongo: ["Casting Options"],
-  vidsrcxyz: [],
-  embedcctv: [],
-  twoembed: [],
-  vidsrctop: []
-};
-
-{/* Badge Rendering Helper */}
-const getBadges = (server) => {
-  const badges = serverFeatures[server] || [];
-  return badges.map((badge, index) => {
-    let color;
-    switch (badge) {
-      case "Zero Ads":
-        color = "bg-green-400";
-        break;
-      case "Auto-Play":
-        color = "bg-blue-400";
-        break;
-      case "Auto-Next":
-        color = "bg-purple-400";
-        break;
-      case "4K Stream":
-        color = "bg-yellow-400";
-        break;
-      case "Shared Stream":
-        color = "bg-pink-400";
-        break;
-      case "Download":
-        color = "bg-red-400";
-        break;
-      case "Casting Options":
-        color = "bg-gray-400";
-        break;
-      case "Recommended":
-        color = "bg-orange-400";
-        break;
-      default:
-        color = "bg-gray-500";
-        break;
-    }
-    return (
-      <span 
-        key={index} 
-        className={`ml-2 px-3 py-1 rounded-full text-xs text-black font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${color}`}
-      >
-        {badge}
-      </span>
-    );
-  });
-};
 
   const handleEpisodeClick = (episodeNumber: string) => {
     setEpisode(episodeNumber);
@@ -329,57 +268,31 @@ const getBadges = (server) => {
       </div>
 
      
-
-
-{/* Server Selector */}
-<div className="flex justify-center pt-4">
-  <div className="w-[300px]">
-    <Select value={server} onValueChange={(e) => setServer(e)}>
-      <SelectTrigger className="transition-transform duration-200 ease-in-out hover:scale-105 bg-gray-900 border border-gray-700 text-white">
-        <SelectValue placeholder="Select Server" />
-      </SelectTrigger>
-      <SelectContent className="bg-gray-900 text-white">
-        <SelectItem value="vidlinkpro" className="group relative flex items-center justify-between p-3 rounded-lg hover:bg-gray-700 transition-colors duration-300 ease-in-out">
-          <span className="text-white">Vidlink Pro</span>
-          <div className="flex space-x-1">
-            {getBadges("vidlinkpro")}
-          </div>
-        </SelectItem>
-        <SelectItem value="vidsrc" className="group relative flex items-center justify-between p-3 rounded-lg hover:bg-gray-700 transition-colors duration-300 ease-in-out">
-          <span className="text-white">Vidsrc</span>
-          <div className="flex space-x-1">
-            {getBadges("vidsrc")}
-          </div>
-        </SelectItem>
-        <SelectItem value="vidbinge4K" className="group relative flex items-center justify-between p-3 rounded-lg hover:bg-gray-700 transition-colors duration-300 ease-in-out">
-          <span className="text-white">Vid Binge 4K</span>
-          <div className="flex space-x-1">
-            {getBadges("vidbinge4K")}
-          </div>
-        </SelectItem>
-        <SelectItem value="smashystream" className="group relative flex items-center justify-between p-3 rounded-lg hover:bg-gray-700 transition-colors duration-300 ease-in-out">
-          <span className="text-white">SmashyStream</span>
-          <div className="flex space-x-1">
-            {getBadges("smashystream")}
-          </div>
-        </SelectItem>
-        <SelectItem value="vidsrcpro" className="group relative flex items-center justify-between p-3 rounded-lg hover:bg-gray-700 transition-colors duration-300 ease-in-out">
-          <span className="text-white">Vidsrc Pro</span>
-          <div className="flex space-x-1">
-            {getBadges("vidsrcpro")}
-          </div>
-        </SelectItem>
-        <SelectItem value="superembed" className="group relative flex items-center justify-between p-3 rounded-lg hover:bg-gray-700 transition-colors duration-300 ease-in-out">
-          <span className="text-white">SuperEmbed</span>
-          <div className="flex space-x-1">
-            {getBadges("superembed")}
-          </div>
-        </SelectItem>
-        {/* Add other servers following the same pattern */}
-      </SelectContent>
-    </Select>
-  </div>
-</div>
+     {/* Server Selector */}
+      <div className="flex justify-center pt-4">
+        <div className="w-[300px]">
+          <Select value={server} onValueChange={(e) => setServer(e)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select Server" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="vidlinkpro">Vidlink Pro</SelectItem>
+              <SelectItem value="vidsrc">Vidsrc</SelectItem>
+              <SelectItem value="vidbinge4K">Vid Binge 4K</SelectItem>
+              <SelectItem value="smashystream">SmashyStream</SelectItem>
+              <SelectItem value="vidsrcpro">Vidsrc Pro</SelectItem>
+              <SelectItem value="superembed">SuperEmbed</SelectItem>
+              <SelectItem value="vidsrcicu">Vidsrc ICU</SelectItem>
+              <SelectItem value="vidsrcnl">Vidsrc NL</SelectItem>
+              <SelectItem value="nontongo">Nontongo</SelectItem>
+              <SelectItem value="vidsrcxyz">Vidsrc XYZ</SelectItem>
+              <SelectItem value="embedcctv">EmbedCC TV</SelectItem>
+              <SelectItem value="twoembed">TwoEmbed</SelectItem>
+              <SelectItem value="vidsrctop">Vidsrc Top</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       {/* Episode Thumbnails */}
       <div className="max-w-4xl mx-auto px-4 pt-10">

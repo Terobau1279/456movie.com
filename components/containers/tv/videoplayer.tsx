@@ -325,14 +325,7 @@ export default function VideoPlayer({ id }: { id: number }) {
         </SelectItem>
       </SelectContent>
     </Select>
-    <div className="pt-4 text-center">
-      <span className="text-lg font-semibold">Recommended Servers:</span>
-      <ul className="list-disc list-inside mt-2">
-        <li>Vidlink Pro</li>
-        <li>Vidsrc CC</li>
-        <li>Vid Binge</li>
-      </ul>
-    </div>
+  
   </div>
 </div>
 

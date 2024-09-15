@@ -125,48 +125,47 @@ export default function VideoPlayer({ id }: any) {
             <SelectTrigger className="px-4 py-2 rounded-md w-[280px]">
               <SelectValue placeholder="Select Video Source" />
             </SelectTrigger>
-          <SelectContent>
-  <SelectItem value="vidlinkpro">
-    Vidlink.pro <span style={{color: 'green', fontSize: '0.9em'}}>No Ads, Auto-Play</span>
-  </SelectItem>
-  <SelectItem value="vidsrccc">
-    VidSrc.cc <span style={{color: 'green', fontSize: '0.9em'}}>No Ads, Auto-Play, Auto-Next</span>
-  </SelectItem>
-  <SelectItem value="vidsrcpro">
-    VidSrc.pro <span style={{color: 'green', fontSize: '0.9em'}}>Casting Options</span>
-  </SelectItem>
-  <SelectItem value="superembed">
-    SuperEmbed <span style={{color: 'red', fontSize: '0.9em'}}>Contains Ads</span>
-  </SelectItem>
-  <SelectItem value="vidbinge4K">
-    VidBinge 4K <span style={{color: 'green', fontSize: '0.9em'}}>4K Stream, Auto-Play, Shared Stream</span>
-  </SelectItem>
-  <SelectItem value="smashystream">
-    Smashy Stream <span style={{color: 'green', fontSize: '0.9em'}}>No Ads, Shared Stream</span>
-  </SelectItem>
-  <SelectItem value="vidsrcicu">
-    VidSrc ICU <span style={{color: 'green', fontSize: '0.9em'}}>Casting Options</span>
-  </SelectItem>
-  <SelectItem value="vidsrcnl">
-    VidSrc NL
-  </SelectItem>
-  <SelectItem value="nontongo">
-    Nontongo <span style={{color: 'green', fontSize: '0.9em'}}>Casting Options</span>
-  </SelectItem>
-  <SelectItem value="vidsrcxyz">
-    VidSrc XYZ
-  </SelectItem>
-  <SelectItem value="embedccMovie">
-    Embed CC Movie
-  </SelectItem>
-  <SelectItem value="twoembed">
-    TwoEmbed
-  </SelectItem>
-  <SelectItem value="vidsrctop">
-    VidSrc Top
-  </SelectItem>
-</SelectContent>
-
+            <SelectContent>
+              <SelectItem value="vidlinkpro">
+                Vidlink.pro <span style={{color: 'green', fontSize: '0.9em'}}>No Ads, Auto-Play</span>
+              </SelectItem>
+              <SelectItem value="vidsrccc">
+                VidSrc.cc <span style={{color: 'green', fontSize: '0.9em'}}>No Ads, Auto-Play, Auto-Next</span>
+              </SelectItem>
+              <SelectItem value="vidsrcpro">
+                VidSrc.pro <span style={{color: 'green', fontSize: '0.9em'}}>Casting Options</span>
+              </SelectItem>
+              <SelectItem value="superembed">
+                SuperEmbed <span style={{color: 'red', fontSize: '0.9em'}}>Contains Ads</span>
+              </SelectItem>
+              <SelectItem value="vidbinge4K">
+                VidBinge 4K <span style={{color: 'green', fontSize: '0.9em'}}>4K Stream, Auto-Play, Shared Stream</span>
+              </SelectItem>
+              <SelectItem value="smashystream">
+                Smashy Stream <span style={{color: 'green', fontSize: '0.9em'}}>No Ads, Shared Stream</span>
+              </SelectItem>
+              <SelectItem value="vidsrcicu">
+                VidSrc ICU <span style={{color: 'green', fontSize: '0.9em'}}>Casting Options</span>
+              </SelectItem>
+              <SelectItem value="vidsrcnl">
+                VidSrc NL
+              </SelectItem>
+              <SelectItem value="nontongo">
+                Nontongo <span style={{color: 'green', fontSize: '0.9em'}}>Casting Options</span>
+              </SelectItem>
+              <SelectItem value="vidsrcxyz">
+                VidSrc XYZ
+              </SelectItem>
+              <SelectItem value="embedccMovie">
+                Embed CC Movie
+              </SelectItem>
+              <SelectItem value="twoembed">
+                TwoEmbed
+              </SelectItem>
+              <SelectItem value="vidsrctop">
+                VidSrc Top
+              </SelectItem>
+            </SelectContent>
           </Select>
         </div>
       </div>
@@ -186,20 +185,19 @@ export default function VideoPlayer({ id }: any) {
         />
       )}
 
-      {/* Toggle Button */}
-      <div className="text-center py-4">
-        <button
-          onClick={toggleRelatedMovies}
-          className="px-4 py-2 bg-blue-500 text-white rounded-md"
-        >
-          {showRelatedMovies ? "Hide Related Movies" : "Show Related Movies"}
-        </button>
-      </div>
-
       {/* Related Movies Section */}
-      {showRelatedMovies && (
-        <div className="pt-10">
-          <h3 className="text-lg font-semibold text-center mb-4">Related Movies</h3>
+      <div className="pt-10">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-center">Related Movies</h3>
+          <button
+            onClick={toggleRelatedMovies}
+            className="px-4 py-2 rounded-md text-white"
+            style={{ backgroundColor: '#1a202c', borderColor: '#2d3748' }}
+          >
+            {showRelatedMovies ? "Hide Related Movies" : "Show Related Movies"}
+          </button>
+        </div>
+        {showRelatedMovies && (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {relatedMovies.map((movie) => (
               <Link href={`/movie/${movie.id}`} key={movie.id}>
@@ -211,17 +209,18 @@ export default function VideoPlayer({ id }: any) {
                     alt={movie.title}
                     width={200}
                     height={300}
-                    className="rounded-lg object-cover"
+                    className="object-cover"
                   />
-                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <h4 className="text-white text-center px-2 text-lg font-bold">{movie.title}</h4>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60 group-hover:opacity-0 transition-opacity duration-300"></div>
+                  <div className="absolute bottom-0 left-0 p-2 text-white bg-gradient-to-t from-black to-transparent">
+                    {movie.title}
                   </div>
                 </div>
               </Link>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

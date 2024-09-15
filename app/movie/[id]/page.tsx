@@ -5,26 +5,22 @@ import * as React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { API_KEY } from "@/config/url";
 
-type Genre = {
-  id: number;
-  name: string;
-};
-
+// Type definitions
 type Movie = {
   id: number;
   title: string;
   backdrop_path: string | null;
+  poster_path: string | null;
   vote_average: number;
   vote_count: number;
   overview: string;
-  poster_path: string | null; // Existing property
-  release_date: string | null; // Existing property
-  genres: Genre[]; // Added property
+  release_date: string | null;
+  genres: { id: number; name: string }[];
 };
 
-type MovieData = {
+interface MovieData {
   results: Movie[];
-};
+}
 
 type Params = {
   id: string;
@@ -32,7 +28,7 @@ type Params = {
 
 const Info: React.FC<{ params: Params }> = ({ params }) => {
   const { id } = params;
-  const [data, setData] = React.useState<Movie | null>(null); // Updated to Movie | null
+  const [data, setData] = React.useState<Movie | null>(null); // Use Movie type here
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -53,7 +49,7 @@ const Info: React.FC<{ params: Params }> = ({ params }) => {
           throw new Error(`Error: ${res.status} ${res.statusText}`);
         }
 
-        const data: Movie = await res.json(); // Fetches Movie type
+        const data: Movie = await res.json(); // Ensure correct type
         setData(data);
       } catch (err: any) {
         setError(err.message);
@@ -98,9 +94,7 @@ const Info: React.FC<{ params: Params }> = ({ params }) => {
           </div>
         </div>
       ) : (
-        data && ( // Check if data is not null
-          <DetailsContainer data={data} id={id} embed={false} /> // Adjusted embed prop type to boolean
-        )
+        data && <DetailsContainer data={data} id={id} embed="false" />
       )}
     </>
   );

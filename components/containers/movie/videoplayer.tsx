@@ -18,7 +18,7 @@ import {
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Maximize2 } from "lucide-react"; // Replace 'Download' icon with fullscreen
+import { Maximize2 } from "lucide-react"; // Fullscreen icon
 
 type VideoSourceKey = "vidlinkpro" | "vidsrccc" | "vidsrcpro" | "superembed";
 
@@ -46,20 +46,20 @@ export default function VideoPlayer({ id }: any) {
     const iframe = iframeRef.current;
 
     if (iframe) {
-      // Request full-screen using standard methods
+      // Use type assertion to access browser-specific fullscreen methods
       if (iframe.requestFullscreen) {
         iframe.requestFullscreen();
-      } else if (iframe.webkitRequestFullscreen) {
-        iframe.webkitRequestFullscreen(); // Safari
-      } else if (iframe.msRequestFullscreen) {
-        iframe.msRequestFullscreen(); // IE/Edge
+      } else if ((iframe as HTMLIFrameElement).webkitRequestFullscreen) {
+        (iframe as HTMLIFrameElement).webkitRequestFullscreen(); // Safari
+      } else if ((iframe as HTMLIFrameElement).msRequestFullscreen) {
+        (iframe as HTMLIFrameElement).msRequestFullscreen(); // IE/Edge
       } else {
         console.warn("Fullscreen API is not supported by this browser.");
       }
 
-      // Unmute the video (if supported by the iframe video player)
+      // Unmute the video if supported
       iframe.contentWindow?.postMessage(
-        '{"method":"setVolume","value":1}', // If the player supports volume control via postMessage
+        '{"method":"setVolume","value":1}',
         "*"
       );
     }

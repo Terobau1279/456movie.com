@@ -278,15 +278,15 @@ export default function VideoPlayer({ id }: { id: number }) {
       <SelectContent>
         <SelectItem value="vidlinkpro">
           Vidlink Pro
-          <span className="ml-2 text-sm text-green-500">No Ads, Auto-Play, Casting Options</span>
+          <span className="ml-2 text-sm text-green-500">No Ads, Auto-Play</span>
         </SelectItem>
         <SelectItem value="vidsrc">
           Vidsrc
-          <span className="ml-2 text-sm text-green-500">No Ads, Auto-Play</span>
+          <span className="ml-2 text-sm text-green-500">No Ads, Auto-Play,Auto Next</span>
         </SelectItem>
         <SelectItem value="vidbinge4K">
           Vid Binge 4K
-          <span className="ml-2 text-sm text-green-500">4K Stream, Download Option, Shared Stream</span>
+          <span className="ml-2 text-sm text-green-500">4K Stream, Download Option, Shared Stream,Auto Play, AutoNext</span>
         </SelectItem>
         <SelectItem value="smashystream">
           SmashyStream

@@ -115,10 +115,30 @@ export default function VideoPlayer({ id }: { id: number }) {
     switch (server) {
       case "vidlinkpro":
         return `https://vidlink.pro/tv/${id}/${season}/${episode}?primaryColor=ff0044&secondaryColor=f788a6&iconColor=ff0044&title=true&poster=true&autoplay=true&nextbutton=true`;
-      case "autoembed":
-        return `https://player.autoembed.cc/embed/tv/${id}/${season}/${episode}`;
+      case "vidsrc":
+        return `https://vidsrc.cc/v3/embed/tv/${id}/${season}/${episode}?autoPlay=true&autoNext=true&poster=true`;
+      case "vidsrcpro":
+        return `https://vidsrc.pro/embed/tv/${id}/${season}/${episode}`;
+      case "vidbinge4k":
+        return `https://vidbinge.dev/embed/tv/${id}/${season}/${episode}`;
+      case "smashystream":
+        return `https://player.smashy.stream/tv/${id}?s=${season}&e=${episode}`;
       case "superembed":
         return `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}`;
+      case "vidsrcicu":
+        return `https://vidsrc.icu/embed/tv/${id}/${season}/${episode}`;
+      case "vidsrcnl":
+        return `https://player.vidsrc.nl/embed/tv/${id}/${season}/${episode}?server=hindi`;
+      case "nontongo":
+        return `https://www.nontongo.win/embed/tv/${id}/${season}/${episode}`;
+      case "vidsrcxyz":
+        return `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${season}&episode=${episode}`;
+      case "embedcctv":
+        return `https://www.2embed.cc/embed/tv/${id}/${season}/${episode}`;
+      case "twoembed":
+        return `https://2embed.org/embed/tv/${id}/${season}/${episode}`;
+      case "vidsrctop":
+        return `https://vidsrc.top/embed/tv/tmdb/${id}/${season}`;
       default:
         return `https://vidsrc.cc/v3/embed/tv/${id}/${season}/${episode}?autoPlay=true&autoNext=true&poster=true`;
     }
@@ -212,39 +232,37 @@ export default function VideoPlayer({ id }: { id: number }) {
       {/* Season Selector */}
       <div className="flex justify-center pt-4">
         <div className="w-[300px]">
-          <Select value={season} onValueChange={(e) => setSeason(e)} disabled={isLoading || seasons.length === 0}>
-            <SelectTrigger className="px-4 py-2 rounded-md">
-              <SelectValue placeholder="Select Season" />
+          <Select value={season} onValueChange={(e) => setSeason(e)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a Season" />
             </SelectTrigger>
             <SelectContent>
-              {seasons.length > 0 ? (
-                seasons.map((s) => (
-                  <SelectItem
-                    key={s.season_number}
-                    value={s.season_number.toString()}
-                  >
-                    Season {s.season_number}
-                  </SelectItem>
-                ))
-              ) : (
-                <></>
-              )}
+              {seasons.map((s) => (
+                <SelectItem key={s.season_number} value={s.season_number.toString()}>
+                  {s.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      {/* Download Button */}
-      <div className="pt-4 text-center">
-        <Link href={`https://dl.vidsrc.vip/tv/${id}/${season}/${episode}`}>
-          <Badge
-            variant="outline"
-            className="cursor-pointer whitespace-nowrap"
-          >
-            <Download className="mr-1.5" size={12} />
-            Download {season}-{episode}
-          </Badge>
-        </Link>
+      {/* Episode Selector */}
+      <div className="flex justify-center pt-4">
+        <div className="w-[300px]">
+          <Select value={episode} onValueChange={(e) => handleEpisodeClick(e)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select an Episode" />
+            </SelectTrigger>
+            <SelectContent>
+              {episodes.map((ep) => (
+                <SelectItem key={ep.episode_number} value={ep.episode_number.toString()}>
+                  Episode {ep.episode_number}: {ep.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Server Selector */}
@@ -252,53 +270,24 @@ export default function VideoPlayer({ id }: { id: number }) {
         <div className="w-[300px]">
           <Select value={server} onValueChange={(e) => setServer(e)}>
             <SelectTrigger>
-              <SelectValue placeholder="Select Server" />
+              <SelectValue placeholder="Select a Server" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="vidsrc">VidSrc.cc</SelectItem>
-              <SelectItem value="vidlinkpro">Vidlink.pro</SelectItem>
-              <SelectItem value="autoembed">Autoembed</SelectItem>
+              <SelectItem value="vidlinkpro">Vidlink Pro</SelectItem>
+              <SelectItem value="vidsrc">Vidsrc</SelectItem>
+              <SelectItem value="vidsrcpro">Vidsrc Pro</SelectItem>
+              <SelectItem value="vidbinge4k">Vid Binge 4K</SelectItem>
+              <SelectItem value="smashystream">SmashyStream</SelectItem>
               <SelectItem value="superembed">SuperEmbed</SelectItem>
+              <SelectItem value="vidsrcicu">Vidsrc ICU</SelectItem>
+              <SelectItem value="vidsrcnl">Vidsrc NL</SelectItem>
+              <SelectItem value="nontongo">Nontongo</SelectItem>
+              <SelectItem value="vidsrcxyz">Vidsrc XYZ</SelectItem>
+              <SelectItem value="embedcctv">Embed CC TV</SelectItem>
+              <SelectItem value="twoembed">Two Embed</SelectItem>
+              <SelectItem value="vidsrctop">Vidsrc Top</SelectItem>
             </SelectContent>
           </Select>
-        </div>
-      </div>
-
-      {/* Episode Thumbnails */}
-      <div className="max-w-4xl mx-auto px-4 pt-10">
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {episodes.map((ep) => (
-            <div
-              key={ep.episode_number}
-              className={`relative group cursor-pointer rounded-lg overflow-hidden border border-gray-300 shadow-md ${
-                episode === ep.episode_number.toString() ? "ring-4 ring-yellow-500" : "" // Shiny spotlight effect
-              }`}
-              onClick={() => handleEpisodeClick(ep.episode_number.toString())}
-            >
-              <img
-                src={`https://image.tmdb.org/t/p/w500${ep.still_path}`}
-                alt={ep.name}
-                className="w-full h-full object-cover"
-              />
-              <div
-                className={`absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
-                  episode === ep.episode_number.toString() ? "ring-4 ring-yellow-500" : "" // Shiny spotlight effect
-                }`}
-              >
-                <div className="text-white text-center p-2">
-                  <div className="text-lg font-bold">Episode {ep.episode_number}</div>
-                  <div>{ep.name}</div>
-                </div>
-              </div>
-              {/* Small Episode Number */}
-              <div className="absolute top-2 left-2 bg-black text-white text-xs px-1 rounded">
-                {ep.episode_number}
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="text-center text-sm text-gray-500 pt-4">
-          Changing the episode inside the player may cause the spotlight to mismatch with the current episode. Please select an episode from the list to keep the spotlight in sync.
         </div>
       </div>
     </div>

@@ -22,27 +22,28 @@ type Movie = {
   vote_average: number;
   vote_count: number;
   overview: string;
-  release_date: string; // Added for release date
-  quality: string; // Added for quality indicator
+  release_date: string;
+  quality: string;
 };
 
 type MovieData = {
   results: Movie[];
 };
 
-// Function to determine the media quality
+// Updated function to determine media quality
 const getMediaQuality = (releaseDate: string): string => {
   const now = new Date();
   const release = new Date(releaseDate);
-  const diff = now.getFullYear() - release.getFullYear();
+  const diffMonths = (now.getFullYear() - release.getFullYear()) * 12 + now.getMonth() - release.getMonth();
+  const monthsToHD = 6; // HD available within 6 months of release
 
   if (now < release) return "Not Released Yet";
-  if (diff > 1) return "HD";
-  if (now.getFullYear() === release.getFullYear() && now.getMonth() - release.getMonth() < 12) return "Cam Quality";
+  if (diffMonths > monthsToHD) return "HD";
+  if (diffMonths > 0) return "Cam Quality";
   return "HD";
 };
 
-export default function Upcoming() {
+export default function UpcomingMovies() {
   const [data, setData] = React.useState<MovieData | null>(null);
   const [loading, setLoading] = React.useState(true);
 
@@ -56,7 +57,7 @@ export default function Upcoming() {
       const data = await res.json();
 
       // Adding quality to each movie
-      const updatedData: MovieData = {
+      const updatedData = {
         ...data,
         results: data.results.map((movie: any) => ({
           ...movie,
@@ -77,8 +78,7 @@ export default function Upcoming() {
       <div className="flex items-center justify-between">
         <div className="grid w-full grid-cols-1 gap-x-4 gap-y-8 md:grid-cols-3">
           {loading
-            ? // Skeleton component while loading
-              Array.from({ length: 18 }).map((_, index) => (
+            ? Array.from({ length: 18 }).map((_, index) => (
                 <div key={index} className="w-full space-y-2">
                   <Skeleton className="aspect-video w-full rounded-md" />
                   <div className="space-y-1.5">
@@ -125,24 +125,19 @@ export default function Upcoming() {
                   <div className="space-y-1.5">
                     <div className="flex items-start justify-between gap-1">
                       <span className="">{item.title}</span>
-
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger>
                             <Badge variant="outline">
-                              {item.vote_average
-                                ? item.vote_average.toFixed(1)
-                                : "?"}
+                              {item.vote_average ? item.vote_average.toFixed(1) : "?"}
                             </Badge>
                           </TooltipTrigger>
-
                           <TooltipContent>
                             <p>{item.vote_count} votes</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
                     </div>
-
                     <p className="line-clamp-3 text-xs text-muted-foreground">
                       {item.overview}
                     </p>

@@ -15,12 +15,12 @@ export function SiteHeader() {
           <nav className="flex items-center space-x-4">
             <CommandSearch />
             <ThemeToggle />
-            {/* Plain Text Link to Discord */}
+            {/* Styled Link to Discord */}
             <a
               href="https://discord.gg/e5BEVDnp"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-muted hover:text-primary"
+              className="text-white hover:text-gray-300 transition-colors duration-300"
             >
               Join Discord
             </a>

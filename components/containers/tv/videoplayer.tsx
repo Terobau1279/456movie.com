@@ -268,31 +268,67 @@ export default function VideoPlayer({ id }: { id: number }) {
       </div>
 
      
-     {/* Server Selector */}
-      <div className="flex justify-center pt-4">
-        <div className="w-[300px]">
-          <Select value={server} onValueChange={(e) => setServer(e)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select Server" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="vidlinkpro">Vidlink Pro</SelectItem>
-              <SelectItem value="vidsrc">Vidsrc</SelectItem>
-              <SelectItem value="vidbinge4K">Vid Binge 4K</SelectItem>
-              <SelectItem value="smashystream">SmashyStream</SelectItem>
-              <SelectItem value="vidsrcpro">Vidsrc Pro</SelectItem>
-              <SelectItem value="superembed">SuperEmbed</SelectItem>
-              <SelectItem value="vidsrcicu">Vidsrc ICU</SelectItem>
-              <SelectItem value="vidsrcnl">Vidsrc NL</SelectItem>
-              <SelectItem value="nontongo">Nontongo</SelectItem>
-              <SelectItem value="vidsrcxyz">Vidsrc XYZ</SelectItem>
-              <SelectItem value="embedcctv">EmbedCC TV</SelectItem>
-              <SelectItem value="twoembed">TwoEmbed</SelectItem>
-              <SelectItem value="vidsrctop">Vidsrc Top</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+
+{/* Server Selector */}
+<div className="flex justify-center pt-4">
+  <div className="w-[300px]">
+    <Select value={server} onValueChange={(e) => setServer(e)}>
+      <SelectTrigger>
+        <SelectValue placeholder="Select Server" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="vidlinkpro">
+          Vidlink Pro
+          <span className="ml-2 text-sm text-green-500">No Ads</span>
+        </SelectItem>
+        <SelectItem value="vidsrc">
+          Vidsrc
+          <span className="ml-2 text-sm text-green-500">No Ads, Auto-Play</span>
+        </SelectItem>
+        <SelectItem value="vidbinge4K">
+          Vid Binge 4K
+          <span className="ml-2 text-sm text-green-500">4K Stream, Download Option, Shared Stream</span>
+        </SelectItem>
+        <SelectItem value="smashystream">
+          SmashyStream
+          <span className="ml-2 text-sm text-green-500">No Ads, Shared Stream</span>
+        </SelectItem>
+        <SelectItem value="vidsrcpro">
+          Vidsrc Pro
+          <span className="ml-2 text-sm text-green-500">Casting Options</span>
+        </SelectItem>
+        <SelectItem value="superembed">
+          SuperEmbed
+        </SelectItem>
+        <SelectItem value="vidsrcicu">
+          Vidsrc ICU
+          <span className="ml-2 text-sm text-green-500">Casting Options</span>
+        </SelectItem>
+        <SelectItem value="vidsrcnl">
+          Vidsrc NL
+          <span className="ml-2 text-sm text-green-500">No Ads</span>
+        </SelectItem>
+        <SelectItem value="nontongo">
+          Nontongo
+          <span className="ml-2 text-sm text-green-500">Casting Options</span>
+        </SelectItem>
+        <SelectItem value="vidsrcxyz">
+          Vidsrc XYZ
+        </SelectItem>
+        <SelectItem value="embedcctv">
+          EmbedCC TV
+        </SelectItem>
+        <SelectItem value="twoembed">
+          TwoEmbed
+        </SelectItem>
+        <SelectItem value="vidsrctop">
+          Vidsrc Top
+        </SelectItem>
+      </SelectContent>
+    </Select>
+  </div>
+</div>
+
 
       {/* Episode Thumbnails */}
       <div className="max-w-4xl mx-auto px-4 pt-10">

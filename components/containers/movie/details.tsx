@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { API_KEY } from "@/config/url";
 
+// Function to get release type, moved to a separate file if needed for clarity
 const getReleaseType = async (mediaId: number, mediaType: string): Promise<string> => {
   try {
     const [releaseDatesResponse, watchProvidersResponse] = await Promise.all([
@@ -75,18 +76,28 @@ const getReleaseType = async (mediaId: number, mediaType: string): Promise<strin
   }
 };
 
-const DetailsContainer = ({ data, id, embed }: any) => {
-  const [quality, setQuality] = React.useState<string>("Unknown Quality");
+// Server-side data fetching function
+export async function getServerSideProps(context: any) {
+  const { id } = context.params;
+  const mediaType = 'movie'; // or 'tv' based on your needs
 
-  React.useEffect(() => {
-    const fetchQuality = async () => {
-      const movieQuality = await getReleaseType(id, 'movie');
-      setQuality(movieQuality);
-    };
+  // Fetch movie or TV show details
+  const response = await fetch(`https://api.themoviedb.org/3/${mediaType}/${id}?api_key=${API_KEY}`);
+  const data = await response.json();
 
-    fetchQuality();
-  }, [id]);
+  // Fetch quality
+  const quality = await getReleaseType(id, mediaType);
 
+  return {
+    props: {
+      data,
+      quality,
+    },
+  };
+}
+
+// Component
+const DetailsContainer = ({ data, quality }: any) => {
   return (
     <div className="">
       <div className={cn("mx-auto max-w-6xl", embed ? "p-0" : "md:pt-4")}>
@@ -123,17 +134,15 @@ const DetailsContainer = ({ data, id, embed }: any) => {
               <div className="flex flex-wrap items-center gap-2">
                 {data.genres.length > 0 && (
                   <>
-                    {data.genres.map((genre: any) => {
-                      return (
-                        <Badge
-                          key={genre.id}
-                          variant="outline"
-                          className="whitespace-nowrap"
-                        >
-                          {genre.name}
-                        </Badge>
-                      );
-                    })}
+                    {data.genres.map((genre: any) => (
+                      <Badge
+                        key={genre.id}
+                        variant="outline"
+                        className="whitespace-nowrap"
+                      >
+                        {genre.name}
+                      </Badge>
+                    ))}
 
                     <Separator orientation="vertical" className="h-6" />
                     

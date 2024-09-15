@@ -6,9 +6,57 @@ import { cn } from "@/lib/utils";
 type PosterProps = {
   url?: string;
   alt: string;
+  releaseDate?: string;
+  availableOnStreaming?: boolean;
+  digitalRelease?: boolean;
 } & ComponentProps<"div">;
 
-export const Poster = ({ url, alt, className, ...props }: PosterProps) => {
+export const Poster = ({
+  url,
+  alt,
+  className,
+  releaseDate,
+  availableOnStreaming,
+  digitalRelease,
+  ...props
+}: PosterProps) => {
+  // Determine the media quality based on provided information
+  const getQualityLabel = () => {
+    if (availableOnStreaming) return "Streaming (HD)";
+    if (digitalRelease) return "HD";
+    if (releaseDate) {
+      const releaseDateObj = new Date(releaseDate);
+      const currentDate = new Date();
+      const differenceInYears = (currentDate.getFullYear() - releaseDateObj.getFullYear()) + (currentDate.getMonth() - releaseDateObj.getMonth()) / 12;
+      if (differenceInYears < 1) return "Cam Quality";
+      return "HD";
+    }
+    if (new Date(releaseDate) > new Date()) return "Not Released Yet";
+    return "Unknown Quality";
+  };
+
+  const quality = getQualityLabel();
+  let labelColor;
+  switch (quality) {
+    case "Streaming (HD)":
+      labelColor = "text-green-500";
+      break;
+    case "HD":
+      labelColor = "text-blue-500";
+      break;
+    case "Cam Quality":
+      labelColor = "text-yellow-500";
+      break;
+    case "Not Released Yet":
+      labelColor = "text-gray-500";
+      break;
+    case "Unknown Quality":
+      labelColor = "text-red-500";
+      break;
+    default:
+      labelColor = "text-gray-500";
+  }
+
   return (
     <div
       className={cn(
@@ -29,6 +77,9 @@ export const Poster = ({ url, alt, className, ...props }: PosterProps) => {
       ) : (
         <LucideImage size={24} />
       )}
+      <span className={`absolute bottom-2 left-2 px-2 py-1 text-xs font-semibold ${labelColor} bg-white rounded`}>
+        {quality}
+      </span>
     </div>
   );
 };

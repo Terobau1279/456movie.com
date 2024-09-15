@@ -125,21 +125,48 @@ export default function VideoPlayer({ id }: any) {
             <SelectTrigger className="px-4 py-2 rounded-md w-[280px]">
               <SelectValue placeholder="Select Video Source" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="vidlinkpro">Vidlink.pro</SelectItem>
-              <SelectItem value="vidsrccc">VidSrc.cc</SelectItem>
-              <SelectItem value="vidsrcpro">VidSrc.pro</SelectItem>
-              <SelectItem value="superembed">SuperEmbed (CONTAINS ADS)</SelectItem>
-              <SelectItem value="vidbinge4K">VidBinge 4K</SelectItem>
-              <SelectItem value="smashystream">Smashy Stream</SelectItem>
-              <SelectItem value="vidsrcicu">VidSrc ICU</SelectItem>
-              <SelectItem value="vidsrcnl">VidSrc NL</SelectItem>
-              <SelectItem value="nontongo">Nontongo</SelectItem>
-              <SelectItem value="vidsrcxyz">VidSrc XYZ</SelectItem>
-              <SelectItem value="embedccMovie">Embed CC Movie</SelectItem>
-              <SelectItem value="twoembed">TwoEmbed</SelectItem>
-              <SelectItem value="vidsrctop">VidSrc Top</SelectItem>
-            </SelectContent>
+          <SelectContent>
+  <SelectItem value="vidlinkpro">
+    Vidlink.pro <span style={{color: 'green', fontSize: '0.9em'}}>No Ads, Auto-Play</span>
+  </SelectItem>
+  <SelectItem value="vidsrccc">
+    VidSrc.cc <span style={{color: 'green', fontSize: '0.9em'}}>No Ads, Auto-Play, Auto-Next</span>
+  </SelectItem>
+  <SelectItem value="vidsrcpro">
+    VidSrc.pro <span style={{color: 'green', fontSize: '0.9em'}}>Casting Options</span>
+  </SelectItem>
+  <SelectItem value="superembed">
+    SuperEmbed <span style={{color: 'red', fontSize: '0.9em'}}>Contains Ads</span>
+  </SelectItem>
+  <SelectItem value="vidbinge4K">
+    VidBinge 4K <span style={{color: 'green', fontSize: '0.9em'}}>4K Stream, Auto-Play, Shared Stream</span>
+  </SelectItem>
+  <SelectItem value="smashystream">
+    Smashy Stream <span style={{color: 'green', fontSize: '0.9em'}}>No Ads, Shared Stream</span>
+  </SelectItem>
+  <SelectItem value="vidsrcicu">
+    VidSrc ICU <span style={{color: 'green', fontSize: '0.9em'}}>Casting Options</span>
+  </SelectItem>
+  <SelectItem value="vidsrcnl">
+    VidSrc NL
+  </SelectItem>
+  <SelectItem value="nontongo">
+    Nontongo <span style={{color: 'green', fontSize: '0.9em'}}>Casting Options</span>
+  </SelectItem>
+  <SelectItem value="vidsrcxyz">
+    VidSrc XYZ
+  </SelectItem>
+  <SelectItem value="embedccMovie">
+    Embed CC Movie
+  </SelectItem>
+  <SelectItem value="twoembed">
+    TwoEmbed
+  </SelectItem>
+  <SelectItem value="vidsrctop">
+    VidSrc Top
+  </SelectItem>
+</SelectContent>
+
           </Select>
         </div>
       </div>

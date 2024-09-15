@@ -42,7 +42,7 @@ const getMediaQuality = (releaseDate: string): string => {
   return "HD";
 };
 
-export default function TopRated() {
+export default function Upcoming() {
   const [data, setData] = React.useState<MovieData | null>(null);
   const [loading, setLoading] = React.useState(true);
 
@@ -56,7 +56,7 @@ export default function TopRated() {
       const data = await res.json();
 
       // Adding quality to each movie
-      const updatedData = {
+      const updatedData: MovieData = {
         ...data,
         results: data.results.map((movie: any) => ({
           ...movie,

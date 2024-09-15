@@ -1,11 +1,8 @@
-"use client";
-import { FetchMovieInfo } from "@/fetch";
-import Image from "next/image";
+import { format } from "date-fns";
+import { Poster } from "@/components/common/poster";
 import Link from "next/link";
-import * as React from "react";
-import { Image as ImageIcon } from "lucide-react";
-import { API_KEY } from "@/config/url";
-
+import { Play } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 import {
   Tooltip,
   TooltipContent,
@@ -13,40 +10,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import { API_KEY } from "@/config/url";
 
-type ReleaseDate = {
-  type: number;
-  release_date: string;
-};
-
-type ReleaseDatesResult = {
-  release_dates: ReleaseDate[];
-};
-
-type WatchProvidersResult = {
-  results?: {
-    US?: {
-      flatrate?: any[];
-    };
-  };
-};
-
-type Movie = {
-  id: number;
-  title: string;
-  backdrop_path: string | null;
-  vote_average: number;
-  vote_count: number;
-  overview: string;
-  quality: string; // Added for quality indicator
-};
-
-type MovieData = {
-  results: Movie[];
-};
-
-// Function to determine the media quality
+// Function to fetch the media quality
 const getReleaseType = async (mediaId: number, mediaType: string): Promise<string> => {
   try {
     const [releaseDatesResponse, watchProvidersResponse] = await Promise.all([
@@ -55,8 +22,8 @@ const getReleaseType = async (mediaId: number, mediaType: string): Promise<strin
     ]);
 
     if (releaseDatesResponse.ok && watchProvidersResponse.ok) {
-      const releaseDatesData: { results: ReleaseDatesResult[] } = await releaseDatesResponse.json();
-      const watchProvidersData: WatchProvidersResult = await watchProvidersResponse.json();
+      const releaseDatesData = await releaseDatesResponse.json();
+      const watchProvidersData = await watchProvidersResponse.json();
 
       const releases = releaseDatesData.results.flatMap(result => result.release_dates);
       const currentDate = new Date();
@@ -84,10 +51,10 @@ const getReleaseType = async (mediaId: number, mediaType: string): Promise<strin
         const theatricalRelease = releases.find(release => release.type === 3);
         if (theatricalRelease && new Date(theatricalRelease.release_date) <= currentDate) {
           const releaseDate = new Date(theatricalRelease.release_date);
-          const sixMonthsLater = new Date(releaseDate);
-          sixMonthsLater.setMonth(releaseDate.getMonth() + 6);
+          const oneYearLater = new Date(releaseDate);
+          oneYearLater.setFullYear(releaseDate.getFullYear() + 1);
 
-          if (currentDate >= sixMonthsLater) {
+          if (currentDate >= oneYearLater) {
             return "HD";
           } else {
             return "Cam Quality";
@@ -108,51 +75,122 @@ const getReleaseType = async (mediaId: number, mediaType: string): Promise<strin
   }
 };
 
-export default function MovieDetails({ movieId }: { movieId: number }) {
-  const [movie, setMovie] = React.useState<Movie | null>(null);
-  const [loading, setLoading] = React.useState(true);
-
+const DetailsContainer = ({ data, id, embed }: any) => {
+  // Fetch media quality asynchronously
+  const [quality, setQuality] = React.useState<string>("Unknown Quality");
+  
   React.useEffect(() => {
-    const fetchMovie = async () => {
-      setLoading(true);
-      const res = await fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=${API_KEY}`);
-      const movieData: Movie = await res.json();
-
-      const quality = await getReleaseType(movieId, 'movie');
-      setMovie({ ...movieData, quality });
-      setLoading(false);
+    const fetchQuality = async () => {
+      const mediaQuality = await getReleaseType(id, 'movie'); // Assuming the type is 'movie'; adjust if needed
+      setQuality(mediaQuality);
     };
-
-    fetchMovie();
-  }, [movieId]);
+    
+    fetchQuality();
+  }, [id]);
 
   return (
-    <main>
-      {loading ? (
-        <Skeleton className="w-full h-64" />
-      ) : movie ? (
-        <div className="flex flex-col items-center">
-          <div className="relative w-full max-w-lg h-64">
-            {movie.backdrop_path ? (
-              <Image
-                fill
-                className="object-cover"
-                src={`https://sup-proxy.zephex0-f6c.workers.dev/api-content?url=https://image.tmdb.org/t/p/original${movie.backdrop_path}`}
-                alt={movie.title}
-              />
-            ) : (
-              <ImageIcon className="text-muted" />
-            )}
-            <div className={`absolute top-2 left-2 px-3 py-1 rounded-full text-xs font-semibold text-white shadow-md border ${movie.quality === "Streaming (HD)" ? "bg-gradient-to-r from-green-500 to-green-700 border-green-800" : movie.quality === "HD" ? "bg-gradient-to-r from-blue-500 to-blue-700 border-blue-800" : movie.quality === "Cam Quality" ? "bg-gradient-to-r from-red-500 to-red-700 border-red-800" : movie.quality === "Not Released Yet" ? "bg-gradient-to-r from-yellow-500 to-yellow-700 border-yellow-800" : "bg-gradient-to-r from-gray-500 to-gray-700 border-gray-800"}`}>
-              {movie.quality}
-            </div>
-          </div>
-          <h1 className="text-3xl font-bold mt-4">{movie.title}</h1>
-          <p className="text-sm text-muted-foreground mt-2">{movie.overview}</p>
+    <div className="">
+      <div className={cn("mx-auto max-w-6xl", embed ? "p-0" : "md:pt-4")}>
+        <div
+          className={cn(
+            "h-[30dvh] w-full overflow-hidden border bg-muted shadow md:rounded-lg lg:h-[55dvh]",
+            embed ? "max-h-[20vh] md:max-h-[50vh]" : undefined
+          )}
+        >
+          <div
+            style={{
+              backgroundImage: `url('https://sup-proxy.zephex0-f6c.workers.dev/api-content?url=https://image.tmdb.org/t/p/original${data.backdrop_path}')`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
+            className="h-full w-full brightness-50"
+            data-testid="banner"
+          />
         </div>
-      ) : (
-        <p>Movie not found</p>
-      )}
-    </main>
+
+        <div className="mx-auto my-8 max-w-4xl space-y-8 p-4 md:space-y-12 md:p-0 ">
+          <main className="flex flex-col gap-4 md:flex-row">
+            <aside className="-mt-24 w-full space-y-2  md:-mt-32 md:w-1/3">
+              <Poster url={data.poster_path} alt={data.title} />
+            </aside>
+
+            <article className="flex w-full flex-col gap-2 md:w-2/3">
+              {data.release_date && (
+                <span className="text-xs text-muted-foreground">
+                  {format(new Date(data.release_date), "PPP", {})}
+                </span>
+              )}
+              <h1 className="text-lg font-bold md:text-4xl">{data.title}</h1>
+              <div className="flex flex-wrap items-center gap-2">
+                {data.genres.length > 0 && (
+                  <>
+                    {data.genres.map((genre: any) => {
+                      return (
+                        <Badge
+                          key={genre.id}
+                          variant="outline"
+                          className="whitespace-nowrap"
+                        >
+                          {genre.name}
+                        </Badge>
+                      );
+                    })}
+
+                    <Separator orientation="vertical" className="h-6" />
+                  </>
+                )}
+
+                {/* Quality Indicator */}
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "text-xs font-medium rounded-full px-2 py-1",
+                    quality === "Streaming (HD)"
+                      ? "bg-gradient-to-r from-green-500 to-green-700 text-green-800"
+                      : quality === "HD"
+                      ? "bg-gradient-to-r from-blue-500 to-blue-700 text-blue-800"
+                      : quality === "Cam Quality"
+                      ? "bg-gradient-to-r from-red-500 to-red-700 text-red-800"
+                      : quality === "Not Released Yet"
+                      ? "bg-gradient-to-r from-yellow-500 to-yellow-700 text-yellow-800"
+                      : "bg-gradient-to-r from-gray-500 to-gray-700 text-gray-800"
+                  )}
+                >
+                  {quality}
+                </Badge>
+
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge>{data.vote_average.toFixed(1)}</Badge>
+                    </TooltipTrigger>
+
+                    <TooltipContent>
+                      <p>{data.vote_count} votes</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <p className="text-xs leading-5 text-muted-foreground md:text-sm md:leading-6">
+                {data.overview}
+              </p>
+              <div className="flex flex-wrap items-center gap-1">
+                <Link href={`/movie/watch/${id}`}>
+                  <Badge
+                    variant="outline"
+                    className="cursor-pointer whitespace-nowrap"
+                  >
+                    <Play className="mr-1.5" size={12} />
+                    Watch
+                  </Badge>
+                </Link>
+              </div>
+            </article>
+          </main>
+        </div>
+      </div>
+    </div>
   );
-}
+};
+
+export default DetailsContainer;

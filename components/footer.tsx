@@ -27,7 +27,8 @@ export const Footer = () => {
         </div>
       </div>
 
-      {/* Inject the popunder script */}
+      {/* 
+      Inject the popunder script 
       <script
         type="text/javascript"
         data-cfasync="false"
@@ -37,6 +38,7 @@ export const Footer = () => {
           `,
         }}
       />
+      */}
     </div>
   );
 };

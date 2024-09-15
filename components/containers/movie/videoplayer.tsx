@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { Share2, Download } from "lucide-react"; // Make sure to import Download here
+import { Share2, Download } from "lucide-react";
 import {
   Select,
   SelectTrigger,
@@ -70,7 +70,30 @@ export default function VideoPlayer({ id }: any) {
   }, [id]);
 
   const shareUrl = `https://www.example.com/movie/${id}`;
-  
+
+  const sharePlatforms = [
+    {
+      name: 'Facebook',
+      url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+      icon: 'facebook',
+    },
+    {
+      name: 'Twitter',
+      url: `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}`,
+      icon: 'twitter',
+    },
+    {
+      name: 'WhatsApp',
+      url: `https://wa.me/?text=${encodeURIComponent(shareUrl)}`,
+      icon: 'whatsapp',
+    },
+    {
+      name: 'Reddit',
+      url: `https://www.reddit.com/submit?url=${encodeURIComponent(shareUrl)}`,
+      icon: 'reddit',
+    },
+  ];
+
   return (
     <div className="py-8 mx-auto max-w-5xl">
       <div className="flex flex-col text-center items-center justify-center">
@@ -127,15 +150,20 @@ export default function VideoPlayer({ id }: any) {
             className="max-w-3xl mx-auto px-4 pt-6"
           />
           <div className="text-center pt-4">
-            <a
-              href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md"
-            >
-              <Share2 className="inline mr-2" size={16} />
-              Share
-            </a>
+            <div className="flex justify-center space-x-2">
+              {sharePlatforms.map((platform) => (
+                <a
+                  key={platform.name}
+                  href={platform.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 bg-gray-800 text-white rounded-full hover:bg-gray-600"
+                  title={`Share on ${platform.name}`}
+                >
+                  <i className={`fab fa-${platform.icon}`} style={{ fontSize: '16px' }}></i>
+                </a>
+              ))}
+            </div>
           </div>
           <div className="pt-8">
             <h2 className="text-lg font-semibold text-center">Related Movies</h2>
@@ -144,7 +172,7 @@ export default function VideoPlayer({ id }: any) {
                 <Link href={`/movie/${movie.id}`} key={movie.id}>
                   <a className="block">
                     <img
-                      src={`https://image.tmdb.org/t/p/w200${movie.poster_path}`}
+                      src={`https://image.tmdb.org/t/p/original${movie.poster_path}`}
                       alt={movie.title}
                       className="w-full h-auto rounded-lg"
                     />

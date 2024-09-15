@@ -39,7 +39,7 @@ export default function VideoPlayer({ id }: any) {
   useEffect(() => {
     const fetchMovieDetails = async () => {
       try {
-        const response = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=YOUR_API_KEY&append_to_response=credits`);
+        const response = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=a46c50a0ccb1bafe2b15665df7fad7e1&append_to_response=credits`);
         const data = await response.json();
         setMovieDetails(data);
         setMovieCast(data.credits.cast);
@@ -67,7 +67,7 @@ export default function VideoPlayer({ id }: any) {
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink href={`/movie/${id}`}>
-                  Movie - {id.charAt(0).toUpperCase() + id.slice(1)}
+                  Movie - {movieDetails?.title || id.charAt(0).toUpperCase() + id.slice(1)}
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
@@ -78,8 +78,13 @@ export default function VideoPlayer({ id }: any) {
           </Breadcrumb>
         </div>
         <div className="text-xl font-bold mb-4">
-          Currently Watching: <span className="text-blue-500">{id.charAt(0).toUpperCase() + id.slice(1)}</span>
+          Currently Watching: <span className="text-blue-500">{movieDetails?.title || id.charAt(0).toUpperCase() + id.slice(1)}</span>
         </div>
+        {movieDetails && (
+          <div className="text-lg mb-6">
+            <p>{movieDetails?.overview}</p>
+          </div>
+        )}
       </div>
       <div className="flex flex-row items-center justify-center w-full mb-4">
         <div className="flex flex-col text-center w-full max-w-xs mx-auto">

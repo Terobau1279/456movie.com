@@ -15,6 +15,68 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
+// Function to determine the media quality
+const getReleaseType = async (mediaId: number, mediaType: string): Promise<string> => {
+  try {
+    const [releaseDatesResponse, watchProvidersResponse] = await Promise.all([
+      fetch(`https://api.themoviedb.org/3/${mediaType}/${mediaId}/release_dates?api_key=${API_KEY}`),
+      fetch(`https://api.themoviedb.org/3/${mediaType}/${mediaId}/watch/providers?api_key=${API_KEY}`)
+    ]);
+
+    if (releaseDatesResponse.ok && watchProvidersResponse.ok) {
+      const releaseDatesData = await releaseDatesResponse.json();
+      const watchProvidersData = await watchProvidersResponse.json();
+
+      const releases = releaseDatesData.results.flatMap(result => result.release_dates);
+      const currentDate = new Date();
+
+      const isDigitalRelease = releases.some(release =>
+        (release.type === 4 || release.type === 6) && new Date(release.release_date) <= currentDate
+      );
+
+      const isInTheaters = mediaType === 'movie' && releases.some(release =>
+        release.type === 3 && new Date(release.release_date) <= currentDate
+      );
+
+      const hasFutureRelease = releases.some(release =>
+        new Date(release.release_date) > currentDate
+      );
+
+      const streamingProviders = watchProvidersData.results?.US?.flatrate || [];
+      const isStreamingAvailable = streamingProviders.length > 0;
+
+      if (isStreamingAvailable) {
+        return "Streaming (HD)";
+      } else if (isDigitalRelease) {
+        return "HD";
+      } else if (isInTheaters && mediaType === 'movie') {
+        const theatricalRelease = releases.find(release => release.type === 3);
+        if (theatricalRelease && new Date(theatricalRelease.release_date) <= currentDate) {
+          const releaseDate = new Date(theatricalRelease.release_date);
+          const oneYearLater = new Date(releaseDate);
+          oneYearLater.setFullYear(releaseDate.getFullYear() + 1);
+
+          if (currentDate >= oneYearLater) {
+            return "HD";
+          } else {
+            return "Cam Quality";
+          }
+        }
+      } else if (hasFutureRelease) {
+        return "Not Released Yet";
+      }
+
+      return "Unknown Quality";
+    } else {
+      console.error('Failed to fetch release type or watch providers.');
+      return "Unknown Quality";
+    }
+  } catch (error) {
+    console.error('An error occurred while fetching release type.', error);
+    return "Unknown Quality";
+  }
+};
+
 type Movie = {
   id: number;
   title: string;
@@ -22,24 +84,11 @@ type Movie = {
   vote_average: number;
   vote_count: number;
   overview: string;
-  release_date: string; // Added for release date
   quality: string; // Added for quality indicator
 };
 
 type MovieData = {
   results: Movie[];
-};
-
-// Function to determine the media quality
-const getMediaQuality = (releaseDate: string): string => {
-  const now = new Date();
-  const release = new Date(releaseDate);
-  const diff = now.getFullYear() - release.getFullYear();
-
-  if (now < release) return "Not Released Yet";
-  if (diff > 1) return "HD";
-  if (now.getFullYear() === release.getFullYear() && now.getMonth() - release.getMonth() < 12) return "Cam Quality";
-  return "HD";
 };
 
 export default function Popular() {
@@ -55,15 +104,13 @@ export default function Popular() {
       );
       const data = await res.json();
 
-      // Adding quality to each movie
-      const updatedData = {
-        ...data,
-        results: data.results.map((movie: any) => ({
-          ...movie,
-          quality: getMediaQuality(movie.release_date),
-        })),
-      };
+      // Fetch and add quality to each movie
+      const resultsWithQuality = await Promise.all(data.results.map(async (movie: any) => {
+        const quality = await getReleaseType(movie.id, 'movie');
+        return { ...movie, quality };
+      }));
 
+      const updatedData = { ...data, results: resultsWithQuality };
       FetchMovieInfo(updatedData);
       setData(updatedData);
       setLoading(false);
@@ -110,8 +157,10 @@ export default function Popular() {
                     )}
                     <div
                       className={`absolute top-2 left-2 px-3 py-1 rounded-full text-xs font-semibold text-white shadow-md border ${
-                        item.quality === "HD"
+                        item.quality === "Streaming (HD)"
                           ? "bg-gradient-to-r from-green-500 to-green-700 border-green-800"
+                          : item.quality === "HD"
+                          ? "bg-gradient-to-r from-blue-500 to-blue-700 border-blue-800"
                           : item.quality === "Cam Quality"
                           ? "bg-gradient-to-r from-red-500 to-red-700 border-red-800"
                           : item.quality === "Not Released Yet"

@@ -15,7 +15,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import Link from "next/link";
@@ -40,7 +39,7 @@ export default function VideoPlayer({ id }: any) {
   const [loading, setLoading] = useState(false);
   const [movieTitle, setMovieTitle] = useState("");
   const [relatedMovies, setRelatedMovies] = useState<any[]>([]);
-  const [showRelatedMovies, setShowRelatedMovies] = useState(true); // New state for toggling related movies
+  const [showRelatedMovies, setShowRelatedMovies] = useState(false); // Hide by default
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   const videoSources: Record<VideoSourceKey, string> = {
@@ -187,17 +186,14 @@ export default function VideoPlayer({ id }: any) {
 
       {/* Related Movies Section */}
       <div className="pt-10">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-center text-white">Related Movies</h3>
-          <button
-            onClick={toggleRelatedMovies}
-            className="px-4 py-2 rounded-md bg-gray-700 text-white border border-gray-600 hover:bg-gray-600 transition-colors"
-          >
-            {showRelatedMovies ? "Hide Related Movies" : "Show Related Movies"}
-          </button>
-        </div>
+        <button
+          onClick={toggleRelatedMovies}
+          className="px-4 py-2 rounded-md bg-gray-700 text-white border border-gray-600 hover:bg-gray-600 transition-colors"
+        >
+          {showRelatedMovies ? "Hide Related Movies" : "Show Related Movies"}
+        </button>
         {showRelatedMovies && (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 mt-4">
             {relatedMovies.map((movie) => (
               <Link href={`/movie/${movie.id}`} key={movie.id}>
                 <div

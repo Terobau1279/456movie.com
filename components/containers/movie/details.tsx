@@ -12,8 +12,81 @@ import {
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { API_KEY } from "@/config/url";
+
+const getReleaseType = async (mediaId: number, mediaType: string): Promise<string> => {
+  try {
+    const [releaseDatesResponse, watchProvidersResponse] = await Promise.all([
+      fetch(`https://api.themoviedb.org/3/${mediaType}/${mediaId}/release_dates?api_key=${API_KEY}`),
+      fetch(`https://api.themoviedb.org/3/${mediaType}/${mediaId}/watch/providers?api_key=${API_KEY}`)
+    ]);
+
+    if (releaseDatesResponse.ok && watchProvidersResponse.ok) {
+      const releaseDatesData = await releaseDatesResponse.json();
+      const watchProvidersData = await watchProvidersResponse.json();
+
+      const releases = releaseDatesData.results.flatMap(result => result.release_dates);
+      const currentDate = new Date();
+
+      const isDigitalRelease = releases.some(release =>
+        (release.type === 4 || release.type === 6) && new Date(release.release_date) <= currentDate
+      );
+
+      const isInTheaters = mediaType === 'movie' && releases.some(release =>
+        release.type === 3 && new Date(release.release_date) <= currentDate
+      );
+
+      const hasFutureRelease = releases.some(release =>
+        new Date(release.release_date) > currentDate
+      );
+
+      const streamingProviders = watchProvidersData.results?.US?.flatrate || [];
+      const isStreamingAvailable = streamingProviders.length > 0;
+
+      if (isStreamingAvailable) {
+        return "Streaming (HD)";
+      } else if (isDigitalRelease) {
+        return "HD";
+      } else if (isInTheaters && mediaType === 'movie') {
+        const theatricalRelease = releases.find(release => release.type === 3);
+        if (theatricalRelease && new Date(theatricalRelease.release_date) <= currentDate) {
+          const releaseDate = new Date(theatricalRelease.release_date);
+          const oneYearLater = new Date(releaseDate);
+          oneYearLater.setFullYear(releaseDate.getFullYear() + 1);
+
+          if (currentDate >= oneYearLater) {
+            return "HD";
+          } else {
+            return "Cam Quality";
+          }
+        }
+      } else if (hasFutureRelease) {
+        return "Not Released Yet";
+      }
+
+      return "Unknown Quality";
+    } else {
+      console.error('Failed to fetch release type or watch providers.');
+      return "Unknown Quality";
+    }
+  } catch (error) {
+    console.error('An error occurred while fetching release type.', error);
+    return "Unknown Quality";
+  }
+};
 
 const DetailsContainer = ({ data, id, embed }: any) => {
+  const [quality, setQuality] = React.useState<string>("Unknown Quality");
+
+  React.useEffect(() => {
+    const fetchQuality = async () => {
+      const movieQuality = await getReleaseType(id, 'movie');
+      setQuality(movieQuality);
+    };
+
+    fetchQuality();
+  }, [id]);
+
   return (
     <div className="">
       <div className={cn("mx-auto max-w-6xl", embed ? "p-0" : "md:pt-4")}>
@@ -63,6 +136,23 @@ const DetailsContainer = ({ data, id, embed }: any) => {
                     })}
 
                     <Separator orientation="vertical" className="h-6" />
+                    
+                    <Badge
+                      variant="outline"
+                      className={`whitespace-nowrap ${
+                        quality === "Streaming (HD)"
+                          ? "bg-green-500 text-white"
+                          : quality === "HD"
+                          ? "bg-blue-500 text-white"
+                          : quality === "Cam Quality"
+                          ? "bg-red-500 text-white"
+                          : quality === "Not Released Yet"
+                          ? "bg-yellow-500 text-white"
+                          : "bg-gray-500 text-white"
+                      }`}
+                    >
+                      {quality}
+                    </Badge>
                   </>
                 )}
 

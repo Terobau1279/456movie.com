@@ -104,7 +104,6 @@ export default function VideoPlayer({ id }: { id: string }) {
       </div>
       <div className="pt-4 text-center">
         <h2 className="text-xl font-bold">Currently Watching: {movieDetails ? movieDetails.title : "Loading..."}</h2>
-        <p className="mt-2 text-gray-700">{movieDetails ? movieDetails.overview : "Loading movie details..."}</p>
       </div>
       {loading ? (
         <Skeleton className="mx-auto px-4 pt-6 w-full h-[500px]" />

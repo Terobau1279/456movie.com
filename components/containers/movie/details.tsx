@@ -12,92 +12,8 @@ import {
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { API_KEY } from "@/config/url";
 
-// Function to get release type, moved to a separate file if needed for clarity
-const getReleaseType = async (mediaId: number, mediaType: string): Promise<string> => {
-  try {
-    const [releaseDatesResponse, watchProvidersResponse] = await Promise.all([
-      fetch(`https://api.themoviedb.org/3/${mediaType}/${mediaId}/release_dates?api_key=${API_KEY}`),
-      fetch(`https://api.themoviedb.org/3/${mediaType}/${mediaId}/watch/providers?api_key=${API_KEY}`)
-    ]);
-
-    if (releaseDatesResponse.ok && watchProvidersResponse.ok) {
-      const releaseDatesData = await releaseDatesResponse.json();
-      const watchProvidersData = await watchProvidersResponse.json();
-
-      const releases = releaseDatesData.results.flatMap(result => result.release_dates);
-      const currentDate = new Date();
-
-      const isDigitalRelease = releases.some(release =>
-        (release.type === 4 || release.type === 6) && new Date(release.release_date) <= currentDate
-      );
-
-      const isInTheaters = mediaType === 'movie' && releases.some(release =>
-        release.type === 3 && new Date(release.release_date) <= currentDate
-      );
-
-      const hasFutureRelease = releases.some(release =>
-        new Date(release.release_date) > currentDate
-      );
-
-      const streamingProviders = watchProvidersData.results?.US?.flatrate || [];
-      const isStreamingAvailable = streamingProviders.length > 0;
-
-      if (isStreamingAvailable) {
-        return "Streaming (HD)";
-      } else if (isDigitalRelease) {
-        return "HD";
-      } else if (isInTheaters && mediaType === 'movie') {
-        const theatricalRelease = releases.find(release => release.type === 3);
-        if (theatricalRelease && new Date(theatricalRelease.release_date) <= currentDate) {
-          const releaseDate = new Date(theatricalRelease.release_date);
-          const oneYearLater = new Date(releaseDate);
-          oneYearLater.setFullYear(releaseDate.getFullYear() + 1);
-
-          if (currentDate >= oneYearLater) {
-            return "HD";
-          } else {
-            return "Cam Quality";
-          }
-        }
-      } else if (hasFutureRelease) {
-        return "Not Released Yet";
-      }
-
-      return "Unknown Quality";
-    } else {
-      console.error('Failed to fetch release type or watch providers.');
-      return "Unknown Quality";
-    }
-  } catch (error) {
-    console.error('An error occurred while fetching release type.', error);
-    return "Unknown Quality";
-  }
-};
-
-// Server-side data fetching function
-export async function getServerSideProps(context: any) {
-  const { id } = context.params;
-  const mediaType = 'movie'; // or 'tv' based on your needs
-
-  // Fetch movie or TV show details
-  const response = await fetch(`https://api.themoviedb.org/3/${mediaType}/${id}?api_key=${API_KEY}`);
-  const data = await response.json();
-
-  // Fetch quality
-  const quality = await getReleaseType(id, mediaType);
-
-  return {
-    props: {
-      data,
-      quality,
-    },
-  };
-}
-
-// Component
-const DetailsContainer = ({ data, quality }: any) => {
+const DetailsContainer = ({ data, id, embed }: any) => {
   return (
     <div className="">
       <div className={cn("mx-auto max-w-6xl", embed ? "p-0" : "md:pt-4")}>
@@ -134,34 +50,19 @@ const DetailsContainer = ({ data, quality }: any) => {
               <div className="flex flex-wrap items-center gap-2">
                 {data.genres.length > 0 && (
                   <>
-                    {data.genres.map((genre: any) => (
-                      <Badge
-                        key={genre.id}
-                        variant="outline"
-                        className="whitespace-nowrap"
-                      >
-                        {genre.name}
-                      </Badge>
-                    ))}
+                    {data.genres.map((genre: any) => {
+                      return (
+                        <Badge
+                          key={genre.id}
+                          variant="outline"
+                          className="whitespace-nowrap"
+                        >
+                          {genre.name}
+                        </Badge>
+                      );
+                    })}
 
                     <Separator orientation="vertical" className="h-6" />
-                    
-                    <Badge
-                      variant="outline"
-                      className={`whitespace-nowrap ${
-                        quality === "Streaming (HD)"
-                          ? "bg-green-500 text-white"
-                          : quality === "HD"
-                          ? "bg-blue-500 text-white"
-                          : quality === "Cam Quality"
-                          ? "bg-red-500 text-white"
-                          : quality === "Not Released Yet"
-                          ? "bg-yellow-500 text-white"
-                          : "bg-gray-500 text-white"
-                      }`}
-                    >
-                      {quality}
-                    </Badge>
                   </>
                 )}
 

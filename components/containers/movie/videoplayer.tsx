@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Maximize2 } from "lucide-react"; // Fullscreen icon
 
 type VideoSourceKey = "vidlinkpro" | "vidsrccc" | "vidsrcpro" | "superembed";
 
@@ -39,31 +38,6 @@ export default function VideoPlayer({ id }: any) {
       setSelectedSource(value);
       setLoading(false);
     }, 1000);
-  };
-
-  const handleFullScreen = () => {
-    const iframe = iframeRef.current;
-
-    if (iframe) {
-      // Standard fullscreen API and fallbacks for webkit and ms browsers
-      if (iframe.requestFullscreen) {
-        iframe.requestFullscreen();
-      } else if ((iframe as HTMLIFrameElement).webkitRequestFullscreen) {
-        // Safari
-        (iframe as HTMLIFrameElement).webkitRequestFullscreen();
-      } else if ((iframe as HTMLIFrameElement).msRequestFullscreen) {
-        // Internet Explorer/Edge
-        (iframe as HTMLIFrameElement).msRequestFullscreen();
-      } else {
-        console.warn("Fullscreen API is not supported by this browser.");
-      }
-
-      // Unmute the video if supported
-      iframe.contentWindow?.postMessage(
-        '{"method":"setVolume","value":1}',
-        "*"
-      );
-    }
   };
 
   return (
@@ -99,17 +73,6 @@ export default function VideoPlayer({ id }: any) {
               <SelectItem value="superembed">SuperEmbed (CONTAINS ADS)</SelectItem>
             </SelectContent>
           </Select>
-
-          <div className="pt-2">
-            <Badge
-              variant="outline"
-              onClick={handleFullScreen}
-              className="cursor-pointer whitespace-nowrap flex items-center"
-            >
-              <Maximize2 className="mr-1.5" size={12} />
-              Enter Fullscreen
-            </Badge>
-          </div>
         </div>
       </div>
 

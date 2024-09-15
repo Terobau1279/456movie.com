@@ -1,3 +1,4 @@
+"use client";
 import { useState, useEffect, useRef } from "react";
 import {
   Select,
@@ -33,12 +34,12 @@ type VideoSourceKey =
   | "twoembed"
   | "vidsrctop";
 
-export default function VideoPlayer({ id }: { id: string }) {
+export default function VideoPlayer({ id }: any) {
   const [selectedSource, setSelectedSource] = useState<VideoSourceKey>("vidlinkpro");
   const [loading, setLoading] = useState(false);
   const [movieTitle, setMovieTitle] = useState("");
   const [relatedMovies, setRelatedMovies] = useState<any[]>([]);
-  const [showRelatedMovies, setShowRelatedMovies] = useState(false);
+  const [showRelatedMovies, setShowRelatedMovies] = useState(false); // Hide by default
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   const videoSources: Record<VideoSourceKey, string> = {
@@ -57,6 +58,7 @@ export default function VideoPlayer({ id }: { id: string }) {
     vidsrctop: `https://vidsrc.top/embed/movie/tmdb/${id}`,
   };
 
+  // Fetch movie details from TMDb API
   useEffect(() => {
     const fetchMovieDetails = async () => {
       try {
@@ -66,11 +68,12 @@ export default function VideoPlayer({ id }: { id: string }) {
         const data = await response.json();
         setMovieTitle(data.title || "Unknown Movie");
 
+        // Fetch related movies
         const relatedResponse = await fetch(
           `https://api.themoviedb.org/3/movie/${id}/similar?api_key=a46c50a0ccb1bafe2b15665df7fad7e1`
         );
         const relatedData = await relatedResponse.json();
-        setRelatedMovies(relatedData.results.slice(0, 8));
+        setRelatedMovies(relatedData.results.slice(0, 8)); // Fetch 8 related movies
       } catch (error) {
         console.error("Error fetching movie details:", error);
       }
@@ -88,17 +91,6 @@ export default function VideoPlayer({ id }: { id: string }) {
 
   const toggleRelatedMovies = () => {
     setShowRelatedMovies(prev => !prev);
-  };
-
-  const handleBookmark = () => {
-    const savedBookmarks = localStorage.getItem("bookmarkedMovies");
-    const bookmarks = savedBookmarks ? JSON.parse(savedBookmarks) : [];
-
-    if (!bookmarks.some((movie: any) => movie.id === id)) {
-      const newBookmark = { id, title: movieTitle, poster_path: "" };
-      bookmarks.push(newBookmark);
-      localStorage.setItem("bookmarkedMovies", JSON.stringify(bookmarks));
-    }
   };
 
   return (
@@ -121,6 +113,7 @@ export default function VideoPlayer({ id }: { id: string }) {
         </div>
       </div>
 
+      {/* Currently Watching Section */}
       <h2 className="text-lg font-bold mb-4 text-center text-white">
         Currently Watching: {movieTitle}
       </h2>
@@ -132,75 +125,97 @@ export default function VideoPlayer({ id }: { id: string }) {
               <SelectValue placeholder="Select Video Source" />
             </SelectTrigger>
             <SelectContent className="bg-gray-800 text-white border border-gray-700">
-              <SelectItem value="vidlinkpro">VidLinkPro</SelectItem>
-              <SelectItem value="vidsrccc">VidSrc CCC</SelectItem>
-              <SelectItem value="vidsrcpro">VidSrc Pro</SelectItem>
-              <SelectItem value="superembed">SuperEmbed</SelectItem>
-              <SelectItem value="vidbinge4K">VidBinge 4K</SelectItem>
-              <SelectItem value="smashystream">SmashyStream</SelectItem>
-              <SelectItem value="vidsrcicu">VidSrc ICU</SelectItem>
-              <SelectItem value="vidsrcnl">VidSrc NL</SelectItem>
-              <SelectItem value="nontongo">Nontongo</SelectItem>
-              <SelectItem value="vidsrcxyz">VidSrc XYZ</SelectItem>
-              <SelectItem value="embedccMovie">EmbedCC Movie</SelectItem>
-              <SelectItem value="twoembed">TwoEmbed</SelectItem>
-              <SelectItem value="vidsrctop">VidSrc Top</SelectItem>
+              <SelectItem value="vidlinkpro">
+                Vidlink.pro <span className="text-green-400 text-sm">No Ads, Auto-Play</span>
+              </SelectItem>
+              <SelectItem value="vidsrccc">
+                VidSrc.cc <span className="text-green-400 text-sm">No Ads, Auto-Play, Auto-Next</span>
+              </SelectItem>
+              <SelectItem value="vidsrcpro">
+                VidSrc.pro <span className="text-green-400 text-sm">Casting Options</span>
+              </SelectItem>
+              <SelectItem value="superembed">
+                SuperEmbed <span className="text-red-400 text-sm">Contains Ads</span>
+              </SelectItem>
+              <SelectItem value="vidbinge4K">
+                VidBinge 4K <span className="text-green-400 text-sm">4K Stream, Auto-Play, Shared Stream</span>
+              </SelectItem>
+              <SelectItem value="smashystream">
+                Smashy Stream <span className="text-green-400 text-sm">No Ads, Shared Stream</span>
+              </SelectItem>
+              <SelectItem value="vidsrcicu">
+                VidSrc ICU <span className="text-green-400 text-sm">Casting Options</span>
+              </SelectItem>
+              <SelectItem value="vidsrcnl">
+                VidSrc NL
+              </SelectItem>
+              <SelectItem value="nontongo">
+                Nontongo <span className="text-green-400 text-sm">Casting Options</span>
+              </SelectItem>
+              <SelectItem value="vidsrcxyz">
+                VidSrc XYZ
+              </SelectItem>
+              <SelectItem value="embedccMovie">
+                Embed CC Movie
+              </SelectItem>
+              <SelectItem value="twoembed">
+                TwoEmbed
+              </SelectItem>
+              <SelectItem value="vidsrctop">
+                VidSrc Top
+              </SelectItem>
             </SelectContent>
           </Select>
-          <div className="relative mt-4">
-            {loading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-900 opacity-75">
-                <Skeleton className="h-24 w-32" />
-              </div>
-            )}
-            <iframe
-              ref={iframeRef}
-              className="w-full h-[500px] border-none rounded-md"
-              src={videoSources[selectedSource]}
-              allowFullScreen
-              title="Video Player"
-            ></iframe>
-          </div>
         </div>
       </div>
 
-      <div className="flex justify-center mt-4">
-        <button
-          onClick={handleBookmark}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-300"
-        >
-          Bookmark This Movie
-        </button>
-      </div>
-
-      {relatedMovies.length > 0 && (
-        <div className="mt-8">
-          <button
-            onClick={toggleRelatedMovies}
-            className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition-colors duration-300"
-          >
-            {showRelatedMovies ? "Hide Related Movies" : "Show Related Movies"}
-          </button>
-          {showRelatedMovies && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
-              {relatedMovies.map((movie) => (
-                <Link href={`/movie/${movie.id}`} key={movie.id}>
-                  <a className="group relative block">
-                    <img
-                      src={`https://image.tmdb.org/t/p/w200${movie.poster_path}`}
-                      alt={movie.title}
-                      className="w-full h-auto rounded-lg"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <span className="text-white">{movie.title}</span>
-                    </div>
-                  </a>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
+      {loading ? (
+        <Skeleton className="mx-auto px-4 pt-6 w-full h-[500px]" />
+      ) : (
+        <iframe
+          src={videoSources[selectedSource]}
+          ref={iframeRef}
+          referrerPolicy="origin"
+          allowFullScreen
+          width="100%"
+          height="450"
+          scrolling="no"
+          className="max-w-3xl mx-auto px-4 pt-6"
+        />
       )}
+
+      {/* Related Movies Section */}
+      <div className="pt-10">
+        <button
+          onClick={toggleRelatedMovies}
+          className="px-4 py-2 rounded-md bg-gray-700 text-white border border-gray-600 hover:bg-gray-600 transition-colors"
+        >
+          {showRelatedMovies ? "Hide Related Movies" : "Show Related Movies"}
+        </button>
+        {showRelatedMovies && (
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 mt-4">
+            {relatedMovies.map((movie) => (
+              <Link href={`/movie/${movie.id}`} key={movie.id}>
+                <div
+                  className="relative group cursor-pointer overflow-hidden rounded-lg shadow-lg hover:scale-105 transition-transform duration-300"
+                >
+                  <Image
+                    src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                    alt={movie.title}
+                    width={200}
+                    height={300}
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60 group-hover:opacity-0 transition-opacity duration-300"></div>
+                  <div className="absolute bottom-0 left-0 p-2 text-white bg-gradient-to-t from-black to-transparent">
+                    {movie.title}
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

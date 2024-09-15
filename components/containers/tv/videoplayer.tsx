@@ -268,7 +268,6 @@ export default function VideoPlayer({ id }: { id: number }) {
       </div>
 
      
-
 {/* Server Selector */}
 <div className="flex justify-center pt-4">
   <div className="relative w-[300px]">
@@ -296,8 +295,12 @@ export default function VideoPlayer({ id }: { id: number }) {
             {label}
             {tags.length > 0 && (
               <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex space-x-2">
-                {tags.map(tag => (
-                  <span key={tag} className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                {tags.map((tag, index) => (
+                  <span key={tag} className={`text-xs px-2 py-1 rounded-full ${
+                    index === 0 ? 'bg-gray-600 text-white' :
+                    index === 1 ? 'bg-gray-500 text-white' :
+                    'bg-gray-400 text-white'
+                  }`}>
                     {tag}
                   </span>
                 ))}
@@ -309,6 +312,7 @@ export default function VideoPlayer({ id }: { id: number }) {
     </Select>
   </div>
 </div>
+
 
 
 

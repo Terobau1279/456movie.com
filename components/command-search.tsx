@@ -1,401 +1,214 @@
-"use client";
-import { ReactNode, useEffect, useState } from "react";
-import { CommandIcon } from "lucide-react";
-import { usePathname } from "next/navigation";
-import Link from "next/link";
+import { Show } from "@/types";
+import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import {
-  Command,
-  CommandDialog,
-  CommandInput,
-  CommandList,
-} from "@/components/ui/command";
-import { Movie_Search, Tv_Search } from "@/config/url";
-import { FetchMovieInfo } from "@/fetch";
-import { Skeleton } from "@/components/ui/skeleton";
-import { getSearchedManga, PreFetchMangaInfo } from "@/fetch";
-import { fetchDramaSearch, FetchAnimeInfo } from "@/fetch";
+import Link from 'next/link'
 
-type AnimeResult = {
-  id: string;
-  malId: number | null;
-  title: {
-    romaji: string;
-    english: string | null;
-    native: string;
-    userPreferred: string;
-  };
-  status: string;
-  image: string;
-  cover: string;
-  popularity: number;
-  description: string;
-  rating: number | null;
-  genres: string[];
-  color: string;
-  totalEpisodes: number | null;
-  currentEpisodeCount: number | null;
-  type: string;
-  releaseDate: number | null;
-};
+interface CarousalCardProps {
+  isDetailsPage?: boolean;
+  show: Show;
+  type?: string;
+  id?: string;
+}
 
-type DramaResult = {
-  id: string;
-  title: string;
-  url: string;
-  image: string;
-};
-
-type MangaResult = {
-  id: string;
-  malId?: number;
-  title: {
-    romaji: string;
-    english?: string;
-    native?: string;
-    userPreferred: string;
-  };
-  status: string;
-  image: string;
-  description: string;
-  genres: string[];
-  totalChapters?: number;
-  volumes?: number;
-  type: string;
-};
-
-type MovieResult = {
-  id: number;
-  title: string;
-  release_date: string;
-  poster_path: string;
-};
-
-type TvResult = {
-  id: number;
-  name: string;
-  first_air_date: string;
-  poster_path: string;
-};
-
-type Result = {
-  movies: Array<MovieResult>;
-  tvShows: Array<TvResult>;
-};
-
-const CommandSearchSkeleton = () => (
-  <div className="flex items-center justify-between gap-4 rounded-sm p-2">
-    <Skeleton className="h-[2ex] w-[20ch]" />
-    <Skeleton className="h-[2ex] w-[4ch]" />
-  </div>
-);
-
-type CommandSearchGroupProps = {
-  heading: string;
-  children: ReactNode;
-};
-
-const CommandSearchGroup = ({ children, heading }: CommandSearchGroupProps) => (
-  <div className="space-y-2 p-4">
-    <h4 className="text-sm font-bold">{heading}</h4>
-    <div className="flex flex-col gap-2">{children}</div>
-  </div>
-);
-
-export const CommandSearch = () => {
-  const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState("");
-  const [result, setResults] = useState<Result | null>({
-    movies: [],
-    tvShows: [],
-  });
-  const [isLoading, setIsLoading] = useState(false);  
-  const [dramaResults, setDramaResults] = useState<DramaResult[] | null>(null);
-  const [mangaResults, setMangaResults] = useState<MangaResult[] | null>(null);
-  const [animeResults, setSearchResults] = useState<AnimeResult[] | null>(null);
-
-  const debounce = (func: (...args: any[]) => void, delay: number) => {
-    let debounceTimer: NodeJS.Timeout;
-    return function (this: void, ...args: any[]) {
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => func(...args), delay);
-    };
-  };
-
-  const fetchDramaResults = async (title: string) => {
-    setIsLoading(true);
-    if (title) {
-      const data = await fetchDramaSearch(title); // Fetch drama search results
-      FetchAnimeInfo(data); // Process the fetched info if needed
-      setDramaResults(data.results); // Set the drama results
-    }
-    setIsLoading(false);
-  };
-
-  useEffect(() => {
-    const debouncedFetch = debounce(fetchDramaResults, 500);
-    debouncedFetch(search);
-  }, [search]);
-
-  const fetchMangaResults = async (title: string) => {
-    setIsLoading(true);
-    if (title) {
-      const data = await getSearchedManga(title); // Fetch manga results
-      PreFetchMangaInfo(data); // Process the fetched manga info
-      setMangaResults(data.results); // Set the manga results
-    }
-    setIsLoading(false);
-  };
-
-  useEffect(() => {
-    const debouncedFetch = debounce(fetchMangaResults, 500);
-    debouncedFetch(search);
-  }, [search]);
-
-  const fetchAnimeResults = async (text: string) => {
-    setIsLoading(true);
-    if (text) {
-      const res = await fetch(
-        `https://api-consumet-org-jet.vercel.app/meta/anilist/` + text,
-        {
-          next: { revalidate: 21600 },
-        }
-      );
-      const data = await res.json();
-      setSearchResults(data.results);
-    }
-    setIsLoading(false);
-  };
-
-  useEffect(() => {
-    const debouncedFetch = debounce(fetchAnimeResults, 500);
-    debouncedFetch(search);
-  }, [search]);
-
-  const fetch_results = async (title: string) => {
-    setIsLoading(true);
-    if (title) {
-      const [movieData, tvData] = await Promise.all([
-        get_movie_results(title),
-        get_tv_results(title),
-      ]);
-      const combinedResults = {
-        movies: movieData.results,
-        tvShows: tvData.results,
-      };
-      FetchMovieInfo(combinedResults);
-      setResults(combinedResults);
-    }
-    setIsLoading(false);
-  };
-
-  useEffect(() => {
-    const debouncedFetch = debounce(fetch_results, 500);
-    debouncedFetch(search);
-  }, [search]);
-
-  useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if ((e.key === "k" || e.key === "K") && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        setOpen((open) => !open);
-      }
-    };
-
-    document.addEventListener("keydown", down);
-    return () => document.removeEventListener("keydown", down);
-  }, []);
-
-  useEffect(() => {
-    if (open) setOpen(false);
-  }, [pathName]);
-
-  const hasMovies = result?.movies?.length > 0;
-  const hasTvSeries = result?.tvShows?.length > 0;
-  const hasMangaResults = mangaResults?.length ?? 0 > 0;
-  const hasDramaResults = dramaResults?.length ?? 0 > 0;
-  const hasAnimeResults = animeResults?.length ?? 0 > 0;
+export default function CarousalCard(props: CarousalCardProps) {
+  const { show, isDetailsPage, type } = props;
 
   return (
     <>
-      <Button
-        variant="outline"
-        className="flex w-full flex-1 justify-between gap-2 pr-2 text-sm text-muted-foreground"
-        onClick={() => setOpen(true)}
-      >
-        Search Anything
-        <div className="mobile:hidden flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
-          <CommandIcon size={12} />K
-        </div>
-      </Button>
+      {props.show && (
+        <>
+          <div className="flex md:hidden   h-[70vh]   relative">
+            <img
+              alt=""
+              className="inset-0 object-cover rounded-t-xl   h-full w-full"
+              src={`https://image.tmdb.org/t/p/original/${props.show.poster_path}`}
+            />
+            <div className="   border-white absolute flex justify-between bg-gradient-to-t from-background to-transparent bottom-0 top-1/2 w-full   flex-col    ">
+              <div></div>
+              <div className="flex items-center flex-col">
+                <div className="text-3xl text-pretty flex text-center w-9/12 items-center justify-center  font-bold">
+                  {props.show.title || props.show.name}
+                </div>
+                <div className="opacity-50">
+                  {props.show.genres?.name?.join(",") || "Comedy"}{" "}
+                  {" • " +
+                    (
+                      props.show.release_date || props.show.first_air_date
+                    ).split("-")[0]}
+                </div>
 
-      <CommandDialog open={open} onOpenChange={setOpen}>
-        <Command>
-          <CommandInput
-            placeholder="Search"
-            onValueChange={setSearch}
-            value={search}
-          />
-
-          <CommandList>
-            {isLoading && (
-              <div className="space-y-8">
-                <CommandSearchGroup heading="Movies">
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <CommandSearchSkeleton key={index} />
-                  ))}
-                </CommandSearchGroup>
-
-                <CommandSearchGroup heading="TV Shows">
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <CommandSearchSkeleton key={index} />
-                  ))}
-                </CommandSearchGroup>
-
-                <CommandSearchGroup heading="Manga">
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <CommandSearchSkeleton key={index} />
-                  ))}
-                </CommandSearchGroup>
-
-                <CommandSearchGroup heading="Drama">
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <CommandSearchSkeleton key={index} />
-                  ))}
-                </CommandSearchGroup>
-
-                <CommandSearchGroup heading="Anime">
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <CommandSearchSkeleton key={index} />
-                  ))}
-                </CommandSearchGroup>
+                {props.show.genres?.map((genre: any) => {
+                  return (
+                    <Badge
+                      key={genre.id}
+                      variant="outline"
+                      className="whitespace-nowrap"
+                    >
+                      {genre.name}
+                    </Badge>
+                  );
+                })}
               </div>
-            )}
-
-            {!isLoading && result ? (
-              <div>
-                {hasMovies && (
-                  <CommandSearchGroup heading="Movies">
-                    {result.movies.map((item) => (
-                      <Link
-                        key={item.id}
-                        href={`/movie/${item.id}`}
-                        className="flex cursor-pointer items-center justify-between gap-4 rounded-sm p-2 hover:bg-muted"
+            </div>
+          </div>
+          <div className="relative h-[70vh] md:flex hidden w-full  mx-auto  ">
+            <img
+              alt=""
+              className=" h-full w-full rounded-t-xl object-center object-cover"
+              src={`https://image.tmdb.org/t/p/original/${show.backdrop_path}`}
+            />
+            <div className="inset-0 bg-gradient-to-t from-background to-from-background/10  absolute justify-between flex flex-col">
+              <div></div>
+              <div className="w-[96%] mx-auto">
+                <div className=" flex gap-1 flex-col  uppercase w-[500px] text-pretty">
+                  <div className="text-sm normal-case opacity-50">
+                    {props.show.release_date || props.show.first_air_date
+                      ? format(
+                          new Date(
+                            props.show.release_date || props.show.first_air_date
+                          ),
+                          "PPP"
+                        )
+                      : "Unknown"}
+                  </div>
+                  <div className="text-3xl text-pretty font-bold ">
+                    {show.title || show.name}
+                  </div>
+                  <div className="text-xs opacity-50 normal-case line-clamp-3">
+                    {show?.overview}
+                  </div>
+                  <div className="flex my-2  gap-2">
+                    <Link href={`/${props.type}/${show.id}`}>
+                      <Button
+                        variant={"ringHover"}
+                        className="whitespace-nowrap w-full"
                       >
-                        <span className="truncate whitespace-nowrap text-sm">
-                          {item.title}
-                        </span>
-
-                        <span className="whitespace-nowrap text-xs text-muted-foreground">
-                          {item.release_date &&
-                            new Date(item.release_date).getFullYear()}
-                        </span>
-                      </Link>
-                    ))}
-                  </CommandSearchGroup>
-                )}
-
-                {hasTvSeries && (
-                  <CommandSearchGroup heading="TV Shows">
-                    {result.tvShows.map((item) => (
-                      <Link
-                        key={item.id}
-                        className="flex cursor-pointer items-center justify-between gap-4 rounded-sm p-2 hover:bg-muted"
-                        href={`/tv/${item.id}`}
-                      >
-                        <span className="truncate whitespace-nowrap text-sm">
-                          {item.name}
-                        </span>
-
-                        <span className="whitespace-nowrap text-xs text-muted-foreground">
-                          {item.first_air_date &&
-                            new Date(item.first_air_date).getFullYear()}
-                        </span>
-                      </Link>
-                    ))}
-                  </CommandSearchGroup>
-                )}
-
-                {hasMangaResults && (
-                  <CommandSearchGroup heading="Manga">
-                    {mangaResults?.map((item) => (
-                      <Link
-                        key={item.id}
-                        className="flex cursor-pointer items-center justify-between gap-4 rounded-sm p-2 hover:bg-muted"
-                        href={`/manga/${item.id}`}
-                      >
-                        <span className="truncate whitespace-nowrap text-sm">
-                          {item.title.userPreferred ||
-                            item.title.english ||
-                            item.title.romaji}
-                        </span>
-
-                        <span className="whitespace-nowrap text-xs text-muted-foreground">
-                          CH: {item.totalChapters}
-                        </span>
-                      </Link>
-                    ))}
-                  </CommandSearchGroup>
-                )}
-
-                {hasDramaResults && (
-                  <CommandSearchGroup heading="Drama">
-                    {dramaResults?.map((item) => (
-                      <Link
-                        key={item.id}
-                        className="flex cursor-pointer items-center justify-between gap-4 rounded-sm p-2 hover:bg-muted"
-                        href={`/drama/${item.id}`}
-                      >
-                        <span className="truncate whitespace-nowrap text-sm">
-                          {item.title}
-                        </span>
-                      </Link>
-                    ))}
-                  </CommandSearchGroup>
-                )}
-
-                {hasAnimeResults && (
-                  <CommandSearchGroup heading="Anime">
-                    {animeResults?.map((item) => (
-                      <Link
-                        key={item.id}
-                        className="flex cursor-pointer items-center justify-between gap-4 rounded-sm p-2 hover:bg-muted"
-                        href={`/anime/${item.id}`}
-                      >
-                        <span className="truncate whitespace-nowrap text-sm">
-                          {item.title.userPreferred ||
-                            item.title.english ||
-                            item.title.romaji}
-                        </span>
-
-                        <span className="whitespace-nowrap text-xs text-muted-foreground">
-                          Episodes: {item.totalEpisodes}
-                        </span>
-                      </Link>
-                    ))}
-                  </CommandSearchGroup>
-                )}
+                        Go To Show
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
               </div>
-            ) : (
-              !isLoading && <p className="p-8 text-center">No Results</p>
-            )}
-          </CommandList>
-        </Command>
-      </CommandDialog>
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
-};
+}
+ 111 changes: 111 additions & 0 deletions111  
+components/common/icons.tsx
+Original file line number	Diff line number	Diff line change
+@@ -0,0 +1,111 @@
+import {
+  LucideProps,
+  Moon,
+  Search,
+  SunMedium,
+  Clapperboard,
+  PawPrint,
+  CircleCheckBig,
+  type Icon as LucideIcon,
+} from "lucide-react";
 
-const get_movie_results = async (title: string) => {
-  const res = await fetch(Movie_Search + title, {
-    next: { revalidate: 21600 },
-  });
-  return res.json();
-};
+export type Icon = typeof LucideIcon;
 
-const get_tv_results = async (title: string) => {
-  const res = await fetch(Tv_Search + title, {
-    next: { revalidate: 21600 },
-  });
-  return res.json();
+export const Icons = {
+  sun: SunMedium,
+  moon: Moon,
+  clapperboard: Clapperboard,
+  search: Search,
+  paw: PawPrint,
+  check: CircleCheckBig,
+  blank: (props: LucideProps) => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="0"
+      height="0"
+      viewBox="0 0 0 0"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="lucide lucide-twitter"
+      {...props}
+    >
+      <path
+        fill="currentColor"
+        d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"
+      />
+    </svg>
+  ),
+  twitter: (props: LucideProps) => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="lucide lucide-twitter"
+      {...props}
+    >
+      <path
+        fill="currentColor"
+        d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"
+      />
+    </svg>
+  ),
+  gitHub: (props: LucideProps) => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="lucide lucide-github"
+      {...props}
+    >
+      <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
+      <path fill="currentColor" d="M9 18c-4.51 2-5-2-7-2" />
+    </svg>
+  ),
+  mobile_button: (props: LucideProps) => (
+    <svg
+      strokeWidth="1.5"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="h-5 w-5"
+      {...props}
+    >
+      <path
+        d="M3 5H11"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      ></path>
+      <path
+        d="M3 12H16"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      ></path>
+      <path
+        d="M3 19H21"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      ></path>
+    </svg>
+  ),
 };

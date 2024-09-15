@@ -1,15 +1,9 @@
-"use client";
 import { ReactNode, useEffect, useState } from "react";
 import { CommandIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import {
-  Command,
-  CommandDialog,
-  CommandInput,
-  CommandList,
-} from "@/components/ui/command";
+import { Command, CommandDialog, CommandInput, CommandList } from "@/components/ui/command";
 import { Movie_Search, Tv_Search } from "@/config/url";
 import { FetchMovieInfo } from "@/fetch";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -36,7 +30,7 @@ type AnimeResult = {
   totalEpisodes: number | null;
   currentEpisodeCount: number | null;
   type: string;
-  releaseDate: number | null;
+  thumbnail: string; // Added field
 };
 
 type DramaResult = {
@@ -44,6 +38,7 @@ type DramaResult = {
   title: string;
   url: string;
   image: string;
+  thumbnail: string; // Added field
 };
 
 type MangaResult = {
@@ -62,6 +57,7 @@ type MangaResult = {
   totalChapters?: number;
   volumes?: number;
   type: string;
+  thumbnail: string; // Added field
 };
 
 type MovieResult = {
@@ -69,6 +65,7 @@ type MovieResult = {
   title: string;
   release_date: string;
   poster_path: string;
+  thumbnail: string; // Added field
 };
 
 type TvResult = {
@@ -76,6 +73,7 @@ type TvResult = {
   name: string;
   first_air_date: string;
   poster_path: string;
+  thumbnail: string; // Added field
 };
 
 type Result = {
@@ -114,7 +112,6 @@ export const CommandSearch = () => {
   const [isLoading, setIsLoading] = useState(false);  
   const [dramaResults, setDramaResults] = useState<DramaResult[] | null>(null);
   const [mangaResults, setMangaResults] = useState<MangaResult[] | null>(null);
-  const [animeResults, setSearchResults] = useState<AnimeResult[] | null>(null);
 
   const debounce = (func: (...args: any[]) => void, delay: number) => {
     let debounceTimer: NodeJS.Timeout;
@@ -127,9 +124,12 @@ export const CommandSearch = () => {
   const fetchDramaResults = async (title: string) => {
     setIsLoading(true);
     if (title) {
-      const data = await fetchDramaSearch(title); // Fetch drama search results
-      FetchAnimeInfo(data); // Process the fetched info if needed
-      setDramaResults(data.results); // Set the drama results
+      const data = await fetchDramaSearch(title);
+      FetchAnimeInfo(data);
+      setDramaResults(data.results.map((result: any) => ({
+        ...result,
+        thumbnail: `https://image.tmdb.org/t/p/w200${result.image}`, // Adjust thumbnail URL
+      })));
     }
     setIsLoading(false);
   };
@@ -142,9 +142,12 @@ export const CommandSearch = () => {
   const fetchMangaResults = async (title: string) => {
     setIsLoading(true);
     if (title) {
-      const data = await getSearchedManga(title); // Fetch manga results
-      PreFetchMangaInfo(data); // Process the fetched manga info
-      setMangaResults(data.results); // Set the manga results
+      const data = await getSearchedManga(title);
+      PreFetchMangaInfo(data);
+      setMangaResults(data.results.map((result: any) => ({
+        ...result,
+        thumbnail: `https://image.tmdb.org/t/p/w200${result.image}`, // Adjust thumbnail URL
+      })));
     }
     setIsLoading(false);
   };
@@ -153,6 +156,8 @@ export const CommandSearch = () => {
     const debouncedFetch = debounce(fetchMangaResults, 500);
     debouncedFetch(search);
   }, [search]);
+
+  const [animeResults, setSearchResults] = useState<AnimeResult[] | null>(null);
 
   const fetchAnimeResults = async (text: string) => {
     setIsLoading(true);
@@ -163,8 +168,11 @@ export const CommandSearch = () => {
           next: { revalidate: 21600 },
         }
       );
-      const data = await res.json()
-      setSearchResults(data.results);
+      const data = await res.json();
+      setSearchResults(data.results.map((result: any) => ({
+        ...result,
+        thumbnail: `https://image.tmdb.org/t/p/w200${result.cover}`, // Adjust thumbnail URL
+      })));
     }
     setIsLoading(false);
   };
@@ -184,8 +192,14 @@ export const CommandSearch = () => {
         get_tv_results(title),
       ]);
       const combinedResults = {
-        movies: movieData.results,
-        tvShows: tvData.results,
+        movies: movieData.results.map((result: any) => ({
+          ...result,
+          thumbnail: `https://image.tmdb.org/t/p/w200${result.poster_path}`, // Adjust thumbnail URL
+        })),
+        tvShows: tvData.results.map((result: any) => ({
+          ...result,
+          thumbnail: `https://image.tmdb.org/t/p/w200${result.poster_path}`, // Adjust thumbnail URL
+        })),
       };
       FetchMovieInfo(combinedResults);
       setResults(combinedResults);
@@ -250,7 +264,7 @@ export const CommandSearch = () => {
                   ))}
                 </CommandSearchGroup>
 
-                <CommandSearchGroup heading="TV Shows">
+                <CommandSearchGroup heading="Tv Shows">
                   {Array.from({ length: 5 }).map((_, index) => (
                     <CommandSearchSkeleton key={index} />
                   ))}
@@ -284,18 +298,18 @@ export const CommandSearch = () => {
                       <Link
                         key={item.id}
                         href={`/movie/${item.id}`}
-                        className="flex items-center gap-4 rounded-sm p-2 hover:bg-muted"
+                        className="flex cursor-pointer items-center gap-4 rounded-sm p-2 hover:bg-muted"
                       >
                         <img
-                          src={`https://image.tmdb.org/t/p/w500${item.poster_path}`}
+                          src={item.thumbnail}
                           alt={item.title}
-                          className="w-16 rounded-sm"
+                          className="w-12 h-16 object-cover"
                         />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{item.title}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {item.release_date.split("-")[0]}
-                          </p>
+                        <div className="flex-1 truncate whitespace-nowrap">
+                          <span className="text-sm">{item.title}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {item.release_date && new Date(item.release_date).getFullYear()}
+                          </span>
                         </div>
                       </Link>
                     ))}
@@ -307,19 +321,19 @@ export const CommandSearch = () => {
                     {result.tvShows.map((item) => (
                       <Link
                         key={item.id}
+                        className="flex cursor-pointer items-center gap-4 rounded-sm p-2 hover:bg-muted"
                         href={`/tv/${item.id}`}
-                        className="flex items-center gap-4 rounded-sm p-2 hover:bg-muted"
                       >
                         <img
-                          src={`https://image.tmdb.org/t/p/w500${item.poster_path}`}
+                          src={item.thumbnail}
                           alt={item.name}
-                          className="w-16 rounded-sm"
+                          className="w-12 h-16 object-cover"
                         />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{item.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {item.first_air_date.split("-")[0]}
-                          </p>
+                        <div className="flex-1 truncate whitespace-nowrap">
+                          <span className="text-sm">{item.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {item.first_air_date && new Date(item.first_air_date).getFullYear()}
+                          </span>
                         </div>
                       </Link>
                     ))}
@@ -328,22 +342,24 @@ export const CommandSearch = () => {
 
                 {hasMangaResults && (
                   <CommandSearchGroup heading="Manga">
-                    {mangaResults.map((item) => (
+                    {mangaResults?.map((item) => (
                       <Link
                         key={item.id}
+                        className="flex cursor-pointer items-center gap-4 rounded-sm p-2 hover:bg-muted"
                         href={`/manga/${item.id}`}
-                        className="flex items-center gap-4 rounded-sm p-2 hover:bg-muted"
                       >
                         <img
-                          src={item.image}
-                          alt={item.title.userPreferred}
-                          className="w-16 rounded-sm"
+                          src={item.thumbnail}
+                          alt={item.title.userPreferred || item.title.english || item.title.romaji}
+                          className="w-12 h-16 object-cover"
                         />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{item.title.userPreferred}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {item.totalChapters ?? "Unknown chapters"} chapters
-                          </p>
+                        <div className="flex-1 truncate whitespace-nowrap">
+                          <span className="text-sm">
+                            {item.title.userPreferred || item.title.english || item.title.romaji}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            CH: {item.totalChapters}
+                          </span>
                         </div>
                       </Link>
                     ))}
@@ -352,19 +368,19 @@ export const CommandSearch = () => {
 
                 {hasDramaResults && (
                   <CommandSearchGroup heading="Drama">
-                    {dramaResults.map((item) => (
+                    {dramaResults?.map((item) => (
                       <Link
                         key={item.id}
+                        className="flex cursor-pointer items-center gap-4 rounded-sm p-2 hover:bg-muted"
                         href={`/drama/${item.id}`}
-                        className="flex items-center gap-4 rounded-sm p-2 hover:bg-muted"
                       >
                         <img
-                          src={item.image}
+                          src={item.thumbnail}
                           alt={item.title}
-                          className="w-16 rounded-sm"
+                          className="w-12 h-16 object-cover"
                         />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{item.title}</p>
+                        <div className="flex-1 truncate whitespace-nowrap">
+                          <span className="text-sm">{item.title}</span>
                         </div>
                       </Link>
                     ))}
@@ -373,32 +389,50 @@ export const CommandSearch = () => {
 
                 {hasAnimeResults && (
                   <CommandSearchGroup heading="Anime">
-                    {animeResults.map((item) => (
+                    {animeResults?.map((item) => (
                       <Link
                         key={item.id}
+                        className="flex cursor-pointer items-center gap-4 rounded-sm p-2 hover:bg-muted"
                         href={`/anime/${item.id}`}
-                        className="flex items-center gap-4 rounded-sm p-2 hover:bg-muted"
                       >
                         <img
-                          src={item.image}
-                          alt={item.title.userPreferred}
-                          className="w-16 rounded-sm"
+                          src={item.thumbnail}
+                          alt={item.title.userPreferred || item.title.english || item.title.romaji}
+                          className="w-12 h-16 object-cover"
                         />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{item.title.userPreferred}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {item.status}
-                          </p>
+                        <div className="flex-1 truncate whitespace-nowrap">
+                          <span className="text-sm">
+                            {item.title.userPreferred || item.title.english || item.title.romaji}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            Episodes: {item.totalEpisodes}
+                          </span>
                         </div>
                       </Link>
                     ))}
                   </CommandSearchGroup>
                 )}
               </div>
+            ) : (
+              !isLoading && <p className="p-8 text-center">No Results</p>
             )}
           </CommandList>
         </Command>
       </CommandDialog>
     </>
   );
+};
+
+const get_movie_results = async (title: string) => {
+  const res = await fetch(Movie_Search + title, {
+    next: { revalidate: 21600 },
+  });
+  return res.json();
+};
+
+const get_tv_results = async (title: string) => {
+  const res = await fetch(Tv_Search + title, {
+    next: { revalidate: 21600 },
+  });
+  return res.json();
 };

@@ -290,6 +290,10 @@ export default function VideoPlayer({ id }: { id: number }) {
                   <div>{ep.name}</div>
                 </div>
               </div>
+              {/* Small Episode Number */}
+              <div className="absolute top-2 left-2 bg-black text-white text-xs px-1 rounded">
+                {ep.episode_number}
+              </div>
             </div>
           ))}
         </div>

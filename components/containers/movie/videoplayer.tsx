@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { Share2, Download } from "lucide-react";
+import { Download, Share2 } from "lucide-react";
 import {
   Select,
   SelectTrigger,
@@ -71,29 +71,6 @@ export default function VideoPlayer({ id }: any) {
 
   const shareUrl = `https://www.example.com/movie/${id}`;
 
-  const sharePlatforms = [
-    {
-      name: 'Facebook',
-      url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
-      icon: 'facebook',
-    },
-    {
-      name: 'Twitter',
-      url: `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}`,
-      icon: 'twitter',
-    },
-    {
-      name: 'WhatsApp',
-      url: `https://wa.me/?text=${encodeURIComponent(shareUrl)}`,
-      icon: 'whatsapp',
-    },
-    {
-      name: 'Reddit',
-      url: `https://www.reddit.com/submit?url=${encodeURIComponent(shareUrl)}`,
-      icon: 'reddit',
-    },
-  ];
-
   return (
     <div className="py-8 mx-auto max-w-5xl">
       <div className="flex flex-col text-center items-center justify-center">
@@ -113,6 +90,15 @@ export default function VideoPlayer({ id }: any) {
           </Breadcrumb>
         </div>
       </div>
+
+      <div className="text-center mb-6">
+        {movieDetails ? (
+          <h2 className="text-xl font-semibold">Currently Watching: {movieDetails.title}</h2>
+        ) : (
+          <Skeleton className="h-6 w-48 mx-auto" />
+        )}
+      </div>
+
       <div className="flex flex-row items-center justify-center w-full">
         <div className="flex flex-col text-center">
           <Select onValueChange={handleSelectChange} value={selectedSource}>
@@ -136,57 +122,53 @@ export default function VideoPlayer({ id }: any) {
           </div>
         </div>
       </div>
+
       {loading ? (
         <Skeleton className="mx-auto px-4 pt-6 w-full h-[500px]" />
       ) : (
-        <>
-          <iframe
-            src={videoSources[selectedSource]}
-            referrerPolicy="origin"
-            allowFullScreen
-            width="100%"
-            height="450"
-            scrolling="no"
-            className="max-w-3xl mx-auto px-4 pt-6"
-          />
-          <div className="text-center pt-4">
-            <div className="flex justify-center space-x-2">
-              {sharePlatforms.map((platform) => (
-                <a
-                  key={platform.name}
-                  href={platform.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 bg-gray-800 text-white rounded-full hover:bg-gray-600 transition-colors"
-                  title={`Share on ${platform.name}`}
-                >
-                  <i className={`fab fa-${platform.icon}`} style={{ fontSize: '16px' }}></i>
-                </a>
-              ))}
-            </div>
-          </div>
-          <div className="pt-8">
-            <h2 className="text-lg font-semibold text-center mb-4">Related Movies</h2>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-              {relatedMovies.slice(0, 8).map((movie) => (
-                <Link href={`/movie/${movie.id}`} key={movie.id}>
-                  <a className="relative block group">
-                    <img
-                      src={`https://image.tmdb.org/t/p/original${movie.poster_path}`}
-                      alt={movie.title}
-                      className="w-full h-auto rounded-lg transition-transform transform group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-50 group-hover:opacity-75 transition-opacity rounded-lg"></div>
-                    <p className="absolute bottom-0 left-0 right-0 p-2 text-center text-white font-bold bg-black bg-opacity-50 rounded-b-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                      {movie.title}
-                    </p>
-                  </a>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </>
+        <iframe
+          src={videoSources[selectedSource]}
+          referrerPolicy="origin"
+          allowFullScreen
+          width="100%"
+          height="450"
+          scrolling="no"
+          className="max-w-3xl mx-auto px-4 pt-6"
+        />
       )}
+
+      <div className="text-center pt-4">
+        <a
+          href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center p-2 bg-blue-600 text-white rounded-full w-10 h-10 hover:bg-blue-500 transition-colors"
+          title="Share on Facebook"
+        >
+          <Share2 size={16} />
+        </a>
+      </div>
+
+      <div className="pt-8">
+        <h2 className="text-lg font-semibold text-center mb-4">Related Movies</h2>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          {relatedMovies.slice(0, 8).map((movie) => (
+            <Link href={`/movie/${movie.id}`} key={movie.id}>
+              <a className="relative block group">
+                <img
+                  src={`https://image.tmdb.org/t/p/original${movie.poster_path}`}
+                  alt={movie.title}
+                  className="w-full h-auto rounded-lg transition-transform transform group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-50 group-hover:opacity-75 transition-opacity rounded-lg"></div>
+                <p className="absolute bottom-0 left-0 right-0 p-2 text-center text-white font-bold bg-black bg-opacity-50 rounded-b-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                  {movie.title}
+                </p>
+              </a>
+            </Link>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

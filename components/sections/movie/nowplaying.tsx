@@ -22,10 +22,24 @@ type Movie = {
   vote_average: number;
   vote_count: number;
   overview: string;
+  release_date: string; // Added for release date
+  quality: string; // Added for quality indicator
 };
 
 type MovieData = {
   results: Movie[];
+};
+
+// Function to determine the media quality
+const getMediaQuality = (releaseDate: string): string => {
+  const now = new Date();
+  const release = new Date(releaseDate);
+  const diff = now.getFullYear() - release.getFullYear();
+
+  if (now < release) return "Not Released Yet";
+  if (diff > 1) return "HD";
+  if (now.getFullYear() === release.getFullYear() && now.getMonth() - release.getMonth() < 12) return "Cam Quality";
+  return "HD";
 };
 
 export default function TopRated() {
@@ -40,8 +54,18 @@ export default function TopRated() {
         { next: { revalidate: 21600 } }
       );
       const data = await res.json();
-      FetchMovieInfo(data);
-      setData(data);
+      
+      // Adding quality to each movie
+      const updatedData = {
+        ...data,
+        results: data.results.map((movie: any) => ({
+          ...movie,
+          quality: getMediaQuality(movie.release_date),
+        })),
+      };
+      
+      FetchMovieInfo(updatedData);
+      setData(updatedData);
       setLoading(false);
     };
 
@@ -65,10 +89,10 @@ export default function TopRated() {
                 </div>
               ))
             : data &&
-              data.results.slice(0, 18).map((item: any, index: any) => (
+              data.results.slice(0, 18).map((item: Movie) => (
                 <Link
                   href={`/movie/${encodeURIComponent(item.id)}`}
-                  key={index}
+                  key={item.id}
                   className="w-full cursor-pointer space-y-2"
                   data-testid="movie-card"
                 >
@@ -84,6 +108,9 @@ export default function TopRated() {
                     ) : (
                       <ImageIcon className="text-muted" />
                     )}
+                    <div className={`absolute top-0 left-0 p-2 text-white text-xs font-bold bg-black ${item.quality === "HD" ? "bg-green-500" : item.quality === "Cam Quality" ? "bg-red-500" : item.quality === "Not Released Yet" ? "bg-yellow-500" : "bg-gray-500"}`}>
+                      {item.quality}
+                    </div>
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex items-start justify-between gap-1">

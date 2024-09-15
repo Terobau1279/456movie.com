@@ -6,10 +6,10 @@ import {
   SelectContent,
   SelectItem,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select"; // Ensure this component allows passing custom styles if needed
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Download, ArrowLeft, ArrowRight } from "lucide-react";
+import { Download } from "lucide-react";
 import Link from "next/link";
 import { API_KEY } from "@/config/url";
 
@@ -29,11 +29,19 @@ interface Episode {
 export default function VideoPlayer({ id }: { id: number }) {
   const [seasons, setSeasons] = React.useState<Season[]>([]);
   const [episodes, setEpisodes] = React.useState<Episode[]>([]);
-  const [season, setSeason] = React.useState("1");
-  const [episode, setEpisode] = React.useState("1");
+  const [season, setSeason] = React.useState<string>(() => {
+    // Retrieve the saved season from localStorage
+    const savedSeason = localStorage.getItem(`video-player-season-${id}`);
+    return savedSeason || "1";
+  });
+  const [episode, setEpisode] = React.useState<string>(() => {
+    // Retrieve the saved episode from localStorage
+    const savedEpisode = localStorage.getItem(`video-player-episode-${id}`);
+    return savedEpisode || "1";
+  });
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
-  const [server, setServer] = React.useState("vidlinkpro"); // Default server set to Vidlink Pro
+  const [server, setServer] = React.useState("vidlinkpro"); // Default server
 
   React.useEffect(() => {
     fetchSeasons();
@@ -46,13 +54,10 @@ export default function VideoPlayer({ id }: { id: number }) {
   }, [season]);
 
   React.useEffect(() => {
-    if (episodes.length > 0) {
-      const episodeExists = episodes.some(ep => ep.episode_number.toString() === episode);
-      if (!episodeExists) {
-        setEpisode(episodes[0].episode_number.toString());
-      }
-    }
-  }, [episodes]);
+    // Save the current season and episode in localStorage
+    localStorage.setItem(`video-player-season-${id}`, season);
+    localStorage.setItem(`video-player-episode-${id}`, episode);
+  }, [season, episode]);
 
   async function fetchSeasons() {
     setIsLoading(true);
@@ -61,9 +66,6 @@ export default function VideoPlayer({ id }: { id: number }) {
       const response = await fetch(
         `https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}`
       );
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
       const data = await response.json();
       if (data.success === false) {
         throw new Error(data.status_message || "Failed to fetch seasons");
@@ -91,9 +93,6 @@ export default function VideoPlayer({ id }: { id: number }) {
       const response = await fetch(
         `https://api.themoviedb.org/3/tv/${id}/season/${seasonNumber}?api_key=${API_KEY}`
       );
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
       const data = await response.json();
       if (data.success === false) {
         throw new Error(data.status_message || "Failed to fetch episodes");
@@ -128,21 +127,6 @@ export default function VideoPlayer({ id }: { id: number }) {
     setEpisode(episodeNumber);
   };
 
-  const handlePreviousEpisode = () => {
-    const currentEpisodeNumber = Number(episode);
-    if (currentEpisodeNumber > 1) {
-      setEpisode((currentEpisodeNumber - 1).toString());
-    }
-  };
-
-  const handleNextEpisode = () => {
-    const currentEpisodeNumber = Number(episode);
-    const nextEpisode = episodes.find(ep => ep.episode_number === currentEpisodeNumber + 1);
-    if (nextEpisode) {
-      setEpisode((currentEpisodeNumber + 1).toString());
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="py-8 mx-auto max-w-5xl">
@@ -154,27 +138,24 @@ export default function VideoPlayer({ id }: { id: number }) {
   if (error) {
     return (
       <div className="py-8 mx-auto max-w-5xl">
-        <Skeleton className="mx-auto px-4 pt-6 w-full h-[500px]" />
+        <Skeleton className="mx-auto px-4 pt-6 w-full h-[500px]" />{" "}
         <div className="text-center text-red-500">Error: {error}</div>
       </div>
     );
   }
 
-  const currentEpisode = episodes.find(ep => ep.episode_number.toString() === episode);
-
   return (
     <div className="py-8">
       {/* Current Episode Info */}
-      {currentEpisode && (
-        <div className="text-center mb-4">
-          <h2 className="text-xl font-semibold">
-            Episode {currentEpisode.episode_number}: {currentEpisode.name}
-          </h2>
-        </div>
-      )}
+      <div className="text-center py-4">
+        <h2 className="text-2xl font-bold">Currently Watching</h2>
+        <p className="text-xl text-gray-600">
+          Episode {episode}: {episodes.find(ep => ep.episode_number.toString() === episode)?.name}
+        </p>
+      </div>
 
       {/* Video Player */}
-      <div className="relative max-w-3xl mx-auto px-4 pt-10">
+      <div className="max-w-3xl mx-auto px-4 pt-10">
         <iframe
           src={getIframeSrc()}
           referrerPolicy="origin"
@@ -182,56 +163,32 @@ export default function VideoPlayer({ id }: { id: number }) {
           width="100%"
           height="450"
           scrolling="no"
-          className="rounded-lg shadow-lg border border-gray-300"
-          allow="autoplay; fullscreen" // Ensure player is not muted by default
+          frameBorder="0"
+          title="Video Player"
+          // Ensure the player is not automatically muted
         ></iframe>
       </div>
 
-      {/* Navigation Buttons */}
-      <div className="flex justify-center pt-4">
-        <button
-          onClick={handlePreviousEpisode}
-          className="px-4 py-2 rounded-md bg-gray-800 text-white shadow-md hover:bg-gray-700 transition-colors duration-300 flex items-center"
-        >
-          <ArrowLeft size={16} className="mr-2" />
-          Previous Episode
-        </button>
-        <button
-          onClick={handleNextEpisode}
-          className="px-4 py-2 rounded-md bg-gray-800 text-white shadow-md hover:bg-gray-700 transition-colors duration-300 flex items-center ml-4"
-        >
-          Next Episode
-          <ArrowRight size={16} className="ml-2" />
-        </button>
-      </div>
-
       {/* Season Selector */}
-      <div className="flex justify-center pt-4">
-        <div className="w-[300px]">
-          <Select value={season} onValueChange={(e) => setSeason(e)} disabled={isLoading || seasons.length === 0}>
-            <SelectTrigger className="px-4 py-2 rounded-md">
+      <div className="pt-4 text-center">
+        <div className="w-[200px] mx-auto">
+          <Select value={season} onValueChange={(e) => setSeason(e)}>
+            <SelectTrigger>
               <SelectValue placeholder="Select Season" />
             </SelectTrigger>
             <SelectContent>
-              {seasons.length > 0 ? (
-                seasons.map((s) => (
-                  <SelectItem
-                    key={s.season_number}
-                    value={s.season_number.toString()}
-                  >
-                    Season {s.season_number}
-                  </SelectItem>
-                ))
-              ) : (
-                <></>
-              )}
+              {seasons.map((s) => (
+                <SelectItem key={s.season_number} value={s.season_number.toString()}>
+                  Season {s.season_number}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
       </div>
 
       {/* Download Button */}
-      <div className="pt-4 text-center">
+      <div className="pt-2 text-center">
         <Link href={`https://dl.vidsrc.vip/tv/${id}/${season}/${episode}`}>
           <Badge
             variant="outline"
@@ -244,17 +201,17 @@ export default function VideoPlayer({ id }: { id: number }) {
       </div>
 
       {/* Server Selector */}
-      <div className="flex justify-center pt-4">
-        <div className="w-[300px]">
+      <div className="pt-4 text-center">
+        <div className="w-[200px] mx-auto">
           <Select value={server} onValueChange={(e) => setServer(e)}>
             <SelectTrigger>
               <SelectValue placeholder="Select Server" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="vidsrc">VidSrc.cc</SelectItem>
-              <SelectItem value="vidlinkpro">Vidlink.pro</SelectItem>
+              <SelectItem value="vidlinkpro">VidLink.pro</SelectItem>
               <SelectItem value="autoembed">Autoembed</SelectItem>
               <SelectItem value="superembed">SuperEmbed</SelectItem>
+              <SelectItem value="vidsrc">VidSrc.cc</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -274,7 +231,7 @@ export default function VideoPlayer({ id }: { id: number }) {
               <img
                 src={`https://image.tmdb.org/t/p/w500${ep.still_path}`}
                 alt={ep.name}
-                className="w-full h-full object-cover"
+                className="w-full h-[200px] object-cover"
               />
               {episode === ep.episode_number.toString() && (
                 <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white text-lg font-bold">
@@ -284,14 +241,11 @@ export default function VideoPlayer({ id }: { id: number }) {
                   </div>
                 </div>
               )}
-              <div className="absolute bottom-2 left-0 right-0 text-center text-white bg-black bg-opacity-60 p-1">
-                Episode {ep.episode_number}
-              </div>
             </div>
           ))}
         </div>
         <div className="text-center text-sm text-gray-500 pt-4">
-          Changing the episode inside the player may cause the spotlight to mismatch with the current episode. Please select an episode from the list to keep the spotlight in sync.
+          Note: Changing the episode inside the player may lead to a mismatch with the spotlight effect.
         </div>
       </div>
     </div>

@@ -278,7 +278,7 @@ export default function VideoPlayer({ id }: { id: number }) {
       <SelectContent>
         <SelectItem value="vidlinkpro">
           Vidlink Pro
-          <span className="ml-2 text-sm text-green-500">No Ads</span>
+          <span className="ml-2 text-sm text-green-500">No Ads, Auto-Play, Casting Options</span>
         </SelectItem>
         <SelectItem value="vidsrc">
           Vidsrc
@@ -325,8 +325,17 @@ export default function VideoPlayer({ id }: { id: number }) {
         </SelectItem>
       </SelectContent>
     </Select>
+    <div className="pt-4 text-center">
+      <span className="text-lg font-semibold">Recommended Servers:</span>
+      <ul className="list-disc list-inside mt-2">
+        <li>Vidlink Pro</li>
+        <li>Vidsrc CC</li>
+        <li>Vid Binge</li>
+      </ul>
+    </div>
   </div>
 </div>
+
 
 
 

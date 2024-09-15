@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { Share2 } from "lucide-react";
+import { Share2, Download } from "lucide-react"; // Make sure to import Download here
 import {
   Select,
   SelectTrigger,

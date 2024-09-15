@@ -1,7 +1,7 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { Download, Share2 } from "lucide-react";
+import { Download, Maximize2 } from "lucide-react";
 import {
   Select,
   SelectTrigger,
@@ -30,6 +30,7 @@ export default function VideoPlayer({ id }: any) {
   const [loading, setLoading] = useState(false);
   const [relatedMovies, setRelatedMovies] = useState<any[]>([]);
   const [movieDetails, setMovieDetails] = useState<any>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const videoSources: Record<VideoSourceKey, string> = {
     vidlinkpro: `https://vidlink.pro/movie/${id}`,
@@ -69,7 +70,29 @@ export default function VideoPlayer({ id }: any) {
     fetchRelatedMovies();
   }, [id]);
 
-  const shareUrl = `https://www.example.com/movie/${id}`;
+  // Function to enter full screen and unmute the iframe
+  const handleFullScreen = () => {
+    const iframe = iframeRef.current;
+
+    if (iframe) {
+      // Request full-screen
+      if (iframe.requestFullscreen) {
+        iframe.requestFullscreen();
+      } else if (iframe.mozRequestFullScreen) {
+        iframe.mozRequestFullScreen();
+      } else if (iframe.webkitRequestFullscreen) {
+        iframe.webkitRequestFullscreen();
+      } else if (iframe.msRequestFullscreen) {
+        iframe.msRequestFullscreen();
+      }
+
+      // Unmute the video (if supported by the iframe video player)
+      iframe.contentWindow?.postMessage(
+        '{"method":"setVolume","value":1}', // This works if the player supports volume control via postMessage API
+        '*'
+      );
+    }
+  };
 
   return (
     <div className="py-8 mx-auto max-w-5xl">
@@ -127,6 +150,7 @@ export default function VideoPlayer({ id }: any) {
         <Skeleton className="mx-auto px-4 pt-6 w-full h-[500px]" />
       ) : (
         <iframe
+          ref={iframeRef}
           src={videoSources[selectedSource]}
           referrerPolicy="origin"
           allowFullScreen
@@ -138,15 +162,13 @@ export default function VideoPlayer({ id }: any) {
       )}
 
       <div className="text-center pt-4">
-        <a
-          href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center p-2 bg-blue-600 text-white rounded-full w-10 h-10 hover:bg-blue-500 transition-colors"
-          title="Share on Facebook"
+        <button
+          onClick={handleFullScreen}
+          className="flex items-center justify-center p-2 bg-gray-700 text-white rounded-full w-10 h-10 hover:bg-gray-600 transition-colors"
+          title="Enter Full Screen"
         >
-          <Share2 size={16} />
-        </a>
+          <Maximize2 size={16} />
+        </button>
       </div>
 
       <div className="pt-8">

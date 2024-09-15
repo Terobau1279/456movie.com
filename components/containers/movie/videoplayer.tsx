@@ -20,7 +20,20 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import Link from "next/link";
 
-type VideoSourceKey = "vidlinkpro" | "vidsrccc" | "vidsrcpro" | "superembed";
+type VideoSourceKey =
+  | "vidlinkpro"
+  | "vidsrccc"
+  | "vidsrcpro"
+  | "superembed"
+  | "vidbinge4K"
+  | "smashystream"
+  | "vidsrcicu"
+  | "vidsrcnl"
+  | "nontongo"
+  | "vidsrcxyz"
+  | "embedccMovie"
+  | "twoembed"
+  | "vidsrctop";
 
 export default function VideoPlayer({ id }: any) {
   const [selectedSource, setSelectedSource] = useState<VideoSourceKey>("vidlinkpro");
@@ -34,6 +47,15 @@ export default function VideoPlayer({ id }: any) {
     vidsrccc: `https://vidsrc.cc/v2/embed/movie/${id}`,
     vidsrcpro: `https://vidsrc.pro/embed/movie/${id}`,
     superembed: `https://multiembed.mov/?video_id=${id}&tmdb=1`,
+    vidbinge4K: `https://vidbinge.dev/embed/movie/${id}`,
+    smashystream: `https://player.smashy.stream/movie/${id}`,
+    vidsrcicu: `https://vidsrc.icu/embed/movie/${id}`,
+    vidsrcnl: `https://player.vidsrc.nl/embed/movie/${id}?server=hindi`,
+    nontongo: `https://www.nontongo.win/embed/movie/${id}`,
+    vidsrcxyz: `https://vidsrc.xyz/embed/movie?tmdb=${id}`,
+    embedccMovie: `https://www.2embed.cc/embed/${id}`,
+    twoembed: `https://2embed.org/embed/movie/${id}`,
+    vidsrctop: `https://vidsrc.top/embed/movie/tmdb/${id}`,
   };
 
   // Fetch movie details from TMDb API
@@ -103,6 +125,15 @@ export default function VideoPlayer({ id }: any) {
               <SelectItem value="vidsrccc">VidSrc.cc</SelectItem>
               <SelectItem value="vidsrcpro">VidSrc.pro</SelectItem>
               <SelectItem value="superembed">SuperEmbed (CONTAINS ADS)</SelectItem>
+              <SelectItem value="vidbinge4K">VidBinge 4K</SelectItem>
+              <SelectItem value="smashystream">Smashy Stream</SelectItem>
+              <SelectItem value="vidsrcicu">VidSrc ICU</SelectItem>
+              <SelectItem value="vidsrcnl">VidSrc NL</SelectItem>
+              <SelectItem value="nontongo">Nontongo</SelectItem>
+              <SelectItem value="vidsrcxyz">VidSrc XYZ</SelectItem>
+              <SelectItem value="embedccMovie">Embed CC Movie</SelectItem>
+              <SelectItem value="twoembed">TwoEmbed</SelectItem>
+              <SelectItem value="vidsrctop">VidSrc Top</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -148,7 +179,5 @@ export default function VideoPlayer({ id }: any) {
         </div>
       </div>
     </div>
-    
   );
-  
 }

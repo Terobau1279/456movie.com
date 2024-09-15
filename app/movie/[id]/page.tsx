@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { getInfoURL } from "@/config/url";
 import DetailsContainer from "@/components/containers/movie/details";
 import * as React from "react";
@@ -17,13 +17,14 @@ type Movie = {
 type MovieData = {
   results: Movie[];
 };
+
 type Params = {
   id: string;
 };
 
 const Info: React.FC<{ params: Params }> = ({ params }) => {
   const { id } = params;
-  const [data, setData] = React.useState<MovieData | null>(null);
+  const [data, setData] = React.useState<Movie | null>(null); // Change MovieData to Movie | null
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -44,7 +45,7 @@ const Info: React.FC<{ params: Params }> = ({ params }) => {
           throw new Error(`Error: ${res.status} ${res.statusText}`);
         }
 
-        const data = await res.json();
+        const data: Movie = await res.json(); // Adjust type to Movie
         setData(data);
       } catch (err: any) {
         setError(err.message);
@@ -86,13 +87,12 @@ const Info: React.FC<{ params: Params }> = ({ params }) => {
               </div>
               <Skeleton className="h-96 w-full " />
             </div>
-         
           </div>
         </div>
       ) : (
-        <>
-          <DetailsContainer data={data} id={id} embed="false" />
-        </>
+        data && ( // Check if data is not null
+          <DetailsContainer data={data} id={id} embed={false} /> // Adjusted embed prop type to boolean
+        )
       )}
     </>
   );

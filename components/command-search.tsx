@@ -95,14 +95,12 @@ type CommandSearchGroupProps = {
   children: ReactNode;
 };
 
-const CommandSearchGroup = ({ children, heading }: CommandSearchGroupProps) => {
-  return (
-    <div className="space-y-2 p-4">
-      <h4 className="text-sm font-bold">{heading}</h4>
-      <div className="flex flex-col gap-2">{children}</div>
-    </div>
-  );
-};
+const CommandSearchGroup = ({ children, heading }: CommandSearchGroupProps) => (
+  <div className="space-y-2 p-4">
+    <h4 className="text-sm font-bold">{heading}</h4>
+    <div className="flex flex-col gap-2">{children}</div>
+  </div>
+);
 
 export const CommandSearch = () => {
   const [open, setOpen] = useState(false);
@@ -114,6 +112,7 @@ export const CommandSearch = () => {
   const [isLoading, setIsLoading] = useState(false);  
   const [dramaResults, setDramaResults] = useState<DramaResult[] | null>(null);
   const [mangaResults, setMangaResults] = useState<MangaResult[] | null>(null);
+  const [animeResults, setSearchResults] = useState<AnimeResult[] | null>(null);
 
   const debounce = (func: (...args: any[]) => void, delay: number) => {
     let debounceTimer: NodeJS.Timeout;
@@ -133,7 +132,6 @@ export const CommandSearch = () => {
     setIsLoading(false);
   };
 
-  // Trigger drama search on input change
   useEffect(() => {
     const debouncedFetch = debounce(fetchDramaResults, 500);
     debouncedFetch(search);
@@ -149,13 +147,10 @@ export const CommandSearch = () => {
     setIsLoading(false);
   };
 
-  // Trigger the manga search on input change
   useEffect(() => {
     const debouncedFetch = debounce(fetchMangaResults, 500);
     debouncedFetch(search);
   }, [search]);
-
-  const [animeResults, setSearchResults] = useState<AnimeResult[] | null>(null);
 
   const fetchAnimeResults = async (text: string) => {
     setIsLoading(true);
@@ -166,19 +161,16 @@ export const CommandSearch = () => {
           next: { revalidate: 21600 },
         }
       );
-      const data = await res.json()
+      const data = await res.json();
       setSearchResults(data.results);
     }
     setIsLoading(false);
   };
 
-  // Trigger search on input change
   useEffect(() => {
     const debouncedFetch = debounce(fetchAnimeResults, 500);
     debouncedFetch(search);
   }, [search]);
-
-  const pathName = usePathname();
 
   const fetch_results = async (title: string) => {
     setIsLoading(true);
@@ -218,8 +210,8 @@ export const CommandSearch = () => {
     if (open) setOpen(false);
   }, [pathName]);
 
-  const hasMovies = result?.movies && result?.movies?.length > 0;
-  const hasTvSeries = result?.tvShows && result.tvShows.length > 0;
+  const hasMovies = result?.movies?.length > 0;
+  const hasTvSeries = result?.tvShows?.length > 0;
   const hasMangaResults = mangaResults?.length ?? 0 > 0;
   const hasDramaResults = dramaResults?.length ?? 0 > 0;
   const hasAnimeResults = animeResults?.length ?? 0 > 0;
@@ -254,7 +246,7 @@ export const CommandSearch = () => {
                   ))}
                 </CommandSearchGroup>
 
-                <CommandSearchGroup heading="Tv Shows">
+                <CommandSearchGroup heading="TV Shows">
                   {Array.from({ length: 5 }).map((_, index) => (
                     <CommandSearchSkeleton key={index} />
                   ))}

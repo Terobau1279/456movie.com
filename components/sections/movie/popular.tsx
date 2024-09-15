@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { FetchMovieInfo } from "@/fetch";
 import Image from "next/image";
 import Link from "next/link";
@@ -22,13 +22,27 @@ type Movie = {
   vote_average: number;
   vote_count: number;
   overview: string;
+  release_date: string; // Added for release date
+  quality: string; // Added for quality indicator
 };
 
 type MovieData = {
   results: Movie[];
 };
 
-export default function Popular() {
+// Function to determine the media quality
+const getMediaQuality = (releaseDate: string): string => {
+  const now = new Date();
+  const release = new Date(releaseDate);
+  const diff = now.getFullYear() - release.getFullYear();
+
+  if (now < release) return "Not Released Yet";
+  if (diff > 1) return "HD";
+  if (now.getFullYear() === release.getFullYear() && now.getMonth() - release.getMonth() < 12) return "Cam Quality";
+  return "HD";
+};
+
+export default function TopRated() {
   const [data, setData] = React.useState<MovieData | null>(null);
   const [loading, setLoading] = React.useState(true);
 
@@ -36,12 +50,22 @@ export default function Popular() {
     const fetchData = async () => {
       setLoading(true);
       const res = await fetch(
-        `https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}`,
+        `https://api.themoviedb.org/3/movie/now_playing?api_key=${API_KEY}`,
         { next: { revalidate: 21600 } }
       );
       const data = await res.json();
-      FetchMovieInfo(data);
-      setData(data);
+      
+      // Adding quality to each movie
+      const updatedData = {
+        ...data,
+        results: data.results.map((movie: any) => ({
+          ...movie,
+          quality: getMediaQuality(movie.release_date),
+        })),
+      };
+      
+      FetchMovieInfo(updatedData);
+      setData(updatedData);
       setLoading(false);
     };
 
@@ -65,14 +89,14 @@ export default function Popular() {
                 </div>
               ))
             : data &&
-              data.results.slice(0, 18).map((item: any, index: any) => (
+              data.results.slice(0, 18).map((item: Movie) => (
                 <Link
                   href={`/movie/${encodeURIComponent(item.id)}`}
-                  key={index}
+                  key={item.id}
                   className="w-full cursor-pointer space-y-2"
                   data-testid="movie-card"
                 >
-                  <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-md border bg-background/50 shadow">
+                  <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-md border bg-background/50 shadow-lg">
                     {item.backdrop_path ? (
                       <Image
                         fill
@@ -84,6 +108,19 @@ export default function Popular() {
                     ) : (
                       <ImageIcon className="text-muted" />
                     )}
+                    <div
+                      className={`absolute top-0 left-0 m-2 px-3 py-1 rounded-full text-xs font-semibold text-white shadow-lg ${
+                        item.quality === "HD"
+                          ? "bg-gradient-to-r from-green-400 to-green-600"
+                          : item.quality === "Cam Quality"
+                          ? "bg-gradient-to-r from-red-400 to-red-600"
+                          : item.quality === "Not Released Yet"
+                          ? "bg-gradient-to-r from-yellow-400 to-yellow-600"
+                          : "bg-gradient-to-r from-gray-400 to-gray-600"
+                      }`}
+                    >
+                      {item.quality}
+                    </div>
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex items-start justify-between gap-1">

@@ -1,105 +1,210 @@
 "use client";
-import { useState } from "react";
+import { FetchMovieInfo } from "@/fetch";
+import Image from "next/image";
+import Link from "next/link";
+import * as React from "react";
+import { Image as ImageIcon } from "lucide-react";
+import { API_KEY } from "@/config/url";
+
 import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import Link from 'next/link'
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Download } from "lucide-react";
 
-type VideoSourceKey = "autoembed" | "vidsrcpro" | "vidsrc" | "superembed";
+type ReleaseDate = {
+  type: number;
+  release_date: string;
+};
 
-export default function VideoPlayer({ id }: any) {
-  const [selectedSource, setSelectedSource] =
-    useState<VideoSourceKey>("autoembed");
-  const [loading, setLoading] = useState(false);
+type ReleaseDatesResult = {
+  release_dates: ReleaseDate[];
+};
 
-  const videoSources: Record<VideoSourceKey, string> = {
-    autoembed: `https://player.autoembed.cc/embed/movie/${id}`,
-    vidsrcpro: `https://vidsrc.pro/embed/movie/${id}`,
-    vidsrc: `https://vidsrc.in/embed/movie/${id}`,
-    superembed: `https://multiembed.mov/?video_id=${id}&tmdb=1`,
+type WatchProvidersResult = {
+  results?: {
+    US?: {
+      flatrate?: any[];
+    };
   };
+};
 
-  const handleSelectChange = (value: VideoSourceKey) => {
-    setLoading(true);
-    setTimeout(() => {
-      setSelectedSource(value);
+type Movie = {
+  id: number;
+  title: string;
+  backdrop_path: string | null;
+  vote_average: number;
+  vote_count: number;
+  overview: string;
+  quality: string; // Added for quality indicator
+};
+
+type MovieData = {
+  results: Movie[];
+};
+
+// Function to determine the media quality
+const getReleaseType = async (mediaId: number, mediaType: string): Promise<string> => {
+  try {
+    const [releaseDatesResponse, watchProvidersResponse] = await Promise.all([
+      fetch(`https://api.themoviedb.org/3/${mediaType}/${mediaId}/release_dates?api_key=${API_KEY}`),
+      fetch(`https://api.themoviedb.org/3/${mediaType}/${mediaId}/watch/providers?api_key=${API_KEY}`)
+    ]);
+
+    if (releaseDatesResponse.ok && watchProvidersResponse.ok) {
+      const releaseDatesData: { results: ReleaseDatesResult[] } = await releaseDatesResponse.json();
+      const watchProvidersData: WatchProvidersResult = await watchProvidersResponse.json();
+
+      const releases = releaseDatesData.results.flatMap(result => result.release_dates);
+      const currentDate = new Date();
+
+      const isDigitalRelease = releases.some(release =>
+        (release.type === 4 || release.type === 6) && new Date(release.release_date) <= currentDate
+      );
+
+      const isInTheaters = mediaType === 'movie' && releases.some(release =>
+        release.type === 3 && new Date(release.release_date) <= currentDate
+      );
+
+      const hasFutureRelease = releases.some(release =>
+        new Date(release.release_date) > currentDate
+      );
+
+      const streamingProviders = watchProvidersData.results?.US?.flatrate || [];
+      const isStreamingAvailable = streamingProviders.length > 0;
+
+      if (isStreamingAvailable) {
+        return "Streaming (HD)";
+      } else if (isDigitalRelease) {
+        return "HD";
+      } else if (isInTheaters && mediaType === 'movie') {
+        const theatricalRelease = releases.find(release => release.type === 3);
+        if (theatricalRelease && new Date(theatricalRelease.release_date) <= currentDate) {
+          const releaseDate = new Date(theatricalRelease.release_date);
+          const oneYearLater = new Date(releaseDate);
+          oneYearLater.setFullYear(releaseDate.getFullYear() + 1);
+
+          if (currentDate >= oneYearLater) {
+            return "HD";
+          } else {
+            return "Cam Quality";
+          }
+        }
+      } else if (hasFutureRelease) {
+        return "Not Released Yet";
+      }
+
+      return "Unknown Quality";
+    } else {
+      console.error('Failed to fetch release type or watch providers.');
+      return "Unknown Quality";
+    }
+  } catch (error) {
+    console.error('An error occurred while fetching release type.', error);
+    return "Unknown Quality";
+  }
+};
+
+export default function Popular() {
+  const [data, setData] = React.useState<MovieData | null>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      const res = await fetch(
+        `https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}`,
+        { next: { revalidate: 21600 } }
+      );
+      const data = await res.json();
+
+      // Fetch and add quality to each movie
+      const resultsWithQuality = await Promise.all(data.results.map(async (movie: any) => {
+        const quality = await getReleaseType(movie.id, 'movie');
+        return { ...movie, quality };
+      }));
+
+      const updatedData: MovieData = { ...data, results: resultsWithQuality };
+      FetchMovieInfo(updatedData);
+      setData(updatedData);
       setLoading(false);
-    }, 1000);
-  };
+    };
+
+    fetchData();
+  }, []);
 
   return (
-    <div className="py-8 mx-auto max-w-5xl">
-      <div className="flex flex-col text-center items-center justify-center">
-        <div className="flex flex-col flex-wrap pb-4">
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink href={`/movie/${id}`}>
-                Movie -  {id.charAt(0).toUpperCase() + id.slice(1)}
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Watch</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+    <main>
+      <div className="flex items-center justify-between">
+        <div className="grid w-full grid-cols-1 gap-x-4 gap-y-8 md:grid-cols-3">
+          {loading
+            ? // Skeleton component while loading
+              Array.from({ length: 18 }).map((_, index) => (
+                <div key={index} className="w-full space-y-2">
+                  <Skeleton className="aspect-video w-full rounded-md" />
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-6 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                    <Skeleton className="h-3 w-full" />
+                  </div>
+                </div>
+              ))
+            : data &&
+              data.results.slice(0, 18).map((item: Movie) => (
+                <Link
+                  href={`/movie/${encodeURIComponent(item.id)}`}
+                  key={item.id}
+                  className="w-full cursor-pointer space-y-2"
+                  data-testid="movie-card"
+                >
+                  <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-md border bg-background/50 shadow-lg">
+                    {item.backdrop_path ? (
+                      <Image
+                        fill
+                        className="object-cover"
+                        src={`https://sup-proxy.zephex0-f6c.workers.dev/api-content?url=https://image.tmdb.org/t/p/original${item.backdrop_path}`}
+                        alt={item.title}
+                        sizes="100%"
+                      />
+                    ) : (
+                      <ImageIcon className="text-muted" />
+                    )}
+                    <div className={`absolute top-2 left-2 px-3 py-1 rounded-full text-xs font-semibold text-white shadow-md border ${item.quality === "Streaming (HD)" ? "bg-gradient-to-r from-green-500 to-green-700 border-green-800" : item.quality === "HD" ? "bg-gradient-to-r from-blue-500 to-blue-700 border-blue-800" : item.quality === "Cam Quality" ? "bg-gradient-to-r from-red-500 to-red-700 border-red-800" : item.quality === "Not Released Yet" ? "bg-gradient-to-r from-yellow-500 to-yellow-700 border-yellow-800" : "bg-gradient-to-r from-gray-500 to-gray-700 border-gray-800"}`}>
+                      {item.quality}
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="flex items-start justify-between gap-1">
+                      <span className="">{item.title}</span>
+
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Badge variant="outline">
+                              {item.vote_average
+                                ? item.vote_average.toFixed(1)
+                                : "?"}
+                            </Badge>
+                          </TooltipTrigger>
+
+                          <TooltipContent>
+                            <p>{item.vote_count} votes</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+
+                    <p className="line-clamp-3 text-xs text-muted-foreground">
+                      {item.overview}
+                    </p>
+                  </div>
+                </Link>
+              ))}
         </div>
       </div>
-      <div className="flex flex-row items-center justify-center w-full">
-        <div className="flex flex-col text-center">
-          <Select onValueChange={handleSelectChange} value={selectedSource}>
-            <SelectTrigger className="px-4 py-2 rounded-md w-[280px]">
-              <SelectValue placeholder="Select Video Source" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="autoembed">AutoEmbed</SelectItem>
-              <SelectItem value="vidsrcpro">VidSrc.pro</SelectItem>
-              <SelectItem value="vidsrc">VidSrc</SelectItem>
-              <SelectItem value="superembed">SuperEmbed</SelectItem>
-            </SelectContent>
-          </Select>
-          <div className="pt-2">
-            <Link href={`https://dl.vidsrc.vip/movie/${id}`}>
-              <Badge
-                variant="outline"
-                className="cursor-pointer whitespace-nowrap"
-              >
-                <Download className="mr-1.5" size={12} />
-                Download Movie
-              </Badge>
-            </Link>
-          </div>
-        </div>
-      </div>
-      {loading ? (
-        <Skeleton className="mx-auto px-4 pt-6 w-full h-[500px]" />
-      ) : (
-        <iframe
-          src={videoSources[selectedSource]}
-          referrerPolicy="origin"
-          allowFullScreen
-          width="100%"
-          height="450"
-          scrolling="no"
-          className="max-w-3xl mx-auto px-4 pt-6"
-        />
-      )}
-    </div>
+    </main>
   );
 }

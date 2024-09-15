@@ -15,7 +15,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Maximize2 } from "lucide-react"; // Fullscreen icon
@@ -46,13 +45,15 @@ export default function VideoPlayer({ id }: any) {
     const iframe = iframeRef.current;
 
     if (iframe) {
-      // Use type assertion to access browser-specific fullscreen methods
+      // Standard fullscreen API and fallbacks for webkit and ms browsers
       if (iframe.requestFullscreen) {
         iframe.requestFullscreen();
       } else if ((iframe as HTMLIFrameElement).webkitRequestFullscreen) {
-        (iframe as HTMLIFrameElement).webkitRequestFullscreen(); // Safari
+        // Safari
+        (iframe as HTMLIFrameElement).webkitRequestFullscreen();
       } else if ((iframe as HTMLIFrameElement).msRequestFullscreen) {
-        (iframe as HTMLIFrameElement).msRequestFullscreen(); // IE/Edge
+        // Internet Explorer/Edge
+        (iframe as HTMLIFrameElement).msRequestFullscreen();
       } else {
         console.warn("Fullscreen API is not supported by this browser.");
       }

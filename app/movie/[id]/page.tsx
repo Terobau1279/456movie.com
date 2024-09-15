@@ -5,6 +5,11 @@ import * as React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { API_KEY } from "@/config/url";
 
+type Genre = {
+  id: number;
+  name: string;
+};
+
 type Movie = {
   id: number;
   title: string;
@@ -12,11 +17,14 @@ type Movie = {
   vote_average: number;
   vote_count: number;
   overview: string;
-  poster_path: string | null; // Added property
-  release_date: string | null; // Added property
+  poster_path: string | null; // Existing property
+  release_date: string | null; // Existing property
+  genres: Genre[]; // Added property
 };
 
-type MovieData = Movie; // Updated MovieData to directly match Movie type
+type MovieData = {
+  results: Movie[];
+};
 
 type Params = {
   id: string;

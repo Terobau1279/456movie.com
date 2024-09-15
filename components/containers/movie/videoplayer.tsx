@@ -40,6 +40,7 @@ export default function VideoPlayer({ id }: any) {
   const [loading, setLoading] = useState(false);
   const [movieTitle, setMovieTitle] = useState("");
   const [relatedMovies, setRelatedMovies] = useState<any[]>([]);
+  const [showRelatedMovies, setShowRelatedMovies] = useState(true); // New state for toggling related movies
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   const videoSources: Record<VideoSourceKey, string> = {
@@ -87,6 +88,10 @@ export default function VideoPlayer({ id }: any) {
       setSelectedSource(value);
       setLoading(false);
     }, 1000);
+  };
+
+  const toggleRelatedMovies = () => {
+    setShowRelatedMovies(prev => !prev);
   };
 
   return (
@@ -154,30 +159,42 @@ export default function VideoPlayer({ id }: any) {
         />
       )}
 
-      {/* Related Movies Section */}
-      <div className="pt-10">
-        <h3 className="text-lg font-semibold text-center mb-4">Related Movies</h3>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          {relatedMovies.map((movie) => (
-            <Link href={`/movie/${movie.id}`} key={movie.id}>
-              <div
-                className="relative group cursor-pointer overflow-hidden rounded-lg shadow-lg hover:scale-105 transition-transform duration-300"
-              >
-                <Image
-                  src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-                  alt={movie.title}
-                  width={200}
-                  height={300}
-                  className="rounded-lg object-cover"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <h4 className="text-white text-center px-2 text-lg font-bold">{movie.title}</h4>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+      {/* Toggle Button */}
+      <div className="text-center py-4">
+        <button
+          onClick={toggleRelatedMovies}
+          className="px-4 py-2 bg-blue-500 text-white rounded-md"
+        >
+          {showRelatedMovies ? "Hide Related Movies" : "Show Related Movies"}
+        </button>
       </div>
+
+      {/* Related Movies Section */}
+      {showRelatedMovies && (
+        <div className="pt-10">
+          <h3 className="text-lg font-semibold text-center mb-4">Related Movies</h3>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            {relatedMovies.map((movie) => (
+              <Link href={`/movie/${movie.id}`} key={movie.id}>
+                <div
+                  className="relative group cursor-pointer overflow-hidden rounded-lg shadow-lg hover:scale-105 transition-transform duration-300"
+                >
+                  <Image
+                    src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                    alt={movie.title}
+                    width={200}
+                    height={300}
+                    className="rounded-lg object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <h4 className="text-white text-center px-2 text-lg font-bold">{movie.title}</h4>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -154,7 +154,7 @@ export default function VideoPlayer({ id }: { id: number }) {
   if (error) {
     return (
       <div className="py-8 mx-auto max-w-5xl">
-        <Skeleton className="mx-auto px-4 pt-6 w-full h-[500px]" />{" "}
+        <Skeleton className="mx-auto px-4 pt-6 w-full h-[500px]" />
         <div className="text-center text-red-500">Error: {error}</div>
       </div>
     );
@@ -172,6 +172,7 @@ export default function VideoPlayer({ id }: { id: number }) {
           height="450"
           scrolling="no"
           className="rounded-lg shadow-lg border border-gray-300"
+          allow="autoplay; fullscreen" // Ensure player is not muted by default
         ></iframe>
       </div>
 
@@ -269,6 +270,9 @@ export default function VideoPlayer({ id }: { id: number }) {
                   <div className="text-lg font-bold">Episode {ep.episode_number}</div>
                   <div>{ep.name}</div>
                 </div>
+              </div>
+              <div className="absolute bottom-2 left-0 right-0 text-center text-white bg-black bg-opacity-60 p-1">
+                Episode {ep.episode_number}
               </div>
             </div>
           ))}

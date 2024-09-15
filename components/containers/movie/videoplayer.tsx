@@ -179,4 +179,5 @@ export default function VideoPlayer({ id, mediaType }: { id: string; mediaType: 
       </div>
     </div>
   );
+  
 }

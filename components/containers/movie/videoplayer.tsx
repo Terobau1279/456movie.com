@@ -44,7 +44,7 @@ export default function VideoPlayer({ id }: any) {
 
   const videoSources: Record<VideoSourceKey, string> = {
     vidlinkpro: `https://vidlink.pro/movie/${id}`,
-    vidsrccc: `https://vidsrc.cc/v2/embed/movie/${id}`,
+    vidsrccc: `https://vidsrc.cc/v3/embed/movie/${id}`,
     vidsrcpro: `https://vidsrc.pro/embed/movie/${id}`,
     superembed: `https://multiembed.mov/?video_id=${id}&tmdb=1`,
     vidbinge4K: `https://vidbinge.dev/embed/movie/${id}`,

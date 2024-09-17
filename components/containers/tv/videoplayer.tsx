@@ -209,6 +209,7 @@ export default function VideoPlayer({ id }: { id: number }) {
           scrolling="no"
           className="rounded-lg shadow-lg border border-gray-300"
         ></iframe>
+      </div>
 
 
       {/* Navigation Buttons */}

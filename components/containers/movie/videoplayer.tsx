@@ -35,7 +35,7 @@ type VideoSourceKey =
   | "vidsrctop";
 
 export default function VideoPlayer({ id }: any) {
-  const [selectedSource, setSelectedSource] = useState<VideoSourceKey>("vidsrccc");
+  const [selectedSource, setSelectedSource] = useState<VideoSourceKey>("vidlinkpro");
   const [loading, setLoading] = useState(false);
   const [movieTitle, setMovieTitle] = useState("");
   const [relatedMovies, setRelatedMovies] = useState<any[]>([]);

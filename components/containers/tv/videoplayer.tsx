@@ -198,18 +198,35 @@ export default function VideoPlayer({ id }: { id: number }) {
         )}
       </div>
 
-      {/* Video Player */}
-      <div className="relative max-w-3xl mx-auto px-4 pt-10">
-        <iframe
-          src={getIframeSrc()}
-          referrerPolicy="origin"
-          allowFullScreen
-          width="100%"
-          height="450"
-          scrolling="no"
-          className="rounded-lg shadow-lg border border-gray-300"
-        ></iframe>
-      </div>
+  {/* Video Player */}
+<div className="relative mx-auto px-4 pt-10 flex justify-center">
+  <div 
+    className="relative w-full max-w-5xl" 
+    style={{ 
+      height: "600px", 
+      maxHeight: "600px" 
+    }}
+  >
+    <iframe
+      src={getIframeSrc()}
+      referrerPolicy="origin"
+      allowFullScreen
+      width="100%"
+      height="100%"
+      scrolling="no"
+      className="rounded-lg shadow-lg border border-gray-300"
+    ></iframe>
+  </div>
+</div>
+
+<style jsx>{`
+  @media (max-width: 768px) {
+    .relative.w-full.max-w-5xl {
+      height: 450px;
+      maxHeight: 450px;
+    }
+  }
+`}</style>
 
 
 

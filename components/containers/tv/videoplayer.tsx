@@ -200,7 +200,7 @@ export default function VideoPlayer({ id }: { id: number }) {
 
 {/* Video Player */}
 <div className="relative mx-auto px-4 pt-10 flex justify-center">
-  <div className="relative w-full max-w-5xl aspect-w-16 aspect-h-9">
+  <div className="relative w-full max-w-5xl" style={{ height: "600px" }}>
     <iframe
       src={getIframeSrc()}
       referrerPolicy="origin"
@@ -212,6 +212,7 @@ export default function VideoPlayer({ id }: { id: number }) {
     ></iframe>
   </div>
 </div>
+
 
 
       {/* Navigation Buttons */}

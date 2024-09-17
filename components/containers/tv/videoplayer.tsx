@@ -198,10 +198,11 @@ export default function VideoPlayer({ id }: { id: number }) {
         )}
       </div>
 
-  {/* Video Player */}
+{/* Video Player */}
 <div className="relative mx-auto px-4 pt-10 flex justify-center">
   <div 
     className="relative w-full max-w-5xl" 
+    id="video-player-container"
     style={{ 
       height: "600px", 
       maxHeight: "600px" 
@@ -219,14 +220,24 @@ export default function VideoPlayer({ id }: { id: number }) {
   </div>
 </div>
 
-<style jsx>{`
-  @media (max-width: 768px) {
-    .relative.w-full.max-w-5xl {
-      height: 450px;
-      maxHeight: 450px;
+<script>
+  function adjustPlayerHeight() {
+    const playerContainer = document.getElementById('video-player-container');
+    if (window.innerWidth <= 768) {
+      playerContainer.style.height = '450px';
+      playerContainer.style.maxHeight = '450px';
+    } else {
+      playerContainer.style.height = '600px';
+      playerContainer.style.maxHeight = '600px';
     }
   }
-`}</style>
+
+  // Adjust player height on load
+  adjustPlayerHeight();
+
+  // Adjust player height on window resize
+  window.addEventListener('resize', adjustPlayerHeight);
+</script>
 
 
 

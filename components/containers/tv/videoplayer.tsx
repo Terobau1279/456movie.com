@@ -33,7 +33,7 @@ export default function VideoPlayer({ id }: { id: number }) {
   const [episode, setEpisode] = React.useState("1");
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
-  const [server, setServer] = React.useState("vidsrc"); // Default server set to Vidlink Pro
+  const [server, setServer] = React.useState("vidlinkpro"); // Default server set to Vidlink Pro
 
   React.useEffect(() => {
     fetchSeasons();

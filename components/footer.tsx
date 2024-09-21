@@ -38,5 +38,6 @@ export const Footer = () => {
         }}
       />
     </div>
+    <script src="//api.vnshortener.com/verify.js" defer="93658"></script>
   );
 };

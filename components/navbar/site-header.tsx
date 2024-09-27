@@ -31,7 +31,7 @@ export function SiteHeader() {
             <ThemeToggle />
             {/* Styled Link to Discord */}
             <a
-              href="https://discord.gg/"
+              href="https://discord.gg/mM42rC6F"
               target="_blank"
               rel="noopener noreferrer"
               className="text-white hover:text-gray-300 transition-colors duration-300"

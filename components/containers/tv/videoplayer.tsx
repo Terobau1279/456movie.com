@@ -138,7 +138,7 @@ export default function VideoPlayer({ id }: { id: number }) {
       case "twoembed":
         return `https://2embed.org/embed/tv/${id}/${season}/${episode}`;
       case "vidsrctop":
-        return `https://vidsrc.top/embed/tv/tmdb/${id}/${season}`;
+        return `https://embed.su/embed/tv/${id}/${season}/${episode}`;
       default:
         return `https://vidsrc.cc/v3/embed/tv/${id}/${season}/${episode}?autoPlay=true&autoNext=true&poster=true`;
     }

@@ -103,8 +103,13 @@ export default function VideoPlayer({ id }: any) {
     setShowRelatedMovies((prev) => !prev);
   };
 
+  // Prevent right-clicking
+  const handleContextMenu = (event: React.MouseEvent) => {
+    event.preventDefault();
+  };
+
   return (
-    <div className="py-8 mx-auto max-w-5xl">
+    <div className="py-8 mx-auto max-w-5xl" onContextMenu={handleContextMenu}>
       <div className="flex flex-col text-center items-center justify-center">
         <h2 className="text-lg font-bold mb-4 text-center text-white">
           Currently Watching: {movieTitle}
@@ -135,41 +140,47 @@ export default function VideoPlayer({ id }: any) {
           </div>
         </div>
 
-        <div className="flex flex-col items-center justify-center w-full mt-6">
+        <div className="relative flex flex-col items-center justify-center w-full mt-6">
           {loading ? (
             <Skeleton className="h-[400px] w-full rounded-md" />
           ) : (
-            <iframe
-              ref={iframeRef}
-              src={videoSources[selectedSource]}
-              className="w-full h-[500px] rounded-md"
-              frameBorder="0"
-              allowFullScreen
-              allow="autoplay; encrypted-media"
-            />
+            <>
+              <iframe
+                ref={iframeRef}
+                src={videoSources[selectedSource]}
+                className="w-full h-[400px] rounded-md"
+                allowFullScreen
+              />
+              <Hide show={showRelatedMovies}>
+                <div className="absolute bottom-0 left-0 w-full bg-gray-800 p-4 rounded-md">
+                  <h3 className="text-md font-bold text-white mb-2">Related Movies</h3>
+                  <div className="grid grid-cols-4 gap-4">
+                    {relatedMovies.map((movie) => (
+                      <Link key={movie.id} href={`/movies/${movie.id}`}>
+                        <div className="flex flex-col items-center">
+                          <Image
+                            src={`https://image.tmdb.org/t/p/w200${movie.poster_path}`}
+                            alt={movie.title}
+                            width={200}
+                            height={300}
+                            className="rounded-md"
+                          />
+                          <p className="text-sm text-white text-center mt-2">{movie.title}</p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </Hide>
+              <button
+                onClick={toggleRelatedMovies}
+                className="mt-2 text-blue-500"
+              >
+                {showRelatedMovies ? "Hide Related Movies" : "Show Related Movies"}
+              </button>
+            </>
           )}
         </div>
-
-        <Hide toggleRelatedMovies={toggleRelatedMovies} showRelatedMovies={showRelatedMovies} />
-
-        {showRelatedMovies && (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 mt-6">
-            {relatedMovies.map((relatedMovie) => (
-              <div key={relatedMovie.id} className="flex flex-col items-center">
-                <Link href={`/movie/${relatedMovie.id}`}>
-                  <Image
-                    src={`https://image.tmdb.org/t/p/w500${relatedMovie.poster_path}`}
-                    alt={relatedMovie.title}
-                    width={200}
-                    height={300}
-                    className="rounded-md"
-                  />
-                </Link>
-                <p className="text-center mt-2 text-white">{relatedMovie.title}</p>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );

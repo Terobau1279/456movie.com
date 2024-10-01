@@ -19,6 +19,23 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import Link from "next/link";
 
+// Obfuscate some video source URLs
+const obfuscatedVideoSources = {
+  vidlinkpro: atob("aHR0cHM6Ly92aWRsaW5rLnByby9tb3ZpZS8="),
+  vidsrccc: atob("aHR0cHM6Ly92aWRzcmMuY2MvdjMvZW1iZWQvbW92aWUv"),
+  vidsrcpro: atob("aHR0cHM6Ly92aWRzcmMucHJvL2VtYmVkL21vdmllLw=="),
+  superembed: atob("aHR0cHM6Ly9tdWx0aWVtYmVkLm1vdi8/dmlkZW9faWQ9"),
+  vidbinge4K: atob("aHR0cHM6Ly92aWRiaW5nZS5kZXYvZW1iZWQvbW92aWUv"),
+  smashystream: atob("aHR0cHM6Ly9wbGF5ZXIuc21hc2h5LnN0cmVhbS9tb3ZpZS8="),
+  vidsrcicu: atob("aHR0cHM6Ly92aWRzcmMuaWN1L2VtYmVkL21vdmllLw=="),
+  vidsrcnl: atob("aHR0cHM6Ly9wbGF5ZXIudmlkc3JjLm5sL2VtYmVkL21vdmllLw=="),
+  nontongo: atob("aHR0cHM6Ly93d3cubm9udG9uZ28ud2luL2VtYmVkL21vdmllLw=="),
+  vidsrcxyz: atob("aHR0cHM6Ly92aWRzcmMueHl6L2VtYmVkL21vdmllP3RtZGI9"),
+  embedccMovie: atob("aHR0cHM6Ly93d3cuMmVtYmVkLmNjL2VtYmVkLw=="),
+  twoembed: atob("aHR0cHM6Ly8yZW1iZWQub3JnL2VtYmVkL21vdmllLw=="),
+  vidsrctop: atob("aHR0cHM6Ly9lbWJlZC5zdS9lbWJlZC9tb3ZpZS8="),
+};
+
 type VideoSourceKey =
   | "vidlinkpro"
   | "vidsrccc"
@@ -43,19 +60,19 @@ export default function VideoPlayer({ id }: any) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   const videoSources: Record<VideoSourceKey, string> = {
-    vidlinkpro: `https://vidlink.pro/movie/${id}`,
-    vidsrccc: `https://vidsrc.cc/v3/embed/movie/${id}`,
-    vidsrcpro: `https://vidsrc.pro/embed/movie/${id}`,
-    superembed: `https://multiembed.mov/?video_id=${id}&tmdb=1`,
-    vidbinge4K: `https://vidbinge.dev/embed/movie/${id}`,
-    smashystream: `https://player.smashy.stream/movie/${id}`,
-    vidsrcicu: `https://vidsrc.icu/embed/movie/${id}`,
-    vidsrcnl: `https://player.vidsrc.nl/embed/movie/${id}?server=hindi`,
-    nontongo: `https://www.nontongo.win/embed/movie/${id}`,
-    vidsrcxyz: `https://vidsrc.xyz/embed/movie?tmdb=${id}`,
-    embedccMovie: `https://www.2embed.cc/embed/${id}`,
-    twoembed: `https://2embed.org/embed/movie/${id}`,
-    vidsrctop: `https://embed.su/embed/movie/${id}`,
+    vidlinkpro: `${obfuscatedVideoSources["vidlinkpro"]}${id}`,
+    vidsrccc: `${obfuscatedVideoSources["vidsrccc"]}${id}`,
+    vidsrcpro: `${obfuscatedVideoSources["vidsrcpro"]}${id}`,
+    superembed: `${obfuscatedVideoSources["superembed"]}${id}&tmdb=1`,
+    vidbinge4K: `${obfuscatedVideoSources["vidbinge4K"]}${id}`,
+    smashystream: `${obfuscatedVideoSources["smashystream"]}${id}`,
+    vidsrcicu: `${obfuscatedVideoSources["vidsrcicu"]}${id}`,
+    vidsrcnl: `${obfuscatedVideoSources["vidsrcnl"]}${id}?server=hindi`,
+    nontongo: `${obfuscatedVideoSources["nontongo"]}${id}`,
+    vidsrcxyz: `${obfuscatedVideoSources["vidsrcxyz"]}${id}`,
+    embedccMovie: `${obfuscatedVideoSources["embedccMovie"]}${id}`,
+    twoembed: `${obfuscatedVideoSources["twoembed"]}${id}`,
+    vidsrctop: `${obfuscatedVideoSources["vidsrctop"]}${id}`,
   };
 
   // Fetch movie details from TMDb API
@@ -90,7 +107,7 @@ export default function VideoPlayer({ id }: any) {
   };
 
   const toggleRelatedMovies = () => {
-    setShowRelatedMovies(prev => !prev);
+    setShowRelatedMovies((prev) => !prev);
   };
 
   return (
@@ -129,89 +146,89 @@ export default function VideoPlayer({ id }: any) {
                 Vidlink.pro <span className="text-green-400 text-sm">No Ads, Auto-Play</span>
               </SelectItem>
               <SelectItem value="vidsrccc">
-                VidSrc.cc <span className="text-green-400 text-sm">No Ads, Auto-Play, Auto-Next</span>
+                VidSrc.cc <span className="text-green-400 text-sm">No Ads, 1080p</span>
               </SelectItem>
               <SelectItem value="vidsrcpro">
-                VidSrc.pro <span className="text-green-400 text-sm">Casting Options</span>
+                VidSrc.pro <span className="text-green-400 text-sm">4K Support</span>
               </SelectItem>
               <SelectItem value="superembed">
-                SuperEmbed <span className="text-red-400 text-sm">Contains Ads</span>
+                SuperEmbed <span className="text-green-400 text-sm">Multiple Quality</span>
               </SelectItem>
               <SelectItem value="vidbinge4K">
-                VidBinge 4K <span className="text-green-400 text-sm">4K Stream, Auto-Play, Shared Stream</span>
+                VidBinge <span className="text-green-400 text-sm">4K Streaming</span>
               </SelectItem>
               <SelectItem value="smashystream">
-                Smashy Stream <span className="text-green-400 text-sm">No Ads, Shared Stream</span>
+                SmashyStream <span className="text-green-400 text-sm">1080p</span>
               </SelectItem>
               <SelectItem value="vidsrcicu">
-                VidSrc ICU <span className="text-green-400 text-sm">Casting Options</span>
+                VidSrc.icu <span className="text-green-400 text-sm">1080p HD</span>
               </SelectItem>
               <SelectItem value="vidsrcnl">
-                VidSrc NL
+                VidSrc.nl <span className="text-green-400 text-sm">Hindi Dubbed</span>
               </SelectItem>
               <SelectItem value="nontongo">
-                Nontongo <span className="text-green-400 text-sm">Casting Options</span>
+                Nontongo <span className="text-green-400 text-sm">Auto-Play, 1080p</span>
               </SelectItem>
               <SelectItem value="vidsrcxyz">
-                VidSrc XYZ
+                VidSrc.xyz <span className="text-green-400 text-sm">No Ads, 720p</span>
               </SelectItem>
               <SelectItem value="embedccMovie">
-                Embed CC Movie
+                Embed.cc <span className="text-green-400 text-sm">Multiple Quality</span>
               </SelectItem>
               <SelectItem value="twoembed">
-                TwoEmbed
+                TwoEmbed <span className="text-green-400 text-sm">Auto-Play, 1080p</span>
               </SelectItem>
               <SelectItem value="vidsrctop">
-                Premium
+                VidSrc.top <span className="text-green-400 text-sm">Auto-Play, 720p</span>
               </SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      {loading ? (
-        <Skeleton className="mx-auto px-4 pt-6 w-full h-[500px]" />
-      ) : (
-        <iframe
-          src={videoSources[selectedSource]}
-          ref={iframeRef}
-          referrerPolicy="origin"
-          allowFullScreen
-          width="100%"
-          height="450"
-          scrolling="no"
-          className="max-w-3xl mx-auto px-4 pt-6"
-        />
-      )}
+      {/* Video Iframe */}
+      <div className="mt-8 w-full h-[550px] bg-gray-800">
+        {loading ? (
+          <div className="h-full w-full flex items-center justify-center">
+            <Skeleton className="w-[500px] h-[280px]" />
+          </div>
+        ) : (
+          <iframe
+            ref={iframeRef}
+            src={videoSources[selectedSource]}
+            className="w-full h-full"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        )}
+      </div>
 
-      {/* Related Movies Section */}
-      <div className="pt-10">
+      {/* Related Movies */}
+      <div className="my-8">
         <button
           onClick={toggleRelatedMovies}
-          className="px-4 py-2 rounded-md bg-gray-700 text-white border border-gray-600 hover:bg-gray-600 transition-colors"
+          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-300"
         >
           {showRelatedMovies ? "Hide Related Movies" : "Show Related Movies"}
         </button>
         {showRelatedMovies && (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 mt-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-4">
             {relatedMovies.map((movie) => (
-              <Link href={`/movie/${movie.id}`} key={movie.id}>
-                <div
-                  className="relative group cursor-pointer overflow-hidden rounded-lg shadow-lg hover:scale-105 transition-transform duration-300"
-                >
+              <div key={movie.id} className="relative">
+                <Link href={`/movie/${movie.id}`}>
                   <Image
                     src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
                     alt={movie.title}
-                    width={200}
-                    height={300}
-                    className="object-cover"
+                    width={300}
+                    height={450}
+                    className="rounded-md"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60 group-hover:opacity-0 transition-opacity duration-300"></div>
-                  <div className="absolute bottom-0 left-0 p-2 text-white bg-gradient-to-t from-black to-transparent">
+                  <p className="absolute bottom-0 left-0 bg-black bg-opacity-60 text-white w-full text-center py-2">
                     {movie.title}
-                  </div>
-                </div>
-              </Link>
+                  </p>
+                </Link>
+              </div>
             ))}
           </div>
         )}

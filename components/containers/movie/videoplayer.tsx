@@ -7,17 +7,10 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import Link from "next/link";
+import Hide from "./hide"; // Import Hide component
 
 // Obfuscate some video source URLs
 const obfuscatedVideoSources = {
@@ -113,121 +106,66 @@ export default function VideoPlayer({ id }: any) {
   return (
     <div className="py-8 mx-auto max-w-5xl">
       <div className="flex flex-col text-center items-center justify-center">
-        <div className="flex flex-col flex-wrap pb-4">
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink href={`/movie/${id}`}>
-                  Movie - {movieTitle}
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Watch</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        </div>
-      </div>
+        <h2 className="text-lg font-bold mb-4 text-center text-white">
+          Currently Watching: {movieTitle}
+        </h2>
 
-      {/* Currently Watching Section */}
-      <h2 className="text-lg font-bold mb-4 text-center text-white">
-        Currently Watching: {movieTitle}
-      </h2>
-
-      <div className="flex flex-row items-center justify-center w-full">
-        <div className="flex flex-col text-center">
-          <Select onValueChange={handleSelectChange} value={selectedSource}>
-            <SelectTrigger className="px-4 py-2 rounded-md w-[280px] bg-gray-800 text-white border border-gray-700">
-              <SelectValue placeholder="Select Video Source" />
-            </SelectTrigger>
-            <SelectContent className="bg-gray-800 text-white border border-gray-700">
-              <SelectItem value="vidlinkpro">
-                Vidlink.pro <span className="text-green-400 text-sm">No Ads, Auto-Play</span>
-              </SelectItem>
-              <SelectItem value="vidsrccc">
-                VidSrc.cc <span className="text-green-400 text-sm">No Ads, 1080p</span>
-              </SelectItem>
-              <SelectItem value="vidsrcpro">
-                VidSrc.pro <span className="text-green-400 text-sm">4K Support</span>
-              </SelectItem>
-              <SelectItem value="superembed">
-                SuperEmbed <span className="text-green-400 text-sm">Multiple Quality</span>
-              </SelectItem>
-              <SelectItem value="vidbinge4K">
-                VidBinge <span className="text-green-400 text-sm">4K Streaming</span>
-              </SelectItem>
-              <SelectItem value="smashystream">
-                SmashyStream <span className="text-green-400 text-sm">1080p</span>
-              </SelectItem>
-              <SelectItem value="vidsrcicu">
-                VidSrc.icu <span className="text-green-400 text-sm">1080p HD</span>
-              </SelectItem>
-              <SelectItem value="vidsrcnl">
-                VidSrc.nl <span className="text-green-400 text-sm">Hindi Dubbed</span>
-              </SelectItem>
-              <SelectItem value="nontongo">
-                Nontongo <span className="text-green-400 text-sm">Auto-Play, 1080p</span>
-              </SelectItem>
-              <SelectItem value="vidsrcxyz">
-                VidSrc.xyz <span className="text-green-400 text-sm">No Ads, 720p</span>
-              </SelectItem>
-              <SelectItem value="embedccMovie">
-                Embed.cc <span className="text-green-400 text-sm">Multiple Quality</span>
-              </SelectItem>
-              <SelectItem value="twoembed">
-                TwoEmbed <span className="text-green-400 text-sm">Auto-Play, 1080p</span>
-              </SelectItem>
-              <SelectItem value="vidsrctop">
-                VidSrc.top <span className="text-green-400 text-sm">Auto-Play, 720p</span>
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Video Iframe */}
-      <div className="mt-8 w-full h-[550px] bg-gray-800">
-        {loading ? (
-          <div className="h-full w-full flex items-center justify-center">
-            <Skeleton className="w-[500px] h-[280px]" />
+        <div className="flex flex-row items-center justify-center w-full">
+          <div className="flex flex-col text-center">
+            <Select onValueChange={handleSelectChange} value={selectedSource}>
+              <SelectTrigger className="px-4 py-2 rounded-md w-[280px] bg-gray-800 text-white border border-gray-700">
+                <SelectValue placeholder="Select Video Source" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 text-white border border-gray-700">
+                <SelectItem value="vidlinkpro">Vidlink.pro</SelectItem>
+                <SelectItem value="vidsrccc">VidSrc.cc</SelectItem>
+                <SelectItem value="vidsrcpro">VidSrc.pro</SelectItem>
+                <SelectItem value="superembed">SuperEmbed</SelectItem>
+                <SelectItem value="vidbinge4K">VidBinge</SelectItem>
+                <SelectItem value="smashystream">SmashyStream</SelectItem>
+                <SelectItem value="vidsrcicu">VidSrc.icu</SelectItem>
+                <SelectItem value="vidsrcnl">VidSrc.nl</SelectItem>
+                <SelectItem value="nontongo">Nontongo</SelectItem>
+                <SelectItem value="vidsrcxyz">VidSrc.xyz</SelectItem>
+                <SelectItem value="embedccMovie">Embed.cc</SelectItem>
+                <SelectItem value="twoembed">TwoEmbed</SelectItem>
+                <SelectItem value="vidsrctop">VidSrc.top</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        ) : (
-          <iframe
-            ref={iframeRef}
-            src={videoSources[selectedSource]}
-            className="w-full h-full"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
-        )}
-      </div>
+        </div>
 
-      {/* Related Movies */}
-      <div className="my-8">
-        <button
-          onClick={toggleRelatedMovies}
-          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-300"
-        >
-          {showRelatedMovies ? "Hide Related Movies" : "Show Related Movies"}
-        </button>
+        <div className="flex flex-col items-center justify-center w-full mt-6">
+          {loading ? (
+            <Skeleton className="h-[400px] w-full rounded-md" />
+          ) : (
+            <iframe
+              ref={iframeRef}
+              src={videoSources[selectedSource]}
+              className="w-full h-[500px] rounded-md"
+              frameBorder="0"
+              allowFullScreen
+              allow="autoplay; encrypted-media"
+            />
+          )}
+        </div>
+
+        <Hide toggleRelatedMovies={toggleRelatedMovies} showRelatedMovies={showRelatedMovies} />
+
         {showRelatedMovies && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-4">
-            {relatedMovies.map((movie) => (
-              <div key={movie.id} className="relative">
-                <Link href={`/movie/${movie.id}`}>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 mt-6">
+            {relatedMovies.map((relatedMovie) => (
+              <div key={relatedMovie.id} className="flex flex-col items-center">
+                <Link href={`/movie/${relatedMovie.id}`}>
                   <Image
-                    src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-                    alt={movie.title}
-                    width={300}
-                    height={450}
+                    src={`https://image.tmdb.org/t/p/w500${relatedMovie.poster_path}`}
+                    alt={relatedMovie.title}
+                    width={200}
+                    height={300}
                     className="rounded-md"
                   />
-                  <p className="absolute bottom-0 left-0 bg-black bg-opacity-60 text-white w-full text-center py-2">
-                    {movie.title}
-                  </p>
                 </Link>
+                <p className="text-center mt-2 text-white">{relatedMovie.title}</p>
               </div>
             ))}
           </div>

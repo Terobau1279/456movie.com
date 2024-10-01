@@ -322,7 +322,7 @@ export default function VideoPlayer({ id }: { id: number }) {
           TwoEmbed
         </SelectItem>
         <SelectItem value="vidsrctop">
-          Vidsrc Top
+          Premium
         </SelectItem>
       </SelectContent>
     </Select>

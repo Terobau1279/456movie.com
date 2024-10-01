@@ -12,9 +12,10 @@ import {
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+
 const DetailsContainer = ({ data, id, embed }: any) => {
   return (
-    <div className="">
+    <div className="bg-black text-white">
       <div className={cn("mx-auto max-w-6xl", embed ? "p-0" : "md:pt-4")}>
         <div
           className={cn(
@@ -32,9 +33,9 @@ const DetailsContainer = ({ data, id, embed }: any) => {
             data-testid="banner"
           />
         </div>
-        <div className="mx-auto my-8 max-w-4xl space-y-8 p-4 md:space-y-12 md:p-0 ">
+        <div className="mx-auto my-8 max-w-4xl space-y-8 p-4 md:space-y-12 md:p-0">
           <main className="flex flex-col gap-4 md:flex-row">
-            <aside className="-mt-24 w-full space-y-2  md:-mt-32 md:w-1/3">
+            <aside className="-mt-24 w-full space-y-2 md:-mt-32 md:w-1/3">
               <Poster url={data.poster_path} alt={data.title} />
             </aside>
             <article className="flex w-full flex-col gap-2 md:w-2/3">
@@ -52,7 +53,7 @@ const DetailsContainer = ({ data, id, embed }: any) => {
                         <Badge
                           key={genre.id}
                           variant="outline"
-                          className="whitespace-nowrap"
+                          className="whitespace-nowrap border border-gray-400"
                         >
                           {genre.name}
                         </Badge>
@@ -64,7 +65,7 @@ const DetailsContainer = ({ data, id, embed }: any) => {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Badge>{data.vote_average.toFixed(1)}</Badge>
+                      <Badge className="border border-gray-400">{data.vote_average.toFixed(1)}</Badge>
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>{data.vote_count} votes</p>
@@ -79,7 +80,7 @@ const DetailsContainer = ({ data, id, embed }: any) => {
                 <Link href={`/tv/watch/${id}`}>
                   <Badge
                     variant="outline"
-                    className="cursor-pointer whitespace-nowrap"
+                    className="cursor-pointer whitespace-nowrap bg-blue-500 border border-transparent text-white hover:bg-blue-600 transition-all duration-300 ease-in-out shadow-lg"
                   >
                     <Play className="mr-1.5" size={12} />
                     Watch
@@ -93,4 +94,5 @@ const DetailsContainer = ({ data, id, embed }: any) => {
     </div>
   );
 };
+
 export default DetailsContainer;

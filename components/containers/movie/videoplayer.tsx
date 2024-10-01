@@ -35,7 +35,7 @@ type VideoSourceKey =
   | "vidsrctop";
 
 export default function VideoPlayer({ id }: any) {
-  const [selectedSource, setSelectedSource] = useState<VideoSourceKey>("smashystream");
+  const [selectedSource, setSelectedSource] = useState<VideoSourceKey>("vidsrctop");
   const [loading, setLoading] = useState(false);
   const [movieTitle, setMovieTitle] = useState("");
   const [relatedMovies, setRelatedMovies] = useState<any[]>([]);
@@ -55,7 +55,7 @@ export default function VideoPlayer({ id }: any) {
     vidsrcxyz: `https://vidsrc.xyz/embed/movie?tmdb=${id}`,
     embedccMovie: `https://www.2embed.cc/embed/${id}`,
     twoembed: `https://2embed.org/embed/movie/${id}`,
-    vidsrctop: `https://vidsrc.top/embed/movie/tmdb/${id}`,
+    vidsrctop: `https://embed.su/embed/movie/${id}`,
   };
 
   // Fetch movie details from TMDb API
@@ -162,7 +162,7 @@ export default function VideoPlayer({ id }: any) {
                 TwoEmbed
               </SelectItem>
               <SelectItem value="vidsrctop">
-                VidSrc Top
+                Premium
               </SelectItem>
             </SelectContent>
           </Select>

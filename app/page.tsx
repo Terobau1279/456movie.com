@@ -6,8 +6,8 @@ import HeroSection from "@/components/hero";
 export default async function Home() {
   return (
     <>
-      <Pattern variant="checkered" className="opacity-10" />
-      <div className="mx-auto max-w-4xl p-4">
+      <Pattern variant="checkered" />
+      <div className="mx-auto max-w-4xl p-4 bg-black bg-opacity-70">
         <section className="flex h-[75vh] items-center md:h-[50vh]">
           <div className="mx-auto flex w-4/5 flex-col items-center justify-center space-y-6 text-center">
             <h1 className="text-6xl font-bold text-white">

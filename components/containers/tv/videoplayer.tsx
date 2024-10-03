@@ -52,25 +52,25 @@ export default function VideoPlayer({ id }: { id: number }) {
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (event.origin !== 'https://vidlink.pro') return;
+      if (event.origin !== "https://vidlink.pro") return;
 
-      if (event.data && event.data.type === 'MEDIA_DATA') {
+      if (event.data && event.data.type === "MEDIA_DATA") {
         const mediaData = event.data.data;
         try {
-          const currentProgress = JSON.parse(localStorage.getItem('vidLinkProgress') || '[]');
+          const currentProgress = JSON.parse(localStorage.getItem("vidLinkProgress") || "[]");
           const updatedProgress = currentProgress.filter((item: ProgressData) => item.episode_number !== mediaData.episode_number);
           updatedProgress.push(mediaData);
-          localStorage.setItem('vidLinkProgress', JSON.stringify(updatedProgress));
+          localStorage.setItem("vidLinkProgress", JSON.stringify(updatedProgress));
         } catch (e) {
           console.error("Error saving to localStorage", e);
         }
       }
     };
 
-    window.addEventListener('message', handleMessage);
+    window.addEventListener("message", handleMessage);
 
     return () => {
-      window.removeEventListener('message', handleMessage);
+      window.removeEventListener("message", handleMessage);
     };
   }, []);
 
@@ -85,7 +85,7 @@ export default function VideoPlayer({ id }: { id: number }) {
 
   const getWatchProgress = (episodeNumber: number) => {
     try {
-      const progressData = JSON.parse(localStorage.getItem('vidLinkProgress') || '[]');
+      const progressData = JSON.parse(localStorage.getItem("vidLinkProgress") || "[]");
       const episodeProgress = progressData.find((ep: ProgressData) => ep.episode_number === episodeNumber);
       return episodeProgress ? episodeProgress.progress : 0;
     } catch (e) {

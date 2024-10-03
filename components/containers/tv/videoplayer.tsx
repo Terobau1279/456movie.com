@@ -26,12 +26,6 @@ interface Episode {
   still_path: string;
 }
 
-interface MediaProgress {
-  season: number;
-  episode: number;
-  progress: number; // Progress as a percentage
-}
-
 export default function VideoPlayer({ id }: { id: number }) {
   const [seasons, setSeasons] = React.useState<Season[]>([]);
   const [episodes, setEpisodes] = React.useState<Episode[]>([]);
@@ -40,10 +34,24 @@ export default function VideoPlayer({ id }: { id: number }) {
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [server, setServer] = React.useState("vidlinkpro"); // Default server set to Vidlink Pro
-  const [progressData, setProgressData] = React.useState<MediaProgress[]>([]);
 
   React.useEffect(() => {
     fetchSeasons();
+
+    // Listen for progress messages from the player
+    window.addEventListener('message', (event) => {
+      if (event.origin !== 'https://vidlink.pro') {
+        return;
+      }
+
+      if (event.data && event.data.type === 'MEDIA_DATA') {
+        // Get the media data from the message
+        const mediaData = event.data.data;
+
+        // Save the media data to localStorage
+        localStorage.setItem('vidLinkProgress', JSON.stringify(mediaData));
+      }
+    });
   }, []);
 
   React.useEffect(() => {
@@ -54,69 +62,12 @@ export default function VideoPlayer({ id }: { id: number }) {
 
   React.useEffect(() => {
     if (episodes.length > 0) {
-      const episodeExists = episodes.some(
-        (ep) => ep.episode_number.toString() === episode
-      );
+      const episodeExists = episodes.some(ep => ep.episode_number.toString() === episode);
       if (!episodeExists) {
         setEpisode(episodes[0].episode_number.toString());
       }
     }
   }, [episodes]);
-
-  React.useEffect(() => {
-    // Add the message listener for watch progress
-    const handleProgressMessage = (event: MessageEvent) => {
-      if (event.origin !== "https://vidlink.pro") {
-        return;
-      }
-
-      if (event.data && event.data.type === "MEDIA_DATA") {
-        const mediaData = event.data.data;
-
-        // Store progress in localStorage
-        const storedProgress = JSON.parse(
-          localStorage.getItem("vidLinkProgress") || "[]"
-        );
-
-        const updatedProgress = [...storedProgress];
-
-        // Find if progress for this episode exists
-        const existingIndex = updatedProgress.findIndex(
-          (item: MediaProgress) =>
-            item.season === mediaData.season &&
-            item.episode === mediaData.episode
-        );
-
-        if (existingIndex > -1) {
-          // Update existing progress
-          updatedProgress[existingIndex].progress = mediaData.progress;
-        } else {
-          // Add new progress
-          updatedProgress.push(mediaData);
-        }
-
-        localStorage.setItem("vidLinkProgress", JSON.stringify(updatedProgress));
-        setProgressData(updatedProgress); // Update state to reflect progress
-      }
-    };
-
-    window.addEventListener("message", handleProgressMessage);
-
-    // Cleanup event listener on unmount
-    return () => {
-      window.removeEventListener("message", handleProgressMessage);
-    };
-  }, []);
-
-  const getStoredProgress = (seasonNumber: number, episodeNumber: number) => {
-    const storedProgress: MediaProgress[] = JSON.parse(
-      localStorage.getItem("vidLinkProgress") || "[]"
-    );
-    const episodeProgress = storedProgress.find(
-      (item) => item.season === seasonNumber && item.episode === episodeNumber
-    );
-    return episodeProgress ? episodeProgress.progress : 0; // Return progress if exists, otherwise 0
-  };
 
   async function fetchSeasons() {
     setIsLoading(true);
@@ -221,9 +172,7 @@ export default function VideoPlayer({ id }: { id: number }) {
 
   const handleNextEpisode = () => {
     const currentEpisodeNumber = Number(episode);
-    const nextEpisode = episodes.find(
-      (ep) => ep.episode_number === currentEpisodeNumber + 1
-    );
+    const nextEpisode = episodes.find(ep => ep.episode_number === currentEpisodeNumber + 1);
     if (nextEpisode) {
       setEpisode((currentEpisodeNumber + 1).toString());
     }
@@ -246,16 +195,57 @@ export default function VideoPlayer({ id }: { id: number }) {
     );
   }
 
-  const currentSeason = seasons.find(
-    (s) => s.season_number.toString() === season
-  );
-  const currentEpisode = episodes.find(
-    (ep) => ep.episode_number.toString() === episode
-  );
+  const currentSeason = seasons.find(s => s.season_number.toString() === season);
+  const currentEpisode = episodes.find(ep => ep.episode_number.toString() === episode);
 
   return (
-    <div className="py-8 mx-auto max-w-5xl">
-      <div className="flex items-center justify-between px-4">
+    <div className="py-8">
+      {/* Currently Watching Section */}
+      <div className="text-center mb-4">
+        <h2 className="text-xl font-bold">Currently Watching:</h2>
+        {currentSeason && currentEpisode ? (
+          <div>
+            <div className="text-lg font-semibold">{currentSeason.name}</div>
+            <div>Episode {currentEpisode.episode_number}: {currentEpisode.name}</div>
+          </div>
+        ) : (
+          <div>No episode selected</div>
+        )}
+      </div>
+
+      {/* Video Player */}
+      <div className="relative max-w-3xl mx-auto px-4 pt-10">
+        <iframe
+          src={getIframeSrc()}
+          referrerPolicy="origin"
+          allowFullScreen
+          width="100%"
+          height="450"
+          scrolling="no"
+          className="rounded-lg shadow-lg border border-gray-300"
+        ></iframe>
+      </div>
+
+      {/* Navigation Buttons */}
+      <div className="flex justify-center pt-4">
+        <button
+          onClick={handlePreviousEpisode}
+          className="px-4 py-2 rounded-md bg-gray-800 text-white shadow-md hover:bg-gray-700 transition-colors duration-300 flex items-center"
+        >
+          <ArrowLeft size={16} className="mr-2" />
+          Previous Episode
+        </button>
+        <button
+          onClick={handleNextEpisode}
+          className="px-4 py-2 rounded-md bg-gray-800 text-white shadow-md hover:bg-gray-700 transition-colors duration-300 flex items-center ml-4"
+        >
+          Next Episode
+          <ArrowRight size={16} className="ml-2" />
+        </button>
+      </div>
+
+      {/* Season Selector */}
+      <div className="mt-6">
         <Select
           onValueChange={setSeason}
           defaultValue={season}
@@ -275,72 +265,26 @@ export default function VideoPlayer({ id }: { id: number }) {
             ))}
           </SelectContent>
         </Select>
-
-        <div className="flex items-center gap-2">
-          <Badge className="bg-primary">
-            {currentSeason ? currentSeason.episode_count : 0} Episodes
-          </Badge>
-
-          <Badge className="bg-primary">{`S${season}E${episode}`}</Badge>
-
-          <Link href={`/`}>
-            <a>
-              <Download className="text-primary" />
-            </a>
-          </Link>
-        </div>
       </div>
 
-      <div className="flex justify-center my-8">
-        <iframe
-          className="w-full max-w-[800px] h-[450px]"
-          src={getIframeSrc()}
-          allowFullScreen
-          frameBorder="0"
-        ></iframe>
-      </div>
-
-      <div className="flex items-center justify-between px-4">
-        <button onClick={handlePreviousEpisode} disabled={Number(episode) === 1}>
-          <ArrowLeft className="text-primary" />
-        </button>
-
-        <button
-          onClick={handleNextEpisode}
-          disabled={Number(episode) === episodes.length}
+      {/* Episode Selector */}
+      <div className="mt-6">
+        <Select
+          onValueChange={handleEpisodeClick}
+          defaultValue={episode}
+          className="w-[200px]"
         >
-          <ArrowRight className="text-primary" />
-        </button>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-4 mt-8">
-        {episodes.map((ep) => (
-          <div
-            key={ep.episode_number}
-            className="relative cursor-pointer"
-            onClick={() => handleEpisodeClick(ep.episode_number.toString())}
-          >
-            <img
-              src={`https://image.tmdb.org/t/p/w500/${ep.still_path}`}
-              alt={ep.name}
-              className="w-full h-[150px] object-cover"
-            />
-
-            <div
-              className="absolute bottom-0 left-0 w-full bg-primary h-[5px]"
-              style={{
-                width: `${getStoredProgress(
-                  Number(season),
-                  ep.episode_number
-                )}%`,
-              }}
-            ></div>
-
-            <div className="absolute bottom-2 left-2 text-white">
-              {ep.name}
-            </div>
-          </div>
-        ))}
+          <SelectTrigger>
+            <SelectValue placeholder="Select an episode" />
+          </SelectTrigger>
+          <SelectContent>
+            {episodes.map((ep) => (
+              <SelectItem key={ep.episode_number} value={ep.episode_number.toString()}>
+                {ep.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );

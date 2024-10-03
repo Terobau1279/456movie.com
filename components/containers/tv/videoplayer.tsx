@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import * as React from "react";
 import {
   Select,
   SelectTrigger,
@@ -26,72 +26,96 @@ interface Episode {
   still_path: string;
 }
 
-interface ProgressData {
-  episode_number: number;
-  progress: number;
+interface MediaProgress {
+  season: number;
+  episode: number;
+  progress: number; // Progress as a percentage
 }
 
 export default function VideoPlayer({ id }: { id: number }) {
-  const [seasons, setSeasons] = useState<Season[]>([]);
-  const [episodes, setEpisodes] = useState<Episode[]>([]);
-  const [season, setSeason] = useState("1");
-  const [episode, setEpisode] = useState("1");
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [server, setServer] = useState("vidlinkpro");
+  const [seasons, setSeasons] = React.useState<Season[]>([]);
+  const [episodes, setEpisodes] = React.useState<Episode[]>([]);
+  const [season, setSeason] = React.useState("1");
+  const [episode, setEpisode] = React.useState("1");
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const [server, setServer] = React.useState("vidlinkpro"); // Default server set to Vidlink Pro
+  const [progressData, setProgressData] = React.useState<MediaProgress[]>([]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     fetchSeasons();
   }, []);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (season) {
       fetchEpisodes(Number(season));
     }
   }, [season]);
 
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (event.origin !== "https://vidlink.pro") return;
-
-      if (event.data && event.data.type === "MEDIA_DATA") {
-        const mediaData = event.data.data;
-        try {
-          const currentProgress = JSON.parse(localStorage.getItem("vidLinkProgress") || "[]");
-          const updatedProgress = currentProgress.filter((item: ProgressData) => item.episode_number !== mediaData.episode_number);
-          updatedProgress.push(mediaData);
-          localStorage.setItem("vidLinkProgress", JSON.stringify(updatedProgress));
-        } catch (e) {
-          console.error("Error saving to localStorage", e);
-        }
-      }
-    };
-
-    window.addEventListener("message", handleMessage);
-
-    return () => {
-      window.removeEventListener("message", handleMessage);
-    };
-  }, []);
-
-  useEffect(() => {
+  React.useEffect(() => {
     if (episodes.length > 0) {
-      const episodeExists = episodes.some(ep => ep.episode_number.toString() === episode);
+      const episodeExists = episodes.some(
+        (ep) => ep.episode_number.toString() === episode
+      );
       if (!episodeExists) {
         setEpisode(episodes[0].episode_number.toString());
       }
     }
   }, [episodes]);
 
-  const getWatchProgress = (episodeNumber: number) => {
-    try {
-      const progressData = JSON.parse(localStorage.getItem("vidLinkProgress") || "[]");
-      const episodeProgress = progressData.find((ep: ProgressData) => ep.episode_number === episodeNumber);
-      return episodeProgress ? episodeProgress.progress : 0;
-    } catch (e) {
-      console.error("Error reading from localStorage", e);
-    }
-    return 0;
+  React.useEffect(() => {
+    // Add the message listener for watch progress
+    const handleProgressMessage = (event: MessageEvent) => {
+      if (event.origin !== "https://vidlink.pro") {
+        return;
+      }
+
+      if (event.data && event.data.type === "MEDIA_DATA") {
+        const mediaData = event.data.data;
+
+        // Store progress in localStorage
+        const storedProgress = JSON.parse(
+          localStorage.getItem("vidLinkProgress") || "[]"
+        );
+
+        const updatedProgress = [...storedProgress];
+
+        // Find if progress for this episode exists
+        const existingIndex = updatedProgress.findIndex(
+          (item: MediaProgress) =>
+            item.season === mediaData.season &&
+            item.episode === mediaData.episode
+        );
+
+        if (existingIndex > -1) {
+          // Update existing progress
+          updatedProgress[existingIndex].progress = mediaData.progress;
+        } else {
+          // Add new progress
+          updatedProgress.push(mediaData);
+        }
+
+        localStorage.setItem("vidLinkProgress", JSON.stringify(updatedProgress));
+        setProgressData(updatedProgress); // Update state to reflect progress
+      }
+    };
+
+    window.addEventListener("message", handleProgressMessage);
+
+    // Cleanup event listener on unmount
+    return () => {
+      window.removeEventListener("message", handleProgressMessage);
+    };
+  }, []);
+
+  const getStoredProgress = (seasonNumber: number, episodeNumber: number) => {
+    const storedProgress: MediaProgress[] = JSON.parse(
+      localStorage.getItem("vidLinkProgress") || "[]"
+    );
+    const episodeProgress = storedProgress.find(
+      (item) => item.season === seasonNumber && item.episode === episodeNumber
+    );
+    return episodeProgress ? episodeProgress.progress : 0; // Return progress if exists, otherwise 0
   };
 
   async function fetchSeasons() {
@@ -155,6 +179,30 @@ export default function VideoPlayer({ id }: { id: number }) {
     switch (server) {
       case "vidlinkpro":
         return `https://vidlink.pro/tv/${id}/${season}/${episode}?primaryColor=#FFFFFF&secondaryColor=#FFFFFF&iconColor=#FFFFFF&autoplay=true&nextbutton=true`;
+      case "vidsrc":
+        return `https://vidsrc.cc/v3/embed/tv/${id}/${season}/${episode}?autoPlay=true&autoNext=true&poster=true`;
+      case "vidbinge4K":
+        return `https://vidbinge.dev/embed/tv/${id}/${season}/${episode}`;
+      case "smashystream":
+        return `https://player.smashy.stream/tv/${id}?s=${season}&e=${episode}`;
+      case "vidsrcpro":
+        return `https://embed.su/embed/tv/${id}/${season}/${episode}`;
+      case "superembed":
+        return `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}`;
+      case "vidsrcicu":
+        return `https://vidsrc.icu/embed/tv/${id}/${season}/${episode}`;
+      case "vidsrcnl":
+        return `https://player.vidsrc.nl/embed/tv/${id}/${season}/${episode}?server=hindi`;
+      case "nontongo":
+        return `https://www.nontongo.win/embed/tv/${id}/${season}/${episode}`;
+      case "vidsrcxyz":
+        return `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${season}&episode=${episode}`;
+      case "embedcctv":
+        return `https://www.2embed.cc/embed/tv/${id}/${season}/${episode}`;
+      case "twoembed":
+        return `https://2embed.org/embed/tv/${id}/${season}/${episode}`;
+      case "vidsrctop":
+        return `https://embed.su/embed/tv/${id}/${season}/${episode}`;
       default:
         return `https://vidsrc.cc/v3/embed/tv/${id}/${season}/${episode}?autoPlay=true&autoNext=true&poster=true`;
     }
@@ -173,7 +221,9 @@ export default function VideoPlayer({ id }: { id: number }) {
 
   const handleNextEpisode = () => {
     const currentEpisodeNumber = Number(episode);
-    const nextEpisode = episodes.find(ep => ep.episode_number === currentEpisodeNumber + 1);
+    const nextEpisode = episodes.find(
+      (ep) => ep.episode_number === currentEpisodeNumber + 1
+    );
     if (nextEpisode) {
       setEpisode((currentEpisodeNumber + 1).toString());
     }
@@ -190,195 +240,108 @@ export default function VideoPlayer({ id }: { id: number }) {
   if (error) {
     return (
       <div className="py-8 mx-auto max-w-5xl">
-        <Skeleton className="mx-auto px-4 pt-6 w-full h-[500px]" />
+        <Skeleton className="mx-auto px-4 pt-6 w-full h-[500px]" />{" "}
         <div className="text-center text-red-500">Error: {error}</div>
       </div>
     );
   }
 
-  const currentSeason = seasons.find(s => s.season_number.toString() === season);
-  const currentEpisode = episodes.find(ep => ep.episode_number.toString() === episode);
+  const currentSeason = seasons.find(
+    (s) => s.season_number.toString() === season
+  );
+  const currentEpisode = episodes.find(
+    (ep) => ep.episode_number.toString() === episode
+  );
 
   return (
-    <div className="py-8">
-      <div className="text-center mb-4">
-        <h2 className="text-xl font-bold">Currently Watching:</h2>
-        {currentSeason && currentEpisode ? (
-          <div>
-            <div className="text-lg font-semibold">{currentSeason.name}</div>
-            <div>Episode {currentEpisode.episode_number}: {currentEpisode.name}</div>
-          </div>
-        ) : (
-          <div>No episode selected</div>
-        )}
+    <div className="py-8 mx-auto max-w-5xl">
+      <div className="flex items-center justify-between px-4">
+        <Select
+          onValueChange={setSeason}
+          defaultValue={season}
+          className="w-[200px]"
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select a season" />
+          </SelectTrigger>
+          <SelectContent>
+            {seasons.map((season) => (
+              <SelectItem
+                key={season.season_number}
+                value={season.season_number.toString()}
+              >
+                {season.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <div className="flex items-center gap-2">
+          <Badge className="bg-primary">
+            {currentSeason ? currentSeason.episode_count : 0} Episodes
+          </Badge>
+
+          <Badge className="bg-primary">{`S${season}E${episode}`}</Badge>
+
+          <Link href={`/`}>
+            <a>
+              <Download className="text-primary" />
+            </a>
+          </Link>
+        </div>
       </div>
 
-      <div className="relative max-w-3xl mx-auto px-4 pt-10">
+      <div className="flex justify-center my-8">
         <iframe
+          className="w-full max-w-[800px] h-[450px]"
           src={getIframeSrc()}
-          referrerPolicy="origin"
           allowFullScreen
-          width="100%"
-          height="450"
-          scrolling="no"
-          className="rounded-lg shadow-lg border border-gray-300"
+          frameBorder="0"
         ></iframe>
       </div>
 
-      <div className="flex justify-center pt-4">
-        <button
-          onClick={handlePreviousEpisode}
-          className="px-4 py-2 rounded-md bg-gray-800 text-white shadow-md hover:bg-gray-700 transition-colors duration-300 flex items-center"
-        >
-          <ArrowLeft size={16} className="mr-2" />
-          Previous Episode
+      <div className="flex items-center justify-between px-4">
+        <button onClick={handlePreviousEpisode} disabled={Number(episode) === 1}>
+          <ArrowLeft className="text-primary" />
         </button>
+
         <button
           onClick={handleNextEpisode}
-          className="px-4 py-2 rounded-md bg-gray-800 text-white shadow-md hover:bg-gray-700 transition-colors duration-300 flex items-center ml-4"
+          disabled={Number(episode) === episodes.length}
         >
-          Next Episode
-          <ArrowRight size={16} className="ml-2" />
+          <ArrowRight className="text-primary" />
         </button>
       </div>
 
-      <div className="flex justify-center pt-4">
-        <div className="w-[300px]">
-          <Select value={season} onValueChange={(e) => setSeason(e)} disabled={isLoading || seasons.length === 0}>
-            <SelectTrigger className="px-4 py-2 rounded-md">
-              <SelectValue placeholder="Select Season" />
-            </SelectTrigger>
-            <SelectContent>
-              {seasons.length > 0 ? (
-                seasons.map((s) => (
-                  <SelectItem
-                    key={s.season_number}
-                    value={s.season_number.toString()}
-                  >
-                    Season {s.season_number}
-                  </SelectItem>
-                ))
-              ) : (
-                <></>
-              )}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="pt-4 text-center">
-        <Link href={`https://dl.vidsrc.vip/tv/${id}/${season}/${episode}`}>
-          <Badge
-            variant="outline"
-            className="cursor-pointer whitespace-nowrap"
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-4 mt-8">
+        {episodes.map((ep) => (
+          <div
+            key={ep.episode_number}
+            className="relative cursor-pointer"
+            onClick={() => handleEpisodeClick(ep.episode_number.toString())}
           >
-            <Download className="mr-1.5" size={12} />
-            Download {season}-{episode}
-          </Badge>
-        </Link>
-      </div>
+            <img
+              src={`https://image.tmdb.org/t/p/w500/${ep.still_path}`}
+              alt={ep.name}
+              className="w-full h-[150px] object-cover"
+            />
 
-      <div className="flex justify-center pt-4">
-        <div className="w-[300px]">
-          <Select value={server} onValueChange={(e) => setServer(e)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select Server" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="vidlinkpro">
-                Vidlink Pro
-                <span className="ml-2 text-sm text-green-500">Minimal Ads, Auto-Play</span>
-              </SelectItem>
-              <SelectItem value="vidsrc">
-                Vidsrc
-                <span className="ml-2 text-sm text-green-500">Minimal Ads, Auto-Play, Auto Next</span>
-              </SelectItem>
-              <SelectItem value="vidbinge4K">
-                Vid Binge 4K
-                <span className="ml-2 text-sm text-green-500">4K Stream, Download Option, Shared Stream, Auto Play, Auto Next</span>
-              </SelectItem>
-              <SelectItem value="smashystream">
-                SmashyStream
-                <span className="ml-2 text-sm text-green-500">No Ads, Shared Stream</span>
-              </SelectItem>
-              <SelectItem value="vidsrcpro">
-                Vidsrc Pro
-                <span className="ml-2 text-sm text-green-500">Enter fullscreen to load faster</span>
-              </SelectItem>
-              <SelectItem value="superembed">
-                SuperEmbed
-              </SelectItem>
-              <SelectItem value="vidsrcicu">
-                Vidsrc ICU
-                <span className="ml-2 text-sm text-green-500">Casting Options</span>
-              </SelectItem>
-              <SelectItem value="vidsrcnl">
-                Vidsrc NL
-                <span className="ml-2 text-sm text-green-500">No Ads</span>
-              </SelectItem>
-              <SelectItem value="nontongo">
-                Nontongo
-                <span className="ml-2 text-sm text-green-500">Casting Options</span>
-              </SelectItem>
-              <SelectItem value="vidsrcxyz">
-                Vidsrc XYZ
-              </SelectItem>
-              <SelectItem value="embedcctv">
-                EmbedCC TV
-              </SelectItem>
-              <SelectItem value="twoembed">
-                TwoEmbed
-              </SelectItem>
-              <SelectItem value="vidsrctop">
-                Vidsrc Top <span className="text-green-400 text-sm">Personal Favorite</span>
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="max-w-4xl mx-auto px-4 pt-10">
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {episodes.map((ep) => (
             <div
-              key={ep.episode_number}
-              className={`relative group cursor-pointer rounded-lg overflow-hidden border border-gray-300 shadow-md ${
-                episode === ep.episode_number.toString() ? "ring-4 ring-yellow-500" : ""
-              }`}
-              onClick={() => handleEpisodeClick(ep.episode_number.toString())}
-            >
-              <img
-                src={`https://image.tmdb.org/t/p/w500${ep.still_path}`}
-                alt={ep.name}
-                className="w-full h-full object-cover"
-              />
-              <div
-                className={`absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
-                  episode === ep.episode_number.toString() ? "ring-4 ring-yellow-500" : ""
-                }`}
-              >
-                <div className="text-white text-center p-2">
-                  <div className="text-lg font-bold">Episode {ep.episode_number}</div>
-                  <div>{ep.name}</div>
-                </div>
-              </div>
-              <div className="absolute top-2 left-2 bg-black text-white text-xs px-1 rounded">
-                {ep.episode_number}
-              </div>
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-300">
-                <div
-                  className="h-full bg-gold"
-                  style={{ width: `${getWatchProgress(ep.episode_number)}%` }}
-                ></div>
-              </div>
+              className="absolute bottom-0 left-0 w-full bg-primary h-[5px]"
+              style={{
+                width: `${getStoredProgress(
+                  Number(season),
+                  ep.episode_number
+                )}%`,
+              }}
+            ></div>
+
+            <div className="absolute bottom-2 left-2 text-white">
+              {ep.name}
             </div>
-          ))}
-        </div>
-        <div className="text-center text-sm text-gray-500 pt-4">
-          Changing the episode inside the player may cause the spotlight to mismatch with the current episode. Please select an episode from the list to keep the spotlight in sync.
-        </div>
+          </div>
+        ))}
       </div>
     </div>
   );
 }
-

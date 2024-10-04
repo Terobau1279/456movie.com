@@ -242,7 +242,7 @@ export const CommandSearch = () => {
         <Command>
           <CommandInput
             placeholder="Search"
-            onValueChange={(value) => setSearch(value)}
+            onValueChange={setSearch}
             value={search}
           />
 
@@ -443,3 +443,4 @@ const get_tv_results = async (title: string) => {
   });
   return res.json();
 };
+

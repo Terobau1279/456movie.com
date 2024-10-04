@@ -3,6 +3,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { CommandIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -290,6 +291,13 @@ export const CommandSearch = () => {
                         href={`/movie/${item.id}`}
                         className="flex cursor-pointer items-center justify-between gap-4 rounded-sm p-2 hover:bg-muted"
                       >
+                        <Image
+                          src={`https://image.tmdb.org/t/p/w92${item.poster_path}`}
+                          alt={item.title}
+                          width={40}
+                          height={60}
+                          className="rounded"
+                        />
                         <span className="truncate whitespace-nowrap text-sm">
                           {item.title}
                         </span>
@@ -311,6 +319,13 @@ export const CommandSearch = () => {
                         className="flex cursor-pointer items-center justify-between gap-4 rounded-sm p-2 hover:bg-muted"
                         href={`/tv/${item.id}`}
                       >
+                        <Image
+                          src={`https://image.tmdb.org/t/p/w92${item.poster_path}`}
+                          alt={item.name}
+                          width={40}
+                          height={60}
+                          className="rounded"
+                        />
                         <span className="truncate whitespace-nowrap text-sm">
                           {item.name}
                         </span>
@@ -332,6 +347,13 @@ export const CommandSearch = () => {
                         className="flex cursor-pointer items-center justify-between gap-4 rounded-sm p-2 hover:bg-muted"
                         href={`/manga/${item.id}`}
                       >
+                        <Image
+                          src={item.image}
+                          alt={item.title.userPreferred}
+                          width={40}
+                          height={60}
+                          className="rounded"
+                        />
                         <span className="truncate whitespace-nowrap text-sm">
                           {item.title.userPreferred ||
                             item.title.english ||
@@ -354,6 +376,13 @@ export const CommandSearch = () => {
                         className="flex cursor-pointer items-center justify-between gap-4 rounded-sm p-2 hover:bg-muted"
                         href={`/drama/${item.id}`}
                       >
+                        <Image
+                          src={item.image}
+                          alt={item.title}
+                          width={40}
+                          height={60}
+                          className="rounded"
+                        />
                         <span className="truncate whitespace-nowrap text-sm">
                           {item.title}
                         </span>
@@ -370,6 +399,13 @@ export const CommandSearch = () => {
                         className="flex cursor-pointer items-center justify-between gap-4 rounded-sm p-2 hover:bg-muted"
                         href={`/anime/${item.id}`}
                       >
+                        <Image
+                          src={item.image}
+                          alt={item.title.userPreferred}
+                          width={40}
+                          height={60}
+                          className="rounded"
+                        />
                         <span className="truncate whitespace-nowrap text-sm">
                           {item.title.userPreferred ||
                             item.title.english ||

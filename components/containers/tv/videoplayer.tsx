@@ -33,22 +33,18 @@ export default function VideoPlayer({ id }: { id: number }) {
   const [episode, setEpisode] = React.useState("1");
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
-  const [server, setServer] = React.useState("vidlinkpro"); // Default server set to Vidlink Pro
+  const [server, setServer] = React.useState("vidlinkpro");
 
   React.useEffect(() => {
     fetchSeasons();
 
-    // Listen for progress messages from the player
     window.addEventListener('message', (event) => {
       if (event.origin !== 'https://vidlink.pro') {
         return;
       }
 
       if (event.data && event.data.type === 'MEDIA_DATA') {
-        // Get the media data from the message
         const mediaData = event.data.data;
-
-        // Save the media data to localStorage
         localStorage.setItem('vidLinkProgress', JSON.stringify(mediaData));
       }
     });
@@ -245,12 +241,8 @@ export default function VideoPlayer({ id }: { id: number }) {
       </div>
 
       {/* Season Selector */}
-      <div className="mt-6">
-        <Select
-          onValueChange={setSeason}
-          defaultValue={season}
-          className="w-[200px]"
-        >
+      <div className="mt-6 w-[200px]">
+        <Select onValueChange={setSeason} defaultValue={season}>
           <SelectTrigger>
             <SelectValue placeholder="Select a season" />
           </SelectTrigger>
@@ -268,12 +260,8 @@ export default function VideoPlayer({ id }: { id: number }) {
       </div>
 
       {/* Episode Selector */}
-      <div className="mt-6">
-        <Select
-          onValueChange={handleEpisodeClick}
-          defaultValue={episode}
-          className="w-[200px]"
-        >
+      <div className="mt-6 w-[200px]">
+        <Select onValueChange={handleEpisodeClick} defaultValue={episode}>
           <SelectTrigger>
             <SelectValue placeholder="Select an episode" />
           </SelectTrigger>
@@ -289,3 +277,4 @@ export default function VideoPlayer({ id }: { id: number }) {
     </div>
   );
 }
+

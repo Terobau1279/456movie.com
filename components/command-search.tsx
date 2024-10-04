@@ -242,7 +242,7 @@ export const CommandSearch = () => {
         <Command>
           <CommandInput
             placeholder="Search"
-            onValueChange={setSearch}
+            onValueChange={(value) => setSearch(value)}
             value={search}
           />
 

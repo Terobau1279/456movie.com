@@ -49,14 +49,12 @@ type VideoSourceKey =
 
 export default function VideoPlayer({ id }: any) {
   const [selectedSource, setSelectedSource] = useState<VideoSourceKey>("vidsrctop");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Set to true while loading
   const [movieTitle, setMovieTitle] = useState("");
   const [relatedMovies, setRelatedMovies] = useState<any[]>([]);
   const [showRelatedMovies, setShowRelatedMovies] = useState(false); // Hide by default
-  const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null); // For the new player
   const [streams, setStreams] = useState<any[]>([]);
-  const [selectedStream, setSelectedStream] = useState<string | null>(null);
   const [imdbId, setImdbId] = useState<string | null>(null);
   const [englishStreams, setEnglishStreams] = useState<any[]>([]); // To store English streams
 
@@ -99,8 +97,10 @@ export default function VideoPlayer({ id }: any) {
         if (data.imdb_id) {
           fetchStreamUrl(data.imdb_id); // Fetch streams using the IMDb ID
         }
+        setLoading(false); // Set loading to false after fetching
       } catch (error) {
         console.error("Error fetching movie details:", error);
+        setLoading(false); // Ensure loading is set to false on error
       }
     };
     fetchMovieDetails();
@@ -155,67 +155,53 @@ export default function VideoPlayer({ id }: any) {
         videoRef.current?.play();
       }
     } catch (error) {
-      console.error('Error fetching stream URL:', error);
-    }
-  };
-
-  const handleSelectChange = (value: VideoSourceKey) => {
-    setSelectedSource(value);
-    if (value === "newApi" && imdbId) {
-      fetchStreamUrl(imdbId); // Fetch streams for the selected new API
+      console.error('Error fetching stream:', error);
     }
   };
 
   return (
-    <div>
-      <h1>{movieTitle}</h1>
-      <div>
-        <Select onValueChange={handleSelectChange} defaultValue={selectedSource}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select a source" />
-          </SelectTrigger>
-          <SelectContent>
-            {Object.keys(videoSources).map((source) => (
-              <SelectItem key={source} value={source as VideoSourceKey}>
-                {source}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Video Player UI */}
+    <div className="video-player">
       {loading ? (
-        <Skeleton className="w-full h-[400px]" />
+        <Skeleton className="h-[400px] w-full" />
       ) : (
-        <video
-          ref={videoRef}
-          className="w-full h-[400px] object-cover"
-          controls
-        >
-          <source src={videoSources[selectedSource]} type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
-      )}
-
-      {/* Related Movies */}
-      {showRelatedMovies && (
-        <div>
-          <h2>Related Movies</h2>
-          <div className="related-movies">
-            {relatedMovies.map((movie) => (
-              <Link key={movie.id} href={`/movies/${movie.id}`}>
-                <Image
-                  src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-                  alt={movie.title}
-                  width={100}
-                  height={150}
-                />
-                <p>{movie.title}</p>
-              </Link>
-            ))}
+        <>
+          <h2 className="text-lg font-semibold">{movieTitle}</h2>
+          <div className="video-container">
+            <video ref={videoRef} controls width="100%" />
           </div>
-        </div>
+          <Select onValueChange={setSelectedSource} defaultValue={selectedSource}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select Video Source" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.keys(videoSources).map((source) => (
+                <SelectItem key={source} value={source}>
+                  {source}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {/* Hide the related movies section unless there are related movies */}
+          {relatedMovies.length > 0 && (
+            <div className="related-movies">
+              <h3 className="text-lg font-semibold">Related Movies</h3>
+              <Hide show={showRelatedMovies} onToggle={() => setShowRelatedMovies((prev) => !prev)}>
+                <div className="flex overflow-x-auto space-x-4">
+                  {relatedMovies.map((movie) => (
+                    <Link key={movie.id} href={`/movie/${movie.id}`}>
+                      <Image
+                        src={`https://image.tmdb.org/t/p/w500/${movie.poster_path}`}
+                        alt={movie.title}
+                        width={150}
+                        height={225}
+                      />
+                    </Link>
+                  ))}
+                </div>
+              </Hide>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

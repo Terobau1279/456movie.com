@@ -48,13 +48,7 @@ function EmbedPlayer() {
         if (data.success && data.data.playlist.length > 0) {
           setStreams(data.data.playlist); // Store the playlist
           
-          // Filter for English streams
-          const englishStreams = data.data.playlist.filter(stream => stream.title.toLowerCase().includes('english'));
-          setEnglishStreams(englishStreams);
-
-          if (englishStreams.length > 0) {
-            const firstStream = englishStreams[0].file; // Default to the first English stream
-            const key = data.data.key;
+         
 
             await fetchStream(firstStream, key);
           }

@@ -1,140 +1,222 @@
-'use client';
-import React, { useEffect, useRef, useState } from 'react';
-import Hls from 'hls.js';
+"use client";
+import { useState, useEffect, useRef } from "react";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import Image from "next/image";
+import Link from "next/link";
+import Hide from "./hide"; // Import Hide component
+import Hls from "hls.js"; // Import Hls for handling streams
 
-const TMDB_API_KEY = 'a46c50a0ccb1bafe2b15665df7fad7e1'; // Your TMDB API key
-const READ_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhNDZjNTBhMGNjYjFiYWZlMmIxNTY2NWRmN2ZhZDdlMSIsIm5iZiI6MTcyODMyNzA3Ni43OTE0NTUsInN1YiI6IjY2YTBhNTNmYmNhZGE0NjNhNmJmNjljZCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.BNhRdFagBrpQaazN_AWUNr_SRani4pHlYYuffuf2-Os'; // Your read access token
+// Obfuscate some video source URLs
+const obfuscatedVideoSources = {
+  vidlinkpro: atob("aHR0cHM6Ly92aWRsaW5rLnByby9tb3ZpZS8="),
+  vidsrccc: atob("aHR0cHM6Ly92aWRzcmMuY2MvdjMvZW1iZWQvbW92aWUv"),
+  vidsrcpro: atob("aHR0cHM6Ly92aWRzcmMucHJvL2VtYmVkL21vdmllLw=="),
+  superembed: atob("aHR0cHM6Ly9tdWx0aWVtYmVkLm1vdi8/dmlkZW9faWQ9"),
+  vidbinge4K: atob("aHR0cHM6Ly92aWRiaW5nZS5kZXYvZW1iZWQvbW92aWUv"),
+  smashystream: atob("aHR0cHM6Ly9wbGF5ZXIuc21hc2h5LnN0cmVhbS9tb3ZpZS8="),
+  vidsrcicu: atob("aHR0cHM6Ly92aWRzcmMuaWN1L2VtYmVkL21vdmllLw=="),
+  vidsrcnl: atob("aHR0cHM6Ly9wbGF5ZXIudmlkc3JjLm5sL2VtYmVkL21vdmllLw=="),
+  nontongo: atob("aHR0cHM6Ly93d3cubm9udG9uZ28ud2luL2VtYmVkL21vdmllLw=="),
+  vidsrcxyz: atob("aHR0cHM6Ly92aWRzcmMueHl6L2VtYmVkL21vdmllP3RtZGI9"),
+  embedccMovie: atob("aHR0cHM6Ly93d3cuMmVtYmVkLmNjL2VtYmVkLw=="),
+  twoembed: atob("aHR0cHM6Ly8yZW1iZWQub3JnL2VtYmVkL21vdmllLw=="),
+  vidsrctop: atob("aHR0cHM6Ly9lbWJlZC5zdS9lbWJlZC9tb3ZpZS8="),
+};
 
-function EmbedPlayer() {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [tmdbId, setTmdbId] = useState<string | null>(null);
-  const [imdbId, setImdbId] = useState<string | null>(null);
+// Video source keys
+type VideoSourceKey =
+  | "vidlinkpro"
+  | "vidsrccc"
+  | "vidsrcpro"
+  | "superembed"
+  | "vidbinge4K"
+  | "smashystream"
+  | "vidsrcicu"
+  | "vidsrcnl"
+  | "nontongo"
+  | "vidsrcxyz"
+  | "embedccMovie"
+  | "twoembed"
+  | "vidsrctop"
+  | "newApi"; // Add a new API option
+
+export default function VideoPlayer({ id }: any) {
+  const [selectedSource, setSelectedSource] = useState<VideoSourceKey>("vidsrctop");
+  const [loading, setLoading] = useState(false);
+  const [movieTitle, setMovieTitle] = useState("");
+  const [relatedMovies, setRelatedMovies] = useState<any[]>([]);
+  const [showRelatedMovies, setShowRelatedMovies] = useState(false); // Hide by default
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null); // For the new player
   const [streams, setStreams] = useState<any[]>([]);
   const [selectedStream, setSelectedStream] = useState<string | null>(null);
+  const [imdbId, setImdbId] = useState<string | null>(null);
   const [englishStreams, setEnglishStreams] = useState<any[]>([]); // To store English streams
 
+  const videoSources: Record<VideoSourceKey, string> = {
+    vidlinkpro: `${obfuscatedVideoSources["vidlinkpro"]}${id}`,
+    vidsrccc: `${obfuscatedVideoSources["vidsrccc"]}${id}`,
+    vidsrcpro: `${obfuscatedVideoSources["vidsrcpro"]}${id}`,
+    superembed: `${obfuscatedVideoSources["superembed"]}${id}&tmdb=1`,
+    vidbinge4K: `${obfuscatedVideoSources["vidbinge4K"]}${id}`,
+    smashystream: `${obfuscatedVideoSources["smashystream"]}${id}`,
+    vidsrcicu: `${obfuscatedVideoSources["vidsrcicu"]}${id}`,
+    vidsrcnl: `${obfuscatedVideoSources["vidsrcnl"]}${id}?server=hindi`,
+    nontongo: `${obfuscatedVideoSources["nontongo"]}${id}`,
+    vidsrcxyz: `${obfuscatedVideoSources["vidsrcxyz"]}${id}`,
+    embedccMovie: `${obfuscatedVideoSources["embedccMovie"]}${id}`,
+    twoembed: `${obfuscatedVideoSources["twoembed"]}${id}`,
+    vidsrctop: `${obfuscatedVideoSources["vidsrctop"]}${id}`,
+    newApi: "", // Placeholder for new API
+  };
+
+  // Fetch movie details from TMDb API
   useEffect(() => {
-    const urlParts = window.location.pathname.split('/');
-    const id = urlParts[urlParts.length - 1];
-    setTmdbId(id);
-
-    const fetchImdbId = async () => {
+    const fetchMovieDetails = async () => {
       try {
-        const response = await fetch(`https://api.themoviedb.org/3/movie/${tmdbId}?api_key=${TMDB_API_KEY}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${READ_ACCESS_TOKEN}`,
-            'Content-Type': 'application/json'
-          }
-        });
+        const response = await fetch(
+          `https://api.themoviedb.org/3/movie/${id}?api_key=a46c50a0ccb1bafe2b15665df7fad7e1`
+        );
         const data = await response.json();
+        setMovieTitle(data.title || "Unknown Movie");
+        setImdbId(data.imdb_id); // Set the IMDb ID
 
-        if (data.status_code !== 7 && data.status_code !== 6) {
-          setImdbId(data.imdb_id);
-          fetchStreamUrl(data.imdb_id); // Now fetch the stream URL with the IMDb ID
-        } else {
-          console.error('Error fetching IMDb ID:', data.status_message);
+        // Fetch related movies
+        const relatedResponse = await fetch(
+          `https://api.themoviedb.org/3/movie/${id}/similar?api_key=a46c50a0ccb1bafe2b15665df7fad7e1`
+        );
+        const relatedData = await relatedResponse.json();
+        setRelatedMovies(relatedData.results.slice(0, 8)); // Fetch 8 related movies
+
+        // Check if the newApi option should be fetched
+        if (data.imdb_id) {
+          fetchStreamUrl(data.imdb_id); // Fetch streams using the IMDb ID
         }
       } catch (error) {
-        console.error('Error fetching IMDb ID:', error);
+        console.error("Error fetching movie details:", error);
       }
     };
+    fetchMovieDetails();
+  }, [id]);
 
-    const fetchStreamUrl = async (imdbId: string) => {
-      try {
-        const response = await fetch(`https://8-stream-api-sable.vercel.app/api/v1/mediaInfo?id=${imdbId}`);
-        const data = await response.json();
+  // Fetch stream URL for the new API
+  const fetchStreamUrl = async (imdbId: string) => {
+    try {
+      const response = await fetch(`https://8-stream-api-sable.vercel.app/api/v1/mediaInfo?id=${imdbId}`);
+      const data = await response.json();
 
-        if (data.success && data.data.playlist.length > 0) {
-          setStreams(data.data.playlist); // Store the playlist
-          
-          // Filter for English streams
-          const englishStreams = data.data.playlist.filter(stream => stream.title.toLowerCase().includes('english'));
-          setEnglishStreams(englishStreams);
+      if (data.success && data.data.playlist.length > 0) {
+        setStreams(data.data.playlist); // Store the playlist
+        
+        // Filter for English streams
+        const englishStreams = data.data.playlist.filter(stream => stream.title.toLowerCase().includes('english'));
+        setEnglishStreams(englishStreams);
 
-          if (englishStreams.length > 0) {
-            const firstStream = englishStreams[0].file; // Default to the first English stream
-            const key = data.data.key;
+        if (englishStreams.length > 0) {
+          const firstStream = englishStreams[0].file; // Default to the first English stream
+          const key = data.data.key;
 
-            await fetchStream(firstStream, key);
-          }
+          await fetchStream(firstStream, key);
         }
-      } catch (error) {
-        console.error('Error fetching stream URL:', error);
       }
-    };
-
-    const fetchStream = async (file: string, key: string) => {
-      try {
-        const streamResponse = await fetch('https://8-stream-api-sable.vercel.app/api/v1/getStream', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ file, key }),
-        });
-
-        const streamData = await streamResponse.json();
-        const streamUrl = streamData.data.link;
-
-        if (Hls.isSupported() && videoRef.current) {
-          const hls = new Hls();
-          hls.loadSource(streamUrl);
-          hls.attachMedia(videoRef.current);
-          hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            videoRef.current?.play();
-          });
-        } else if (videoRef.current?.canPlayType('application/vnd.apple.mpegurl')) {
-          videoRef.current.src = streamUrl;
-          videoRef.current?.play();
-        }
-      } catch (error) {
-        console.error('Error fetching stream URL:', error);
-      }
-    };
-
-    if (tmdbId) {
-      fetchImdbId(); // Fetch IMDb ID using the TMDB ID
+    } catch (error) {
+      console.error('Error fetching stream URL:', error);
     }
-  }, [tmdbId]);
+  };
+
+  // Function to fetch individual stream
+  const fetchStream = async (file: string, key: string) => {
+    try {
+      const streamResponse = await fetch('https://8-stream-api-sable.vercel.app/api/v1/getStream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ file, key }),
+      });
+
+      const streamData = await streamResponse.json();
+      const streamUrl = streamData.data.link;
+
+      if (Hls.isSupported() && videoRef.current) {
+        const hls = new Hls();
+        hls.loadSource(streamUrl);
+        hls.attachMedia(videoRef.current);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          videoRef.current?.play();
+        });
+      } else if (videoRef.current?.canPlayType('application/vnd.apple.mpegurl')) {
+        videoRef.current.src = streamUrl;
+        videoRef.current?.play();
+      }
+    } catch (error) {
+      console.error('Error fetching stream URL:', error);
+    }
+  };
+
+  const handleSelectChange = (value: VideoSourceKey) => {
+    setSelectedSource(value);
+    if (value === "newApi" && imdbId) {
+      fetchStreamUrl(imdbId); // Fetch streams for the selected new API
+    }
+  };
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative', backgroundColor: '#000' }}>
-      {englishStreams.length > 0 ? (
-        <>
-          <video
-            ref={videoRef}
-            controls
-            style={{ width: '100%', height: '100%', backgroundColor: '#000' }}
-          ></video>
-
-          <select onChange={(e) => {
-            const selected = englishStreams[e.target.selectedIndex];
-            setSelectedStream(selected.file);
-            handleStreamChange(selected.file, englishStreams[0].key); // Use key from the first stream for all
-          }}>
-            {englishStreams.map((stream, index) => (
-              <option key={index} value={stream.file}>{stream.title}</option>
+    <div>
+      <h1>{movieTitle}</h1>
+      <div>
+        <Select onValueChange={handleSelectChange} defaultValue={selectedSource}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select a source" />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.keys(videoSources).map((source) => (
+              <SelectItem key={source} value={source as VideoSourceKey}>
+                {source}
+              </SelectItem>
             ))}
-          </select>
-        </>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Video Player UI */}
+      {loading ? (
+        <Skeleton className="w-full h-[400px]" />
       ) : (
-        <div style={{ color: 'white', textAlign: 'center', marginTop: '20px' }}>
-         
-        </div>
+        <video
+          ref={videoRef}
+          className="w-full h-[400px] object-cover"
+          controls
+        >
+          <source src={videoSources[selectedSource]} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
       )}
 
-      {tmdbId && (
-        <div style={{ position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)', color: 'white', fontSize: '16px' }}>
-          TMDB ID: {tmdbId}
-        </div>
-      )}
-      {imdbId && (
-        <div style={{ position: 'absolute', bottom: 40, left: '50%', transform: 'translateX(-50%)', color: 'white', fontSize: '16px' }}>
-          IMDb ID: {imdbId}
+      {/* Related Movies */}
+      {showRelatedMovies && (
+        <div>
+          <h2>Related Movies</h2>
+          <div className="related-movies">
+            {relatedMovies.map((movie) => (
+              <Link key={movie.id} href={`/movies/${movie.id}`}>
+                <Image
+                  src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                  alt={movie.title}
+                  width={100}
+                  height={150}
+                />
+                <p>{movie.title}</p>
+              </Link>
+            ))}
+          </div>
         </div>
       )}
     </div>
   );
 }
-
-
-export default EmbedPlayer;

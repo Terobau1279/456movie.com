@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import Link from "next/link";
 import Hide from "./hide"; // Import Hide component
+import Hls from "hls.js"; // Import Hls for handling streams
 
 // Obfuscate some video source URLs
 const obfuscatedVideoSources = {
@@ -29,6 +30,7 @@ const obfuscatedVideoSources = {
   vidsrctop: atob("aHR0cHM6Ly9lbWJlZC5zdS9lbWJlZC9tb3ZpZS8="),
 };
 
+// Video source keys
 type VideoSourceKey =
   | "vidlinkpro"
   | "vidsrccc"
@@ -42,7 +44,8 @@ type VideoSourceKey =
   | "vidsrcxyz"
   | "embedccMovie"
   | "twoembed"
-  | "vidsrctop";
+  | "vidsrctop"
+  | "newApi"; // Add a new API option
 
 export default function VideoPlayer({ id }: any) {
   const [selectedSource, setSelectedSource] = useState<VideoSourceKey>("vidsrctop");
@@ -51,7 +54,11 @@ export default function VideoPlayer({ id }: any) {
   const [relatedMovies, setRelatedMovies] = useState<any[]>([]);
   const [showRelatedMovies, setShowRelatedMovies] = useState(false); // Hide by default
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
-
+  const videoRef = useRef<HTMLVideoElement | null>(null); // For the new player
+  const [streams, setStreams] = useState<any[]>([]);
+  const [selectedStream, setSelectedStream] = useState<string | null>(null);
+  const [imdbId, setImdbId] = useState<string | null>(null);
+  
   const videoSources: Record<VideoSourceKey, string> = {
     vidlinkpro: `${obfuscatedVideoSources["vidlinkpro"]}${id}`,
     vidsrccc: `${obfuscatedVideoSources["vidsrccc"]}${id}`,
@@ -66,6 +73,7 @@ export default function VideoPlayer({ id }: any) {
     embedccMovie: `${obfuscatedVideoSources["embedccMovie"]}${id}`,
     twoembed: `${obfuscatedVideoSources["twoembed"]}${id}`,
     vidsrctop: `${obfuscatedVideoSources["vidsrctop"]}${id}`,
+    newApi: "", // Placeholder for new API
   };
 
   // Fetch movie details from TMDb API
@@ -91,96 +99,121 @@ export default function VideoPlayer({ id }: any) {
     fetchMovieDetails();
   }, [id]);
 
+  // Function to fetch streams from the new API
+  const fetchStreamsFromNewApi = async (imdbId: string) => {
+    try {
+      const response = await fetch(`https://8-stream-api-sable.vercel.app/api/v1/mediaInfo?id=${tt6263850}`);
+      const data = await response.json();
+
+      if (data.success && data.data.playlist.length > 0) {
+        setStreams(data.data.playlist); // Store the playlist
+        const firstStream = data.data.playlist[0].file; // Default to the first stream
+        await fetchStream(firstStream, data.data.key);
+      }
+    } catch (error) {
+      console.error("Error fetching stream URL from new API:", error);
+    }
+  };
+
+  // Function to fetch individual stream
+  const fetchStream = async (file: string, key: string) => {
+    try {
+      const streamResponse = await fetch('https://8-stream-api-sable.vercel.app/api/v1/getStream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ file, key }),
+      });
+
+      const streamData = await streamResponse.json();
+      const streamUrl = streamData.data.link;
+
+      if (Hls.isSupported() && videoRef.current) {
+        const hls = new Hls();
+        hls.loadSource(streamUrl);
+        hls.attachMedia(videoRef.current);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          videoRef.current?.play();
+        });
+      } else if (videoRef.current?.canPlayType('application/vnd.apple.mpegurl')) {
+        videoRef.current.src = streamUrl;
+        videoRef.current?.play();
+      }
+    } catch (error) {
+      console.error("Error fetching stream URL:", error);
+    }
+  };
+
   const handleSelectChange = (value: VideoSourceKey) => {
-    setLoading(true);
-    setTimeout(() => {
-      setSelectedSource(value);
-      setLoading(false);
-    }, 1000);
-  };
-
-  const toggleRelatedMovies = () => {
-    setShowRelatedMovies((prev) => !prev);
-  };
-
-  // Prevent right-clicking
-  const handleContextMenu = (event: React.MouseEvent) => {
-    event.preventDefault();
+    setSelectedSource(value);
+    if (value === "newApi" && imdbId) {
+      fetchStreamsFromNewApi(imdbId); // Fetch streams if new API is selected
+    }
+    // Handle other source changes here
   };
 
   return (
-    <div className="py-8 mx-auto max-w-5xl" onContextMenu={handleContextMenu}>
-      <div className="flex flex-col text-center items-center justify-center">
-        <h2 className="text-lg font-bold mb-4 text-center text-white">
-          Currently Watching: {movieTitle}
-        </h2>
+    <div style={{ width: "100%", height: "100%", position: "relative", backgroundColor: "#000" }}>
+      <Select onValueChange={handleSelectChange}>
+        <SelectTrigger>
+          <SelectValue placeholder="Select Source" />
+        </SelectTrigger>
+        <SelectContent>
+          {Object.keys(videoSources).map((sourceKey) => (
+            <SelectItem key={sourceKey} value={sourceKey}>
+              {sourceKey}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-        <div className="flex flex-row items-center justify-center w-full">
-          <div className="flex flex-col text-center">
-            <Select onValueChange={handleSelectChange} value={selectedSource}>
-              <SelectTrigger className="px-4 py-2 rounded-md w-[280px] bg-gray-800 text-white border border-gray-700">
-                <SelectValue placeholder="Select Video Source" />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-800 text-white border border-gray-700">
-                <SelectItem value="vidlinkpro">Vidlink.pro</SelectItem>
-                <SelectItem value="vidsrccc">VidSrc.cc</SelectItem>
-                <SelectItem value="vidsrcpro">VidSrc.pro</SelectItem>
-                <SelectItem value="superembed">SuperEmbed</SelectItem>
-                <SelectItem value="vidbinge4K">VidBinge</SelectItem>
-                <SelectItem value="smashystream">SmashyStream</SelectItem>
-                <SelectItem value="vidsrcicu">VidSrc.icu</SelectItem>
-                <SelectItem value="vidsrcnl">VidSrc.nl</SelectItem>
-                <SelectItem value="nontongo">Nontongo</SelectItem>
-                <SelectItem value="vidsrcxyz">VidSrc.xyz</SelectItem>
-                <SelectItem value="embedccMovie">Embed.cc</SelectItem>
-                <SelectItem value="twoembed">TwoEmbed</SelectItem>
-                <SelectItem value="vidsrctop">VidSrc.top</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="relative flex flex-col items-center justify-center w-full mt-6">
-          {loading ? (
-            <Skeleton className="h-[400px] w-full rounded-md" />
-          ) : (
+      {loading ? (
+        <Skeleton className="h-[400px] w-full" />
+      ) : (
+        <>
+          {selectedSource === "newApi" ? (
             <>
-              <iframe
-                ref={iframeRef}
-                src={videoSources[selectedSource]}
-                className="w-full h-[400px] rounded-md"
-                allowFullScreen
+              <video
+                ref={videoRef}
+                controls
+                style={{ width: "100%", height: "100%" }}
               />
-              <Hide show={showRelatedMovies}>
-                <div className="absolute bottom-0 left-0 w-full bg-gray-800 p-4 rounded-md">
-                  <h3 className="text-md font-bold text-white mb-2">Related Movies</h3>
-                  <div className="grid grid-cols-4 gap-4">
-                    {relatedMovies.map((movie) => (
-                      <Link key={movie.id} href={`/movies/${movie.id}`}>
-                        <div className="flex flex-col items-center">
-                          <Image
-                            src={`https://image.tmdb.org/t/p/w200${movie.poster_path}`}
-                            alt={movie.title}
-                            width={200}
-                            height={300}
-                            className="rounded-md"
-                          />
-                          <p className="text-sm text-white text-center mt-2">{movie.title}</p>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              </Hide>
-              <button
-                onClick={toggleRelatedMovies}
-                className="mt-2 text-blue-500"
-              >
-                {showRelatedMovies ? "Hide Related Movies" : "Show Related Movies"}
-              </button>
+              <Hide source={streams} setSelectedStream={setSelectedStream} />
             </>
+          ) : (
+            <iframe
+              ref={iframeRef}
+              src={videoSources[selectedSource]}
+              frameBorder="0"
+              style={{ width: "100%", height: "100%" }}
+              allowFullScreen
+              onLoad={() => setLoading(false)}
+            />
           )}
-        </div>
+        </>
+      )}
+
+      <div>
+        <h1>{movieTitle}</h1>
+        <button onClick={() => setShowRelatedMovies(!showRelatedMovies)}>
+          {showRelatedMovies ? "Hide Related Movies" : "Show Related Movies"}
+        </button>
+        {showRelatedMovies && (
+          <div>
+            {relatedMovies.map((movie) => (
+              <div key={movie.id}>
+                <Link href={`/movie/${movie.id}`}>
+                  <Image
+                    src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                    alt={movie.title}
+                    width={200}
+                    height={300}
+                  />
+                  <h2>{movie.title}</h2>
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

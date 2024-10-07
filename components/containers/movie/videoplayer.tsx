@@ -102,7 +102,7 @@ export default function VideoPlayer({ id }: any) {
   // Function to fetch streams from the new API
   const fetchStreamsFromNewApi = async (imdbId: string) => {
     try {
-      const response = await fetch(`https://8-stream-api-sable.vercel.app/api/v1/mediaInfo?id=${tt6263850}`);
+      const response = await fetch(`https://8-stream-api-sable.vercel.app/api/v1/mediaInfo?id=tt6263850`);
       const data = await response.json();
 
       if (data.success && data.data.playlist.length > 0) {

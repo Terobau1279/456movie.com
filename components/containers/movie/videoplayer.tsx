@@ -169,22 +169,23 @@ export default function VideoPlayer({ id }: { id: string }) {
       ) : (
         <>
           <h2 className="text-lg font-semibold">{movieTitle}</h2>
-          <Select
-            value={selectedSource}
-            onValueChange={(value) => setSelectedSource(value as VideoSourceKey)}
-            className="w-full mb-4"
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select a source" />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.keys(videoSources).map((key) => (
-                <SelectItem key={key} value={key}>
-                  {key}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="w-full mb-4">
+            <Select
+              value={selectedSource}
+              onValueChange={(value) => setSelectedSource(value as VideoSourceKey)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a source" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.keys(videoSources).map((key) => (
+                  <SelectItem key={key} value={key}>
+                    {key}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           {selectedSource === "newApi" && streams.length > 0 && (
             <div>
               <h3>Available Streams:</h3>

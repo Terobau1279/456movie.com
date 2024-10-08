@@ -145,10 +145,17 @@ export default function VideoPlayer({ id }: { id: string }) {
         if (hlsRef.current) {
           hlsRef.current.destroy();
         }
-        hlsRef.current = new Hls();
+        hlsRef.current = new Hls({
+          autoStartLoad: true,
+          startLevel: -1, // Start with the highest quality
+        });
+
         hlsRef.current.loadSource(streamUrl);
         hlsRef.current.attachMedia(videoRef.current);
         hlsRef.current.on(Hls.Events.MANIFEST_PARSED, () => {
+          if (hlsRef.current) {
+            hlsRef.current.currentLevel = hlsRef.current.levels.length - 1; // Set to highest quality
+          }
           videoRef.current?.play();
         });
       } else if (videoRef.current?.canPlayType('application/vnd.apple.mpegurl')) {

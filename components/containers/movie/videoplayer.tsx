@@ -58,7 +58,7 @@ export default function VideoPlayer({ id }: { id: string }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [imdbId, setImdbId] = useState<string | null>(null);
   const hlsRef = useRef<Hls | null>(null);
-  const [qualityLevels, setQualityLevels] = useState<number[]>([]);
+  const [qualityLevels, setQualityLevels] = useState<{ level: number, label: string }[]>([]);
   const [selectedQuality, setSelectedQuality] = useState<number>(-1);
 
   const videoSources: Record<VideoSourceKey, string> = {
@@ -156,11 +156,19 @@ export default function VideoPlayer({ id }: { id: string }) {
         hlsRef.current.attachMedia(videoRef.current);
         hlsRef.current.on(Hls.Events.MANIFEST_PARSED, () => {
           if (hlsRef.current) {
-            setQualityLevels(hlsRef.current.levels.map((level, index) => index));
-            // Set default quality to 1080p if available
-            const defaultQualityIndex = hlsRef.current.levels.findIndex(level => level.height === 1080);
-            hlsRef.current.currentLevel = defaultQualityIndex !== -1 ? defaultQualityIndex : 0;
+            const levels = hlsRef.current.levels;
+            const availableQualities = levels.map((level, index) => ({
+              level: index,
+              label: `${level.height}p`
+            }));
+
+            setQualityLevels(availableQualities);
+
+            // Set default quality to 1080p if available, otherwise the highest
+            const defaultQualityIndex = levels.findIndex(level => level.height === 1080);
+            hlsRef.current.currentLevel = defaultQualityIndex !== -1 ? defaultQualityIndex : levels.length - 1;
             setSelectedQuality(hlsRef.current.currentLevel);
+
             videoRef.current?.play();
           }
         });
@@ -229,14 +237,11 @@ export default function VideoPlayer({ id }: { id: string }) {
                       <SelectValue placeholder="Select quality" />
                     </SelectTrigger>
                     <SelectContent>
-                      {qualityLevels.map((level) => {
-                        const quality = hlsRef.current?.levels[level].height;
-                        return (
-                          <SelectItem key={level} value={level.toString()}>
-                            {quality === 1080 ? '1080p' : quality === 720 ? '720p' : '480p'}
-                          </SelectItem>
-                        );
-                      })}
+                      {qualityLevels.map(({ level, label }) => (
+                        <SelectItem key={level} value={level.toString()}>
+                          {label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

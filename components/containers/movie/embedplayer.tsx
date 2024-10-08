@@ -12,6 +12,34 @@ function EmbedPlayer() {
   const [streams, setStreams] = useState<any[]>([]);
   const [selectedStream, setSelectedStream] = useState<string | null>(null);
 
+  // Move fetchStream outside of useEffect so it's accessible globally
+  const fetchStream = async (file: string, key: string) => {
+    try {
+      const streamResponse = await fetch('https://8-stream-api-sable.vercel.app/api/v1/getStream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ file, key }),
+      });
+
+      const streamData = await streamResponse.json();
+      const streamUrl = streamData.data.link;
+
+      if (Hls.isSupported() && videoRef.current) {
+        const hls = new Hls();
+        hls.loadSource(streamUrl);
+        hls.attachMedia(videoRef.current);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          videoRef.current?.play();
+        });
+      } else if (videoRef.current?.canPlayType('application/vnd.apple.mpegurl')) {
+        videoRef.current.src = streamUrl;
+        videoRef.current?.play();
+      }
+    } catch (error) {
+      console.error('Error fetching stream URL:', error);
+    }
+  };
+
   useEffect(() => {
     const urlParts = window.location.pathname.split('/');
     const id = urlParts[urlParts.length - 1];
@@ -23,8 +51,8 @@ function EmbedPlayer() {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${READ_ACCESS_TOKEN}`,
-            'Content-Type': 'application/json'
-          }
+            'Content-Type': 'application/json',
+          },
         });
         const data = await response.json();
 
@@ -51,33 +79,6 @@ function EmbedPlayer() {
           const firstStream = data.data.playlist[0].file;
           const key = data.data.playlist[0].key;
           await fetchStream(firstStream, key);
-        }
-      } catch (error) {
-        console.error('Error fetching stream URL:', error);
-      }
-    };
-
-    const fetchStream = async (file: string, key: string) => {
-      try {
-        const streamResponse = await fetch('https://8-stream-api-sable.vercel.app/api/v1/getStream', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ file, key }),
-        });
-
-        const streamData = await streamResponse.json();
-        const streamUrl = streamData.data.link;
-
-        if (Hls.isSupported() && videoRef.current) {
-          const hls = new Hls();
-          hls.loadSource(streamUrl);
-          hls.attachMedia(videoRef.current);
-          hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            videoRef.current?.play();
-          });
-        } else if (videoRef.current?.canPlayType('application/vnd.apple.mpegurl')) {
-          videoRef.current.src = streamUrl;
-          videoRef.current?.play();
         }
       } catch (error) {
         console.error('Error fetching stream URL:', error);

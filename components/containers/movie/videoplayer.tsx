@@ -189,6 +189,12 @@ export default function VideoPlayer({ id }: { id: string }) {
   };
 
   useEffect(() => {
+    if (selectedSource === "newApi" && imdbId) {
+      fetchStreamUrl(imdbId);
+    }
+  }, [selectedSource, imdbId]);
+
+  useEffect(() => {
     return () => {
       if (hlsRef.current) {
         hlsRef.current.destroy();

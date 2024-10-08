@@ -113,9 +113,11 @@ export default function VideoPlayer({ id }: { id: string }) {
       if (data.success && data.data.playlist.length > 0) {
         setStreams(data.data.playlist);
 
-        const firstStream = data.data.playlist[0].file;
-        const key = data.data.key;
-        await fetchStream(firstStream, key);
+        // Default to English stream
+        const englishStream = data.data.playlist.find(stream => stream.title === "English");
+        const file = englishStream ? englishStream.file : data.data.playlist[0].file;
+        const key = englishStream ? englishStream.key : data.data.key;
+        await fetchStream(file, key);
       }
     } catch (error) {
       console.error('Error fetching stream URL:', error);
@@ -180,13 +182,13 @@ export default function VideoPlayer({ id }: { id: string }) {
           {selectedSource === "newApi" ? (
             <div>
               {streams.length > 0 && (
-                <div>
-                  <h3>Available Streams:</h3>
+                <div className="mb-4">
+                  <h3 className="mb-2">Available Streams:</h3>
                   {streams.map((stream) => (
                     <button
                       key={stream.title}
                       onClick={() => handleStreamChange(stream.file, stream.key)}
-                      className="block mb-2"
+                      className="block mb-2 p-2 bg-gray-200 rounded hover:bg-gray-300"
                     >
                       {stream.title}
                     </button>

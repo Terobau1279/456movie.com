@@ -154,9 +154,9 @@ export default function VideoPlayer({ id }: { id: string }) {
   };
 
   return (
-    <div className="video-player">
+    <div className="video-player max-w-3xl mx-auto px-4 pt-6">
       {loading ? (
-        <Skeleton className="h-[400px] w-full" />
+        <Skeleton className="h-[450px] w-full" />
       ) : (
         <>
           <h2 className="text-lg font-semibold">{movieTitle}</h2>
@@ -196,14 +196,17 @@ export default function VideoPlayer({ id }: { id: string }) {
               <video
                 ref={videoRef}
                 controls
-                className="w-full h-[400px]"
+                className="w-full h-[450px]"
               />
             </div>
           ) : (
             <iframe
               src={videoSources[selectedSource]}
-              className="w-full h-[400px]"
               allowFullScreen
+              width="100%"
+              height="450"
+              scrolling="no"
+              className="w-full"
             />
           )}
         </>

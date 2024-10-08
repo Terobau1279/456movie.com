@@ -226,4 +226,5 @@ export default function VideoPlayer({ id }: { id: string }) {
       )}
     </div>
   );
+  
 }

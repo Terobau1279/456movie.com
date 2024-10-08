@@ -115,7 +115,6 @@ export default function VideoPlayer({ id }: { id: string }) {
       if (data.success && data.data.playlist.length > 0) {
         setStreams(data.data.playlist);
 
-        // Default to English stream
         const englishStream = data.data.playlist.find((stream: Stream) => stream.title === "English");
         const defaultStream = englishStream || data.data.playlist[0];
         setSelectedStream(defaultStream.file);
@@ -135,6 +134,10 @@ export default function VideoPlayer({ id }: { id: string }) {
       });
 
       const streamData = await streamResponse.json();
+      if (!streamData || !streamData.data || !streamData.data.link) {
+        throw new Error('Invalid stream data');
+      }
+
       const streamUrl = streamData.data.link;
 
       if (Hls.isSupported() && videoRef.current) {

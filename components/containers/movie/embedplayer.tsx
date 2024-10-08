@@ -51,6 +51,7 @@ type VideoSourceKey =
 type Stream = {
   file: string;
   title: string;
+  key?: string; // Make key optional if it's not always present
 };
 
 export default function VideoPlayer({ id }: any) {
@@ -123,7 +124,8 @@ export default function VideoPlayer({ id }: any) {
 
       if (data.success && data.data.playlist.length > 0) {
         setStreams(data.data.playlist);
-        const englishStreams = data.data.playlist.filter((stream: Stream) => stream.title.toLowerCase().includes('english'));
+        const englishStreams = data.data.playlist.filter((stream: Stream) => stream.title.toLowerCase().includes('english'))
+          .map((stream: Stream) => ({ ...stream, key: data.data.key }));
         setEnglishStreams(englishStreams);
 
         if (englishStreams.length > 0) {
@@ -137,7 +139,7 @@ export default function VideoPlayer({ id }: any) {
     }
   };
 
-  const fetchStream = async (file: string, key: string) => {
+  const fetchStream = async (file: string, key?: string) => {
     try {
       const streamResponse = await fetch('https://8-stream-api-sable.vercel.app/api/v1/getStream', {
         method: 'POST',
@@ -164,8 +166,8 @@ export default function VideoPlayer({ id }: any) {
     }
   };
 
-  const handleStreamChange = async (file: string, key: string) => {
-    await fetchStream(file, key);
+  const handleStreamChange = async (file: string, key?: string) => {
+    await fetchStream(file, key || "");
   };
 
   return (
@@ -193,7 +195,7 @@ export default function VideoPlayer({ id }: any) {
           {selectedSource === "newApi" && englishStreams.length > 0 && (
             <select onChange={(e) => {
               const selected = englishStreams[e.target.selectedIndex];
-              handleStreamChange(selected.file, englishStreams[0].key);
+              handleStreamChange(selected.file, selected.key);
             }}>
               {englishStreams.map((stream, index) => (
                 <option key={index} value={stream.file}>{stream.title}</option>

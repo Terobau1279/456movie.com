@@ -1,6 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
-import Hls from "hls.js";
+import * as React from "react";
 import {
   Select,
   SelectTrigger,
@@ -8,265 +7,236 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Download } from "lucide-react";
+import Link from "next/link";
+import { API_KEY } from "@/config/url";
+import { MOVIES } from 'flixhq-core';
 
-const TMDB_API_KEY = 'a46c50a0ccb1bafe2b15665df7fad7e1'; // Using your original TMDB API key
+interface Season {
+  season_number: number;
+  name: string;
+  episode_count: number;
+}
+interface Episode {
+  episode_number: number;
+  name: string;
+}
+export default function VideoPlayer({ id }: { id: number }) {
+  const [seasons, setSeasons] = React.useState<Season[]>([]);
+  const [episodes, setEpisodes] = React.useState<Episode[]>([]);
+  const [season, setSeason] = React.useState("1");
+  const [episode, setEpisode] = React.useState("1");
+  const [streamUrl, setStreamUrl] = React.useState<string | null>(null); // New state for the stream URL
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+  
+  const flixhq = new MOVIES.FlixHQ();  // Initialize the flixhq-core API
 
-const obfuscatedVideoSources = {
-  vidlinkpro: atob("aHR0cHM6Ly92aWRsaW5rLnByby90di8="),
-  // Add other sources here...
-};
+  React.useEffect(() => {
+    fetchSeasons();
+  }, []);
 
-type VideoSourceKey =
-  | "vidlinkpro"
-  | "newApi";
-
-type Stream = {
-  file: string;
-  title: string;
-  key?: string;
-};
-
-export default function VideoPlayer({ id }: { id: string }) {
-  const [selectedSource, setSelectedSource] = useState<VideoSourceKey>("vidlinkpro");
-  const [loading, setLoading] = useState(true);
-  const [tvTitle, setTvTitle] = useState("");
-  const [seasons, setSeasons] = useState([]);
-  const [season, setSeason] = useState("1");
-  const [episodes, setEpisodes] = useState([]);
-  const [episode, setEpisode] = useState("1");
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [imdbId, setImdbId] = useState<string | null>(null);
-  const hlsRef = useRef<Hls | null>(null);
-  const [qualityLevels, setQualityLevels] = useState<{ level: number, label: string }[]>([]);
-  const [selectedQuality, setSelectedQuality] = useState<number>(-1);
-
-  const videoSources: Record<VideoSourceKey, string> = {
-    vidlinkpro: `${obfuscatedVideoSources["vidlinkpro"]}${id}/${season}/${episode}`,
-    newApi: "",
-  };
-
-  useEffect(() => {
-    const fetchTvDetails = async () => {
-      try {
-        const response = await fetch(
-          `https://api.themoviedb.org/3/tv/${id}?api_key=${TMDB_API_KEY}&append_to_response=external_ids`
-        );
-        const data = await response.json();
-        setTvTitle(data.name || "Unknown TV Show");
-        setImdbId(data.external_ids.imdb_id);
-
-        if (data.seasons.length > 0) {
-          setSeasons(data.seasons);
-          setSeason(data.seasons[0].season_number.toString());
-        }
-
-        if (data.external_ids.imdb_id) {
-          fetchStreamUrl(data.external_ids.imdb_id);
-        }
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching TV details:", error);
-        setLoading(false);
-      }
-    };
-    fetchTvDetails();
-  }, [id]);
-
-  useEffect(() => {
+  React.useEffect(() => {
     if (season) {
       fetchEpisodes(Number(season));
     }
   }, [season]);
 
-  const fetchEpisodes = async (seasonNumber: number) => {
-    setLoading(true);
+  React.useEffect(() => {
+    if (season && episode) {
+      fetchStreamUrl(id, season, episode);  // Fetch stream URL when season or episode changes
+    }
+  }, [season, episode]);
+
+  async function fetchSeasons() {
+    setIsLoading(true);
+    setError(null);
     try {
       const response = await fetch(
-        `https://api.themoviedb.org/3/tv/${id}/season/${seasonNumber}?api_key=${TMDB_API_KEY}`
+        `https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}`
       );
       const data = await response.json();
+      if (data.success === false) {
+        throw new Error(data.status_message || "Failed to fetch seasons");
+      }
+      const relevantSeasons = data.seasons.filter(
+        (s: any) => s.season_number > 0
+      );
+      setSeasons(relevantSeasons || []);
+      if (relevantSeasons.length > 0) {
+        setSeason(relevantSeasons[0].season_number.toString());
+      }
+    } catch (error: unknown) {
+      console.error("Error fetching seasons:", error);
+      setError(error instanceof Error ? error.message : String(error));
+      setSeasons([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function fetchEpisodes(seasonNumber: number) {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(
+        `https://api.themoviedb.org/3/tv/${id}/season/${seasonNumber}?api_key=${API_KEY}`
+      );
+      const data = await response.json();
+      if (data.success === false) {
+        throw new Error(data.status_message || "Failed to fetch episodes");
+      }
       setEpisodes(data.episodes || []);
       if (data.episodes.length > 0) {
         setEpisode(data.episodes[0].episode_number.toString());
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error fetching episodes:", error);
+      setError(error instanceof Error ? error.message : String(error));
+      setEpisodes([]);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  };
+  }
 
-  const fetchStreamUrl = async (imdbId: string) => {
+  // Fetch stream URL from FlixHQ
+  async function fetchStreamUrl(mediaId: number, season: string, episode: string) {
     try {
-      const response = await fetch(`https://8-stream-api-sable.vercel.app/api/v1/mediaInfo?id=${imdbId}`);
-      const data = await response.json();
-
-      if (data.success && data.data.playlist.length > 0) {
-        const seasonData = data.data.playlist.find(
-          (season: any) => season.id === season
-        );
-
-        if (seasonData) {
-          const episodeData = seasonData.folder.find(
-            (ep: any) => ep.episode === episode
-          );
-
-          if (episodeData) {
-            const englishStream = episodeData.folder.find(
-              (stream: Stream) => stream.title === "English"
-            );
-
-            if (englishStream) {
-              setSelectedSource("newApi");
-              await fetchStream(englishStream.file, data.data.key);
-            }
-          }
-        }
+      const sources = await flixhq.fetchEpisodeSources(`tv/${mediaId}`, `${season}-${episode}`);
+      if (sources && sources.sources.length > 0) {
+        setStreamUrl(sources.sources[0].url);  // Set the first available source URL
+      } else {
+        setStreamUrl(null);
       }
     } catch (error) {
-      console.error('Error fetching stream URL:', error);
+      console.error("Error fetching stream URL:", error);
+      setStreamUrl(null);
     }
-  };
+  }
 
-  const fetchStream = async (file: string, key?: string) => {
-    try {
-      const streamResponse = await fetch('https://8-stream-api-sable.vercel.app/api/v1/getStream', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ file, key }),
-      });
+  if (isLoading) {
+    return (
+      <div className="py-8 mx-auto max-w-5xl">
+        <Skeleton className="mx-auto px-4 pt-6 w-full h-[500px]" />
+      </div>
+    );
+  }
 
-      const streamData = await streamResponse.json();
-      if (!streamData || !streamData.data || !streamData.data.link) {
-        throw new Error('Invalid stream data');
-      }
-
-      const streamUrl = streamData.data.link;
-
-      if (Hls.isSupported() && videoRef.current) {
-        if (hlsRef.current) {
-          hlsRef.current.destroy();
-        }
-        hlsRef.current = new Hls({
-          autoStartLoad: true,
-          startLevel: -1, // Start with the highest quality
-        });
-
-        hlsRef.current.loadSource(streamUrl);
-        hlsRef.current.attachMedia(videoRef.current);
-        hlsRef.current.on(Hls.Events.MANIFEST_PARSED, () => {
-          if (hlsRef.current) {
-            const levels = hlsRef.current.levels;
-            const availableQualities = levels.map((level, index) => ({
-              level: index,
-              label: `${level.height}p`
-            }));
-
-            setQualityLevels(availableQualities);
-
-            // Set default quality to the maximum available
-            const maxQualityIndex = levels.reduce((maxIndex, level, index) => 
-              level.height > levels[maxIndex].height ? index : maxIndex, 0);
-            hlsRef.current.currentLevel = maxQualityIndex;
-            setSelectedQuality(maxQualityIndex);
-
-            videoRef.current?.play();
-          }
-        });
-      } else if (videoRef.current?.canPlayType('application/vnd.apple.mpegurl')) {
-        videoRef.current.src = streamUrl;
-        videoRef.current?.play();
-      }
-    } catch (error) {
-      console.error('Error fetching stream:', error);
-    }
-  };
-
-  const handleQualityChange = (level: number) => {
-    if (hlsRef.current) {
-      hlsRef.current.currentLevel = level;
-      setSelectedQuality(level);
-    }
-  };
-
-  useEffect(() => {
-    if (selectedSource === "newApi" && imdbId) {
-      fetchStreamUrl(imdbId);
-    }
-  }, [selectedSource, imdbId]);
-
-  useEffect(() => {
-    return () => {
-      if (hlsRef.current) {
-        hlsRef.current.destroy();
-      }
-    };
-  }, []);
+  if (error) {
+    return (
+      <div className="py-8 mx-auto max-w-5xl">
+        <Skeleton className="mx-auto px-4 pt-6 w-full h-[500px]" />{" "}
+        <div className="text-center text-red-500">Error: {error}</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="video-player max-w-3xl mx-auto px-4 pt-6">
-      {loading ? (
-        <Skeleton className="h-[450px] w-full" />
-      ) : (
-        <>
-          <h2 className="text-lg font-semibold">{tvTitle}</h2>
-          <div className="w-full mb-4">
-            <Select
-              value={selectedSource}
-              onValueChange={(value) => setSelectedSource(value as VideoSourceKey)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a source" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.keys(videoSources).map((key) => (
-                  <SelectItem key={key} value={key}>
-                    {key}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          {selectedSource === "newApi" ? (
-            <div>
-              <video
-                ref={videoRef}
-                controls
-                className="w-full h-[450px]"
-              />
-              {qualityLevels.length > 0 && (
-                <div className="mt-4">
-                  <Select
-                    value={selectedQuality.toString()}
-                    onValueChange={(value) => handleQualityChange(Number(value))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select quality" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {qualityLevels.map(({ level, label }) => (
-                        <SelectItem key={level} value={level.toString()}>
-                          {label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
+    <div className="py-8">
+      <div className="pb-4">
+        <div className="flex flex-col text-center items-center justify-center">
+          <div className="rounded-md pl-4 flex w-full max-w-sm items-center space-x-2">
+            <div className="flex items-center space-x-2">
+              <Select
+                value={season}
+                onValueChange={(e) => setSeason(e)}
+                disabled={isLoading || seasons.length === 0}
+              >
+                <SelectTrigger className="px-4 py-2 rounded-md w-[180px]">
+                  <SelectValue placeholder="Select Season" />
+                </SelectTrigger>
+                <SelectContent>
+                  {seasons.length > 0 ? (
+                    seasons.map((s) => (
+                      <SelectItem
+                        key={s.season_number}
+                        value={s.season_number.toString()}
+                      >
+                        Season {s.season_number}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <></>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
-          ) : (
+            <div className="flex items-center space-x-2">
+              <Select
+                value={episode}
+                onValueChange={(e) => setEpisode(e)}
+                disabled={isLoading || episodes.length === 0}
+              >
+                <SelectTrigger className="px-4 py-2 rounded-md w-[180px]">
+                  <SelectValue placeholder="Select Episode" />
+                </SelectTrigger>
+                <SelectContent>
+                  {episodes.length > 0 ? (
+                    episodes.map((s) => (
+                      <SelectItem
+                        key={s.episode_number}
+                        value={s.episode_number.toString()}
+                      >
+                        Episode {s.episode_number}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <></>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="pt-2">
+            <Link href={`https://dl.vidsrc.vip/tv/${id}/${season}/${episode}`}>
+              <Badge
+                variant="outline"
+                className="cursor-pointer whitespace-nowrap"
+              >
+                <Download className="mr-1.5" size={12} />
+                Download {season}-{episode}
+              </Badge>
+            </Link>
+          </div>
+        </div>
+      </div>
+      <Tabs defaultValue="autoembed">
+        <div className="flex flex-col items-center">
+          <TabsList>
+            <TabsTrigger value="autoembed">AutoEmbed</TabsTrigger>
+            <TabsTrigger value="flixhq">FlixHQ</TabsTrigger>
+          </TabsList>
+        </div>
+        <TabsContent value="autoembed">
+          <iframe
+            src={`https://player.autoembed.cc/embed/tv/${id}/${season}/${episode}`}
+            referrerPolicy="origin"
+            allowFullScreen
+            width="100%"
+            height="450"
+            scrolling="no"
+            className="max-w-3xl mx-auto px-4 pt-10"
+          ></iframe>
+        </TabsContent>
+        <TabsContent value="flixhq">
+          {streamUrl ? (
             <iframe
-              src={videoSources[selectedSource]}
+              src={streamUrl}
+              referrerPolicy="origin"
               allowFullScreen
               width="100%"
               height="450"
               scrolling="no"
-              className="w-full"
-            />
+              className="max-w-3xl mx-auto px-4 pt-10"
+            ></iframe>
+          ) : (
+            <div>No streaming source available.</div>
           )}
-        </>
-      )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

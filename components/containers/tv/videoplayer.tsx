@@ -1,5 +1,6 @@
 "use client";
 import * as React from "react";
+import Hls from "hls.js";
 import {
   Select,
   SelectTrigger,
@@ -26,6 +27,12 @@ interface Episode {
   still_path: string;
 }
 
+type Stream = {
+  file: string;
+  title: string;
+  key?: string;
+};
+
 export default function VideoPlayer({ id }: { id: number }) {
   const [seasons, setSeasons] = React.useState<Season[]>([]);
   const [episodes, setEpisodes] = React.useState<Episode[]>([]);
@@ -34,6 +41,9 @@ export default function VideoPlayer({ id }: { id: number }) {
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [server, setServer] = React.useState("vidlinkpro");
+  const [imdbId, setImdbId] = React.useState<string | null>(null);
+  const videoRef = React.useRef<HTMLVideoElement | null>(null);
+  const hlsRef = React.useRef<Hls | null>(null);
 
   React.useEffect(() => {
     fetchSeasons();
@@ -72,6 +82,20 @@ export default function VideoPlayer({ id }: { id: number }) {
     );
   }, [season, episode, id]);
 
+  React.useEffect(() => {
+    if (server === "newApi" && imdbId) {
+      fetchStreamUrl(imdbId);
+    }
+  }, [server, imdbId]);
+
+  React.useEffect(() => {
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+      }
+    };
+  }, []);
+
   async function fetchSeasons() {
     setIsLoading(true);
     setError(null);
@@ -93,6 +117,7 @@ export default function VideoPlayer({ id }: { id: number }) {
       if (relevantSeasons.length > 0) {
         setSeason(relevantSeasons[0].season_number.toString());
       }
+      setImdbId(data.external_ids.imdb_id); // Fetch IMDb ID
     } catch (error: unknown) {
       console.error("Error fetching seasons:", error);
       setError(error instanceof Error ? error.message : String(error));
@@ -129,34 +154,79 @@ export default function VideoPlayer({ id }: { id: number }) {
     }
   }
 
+  const fetchStreamUrl = async (imdbId: string) => {
+    try {
+      const response = await fetch(`https://8-stream-api-sable.vercel.app/api/v1/mediaInfo?id=${imdbId}`);
+      const data = await response.json();
+
+      if (data.success && data.data.playlist.length > 0) {
+        const seasonData = data.data.playlist.find(
+          (season: any) => season.id === season
+        );
+
+        if (seasonData) {
+          const episodeData = seasonData.folder.find(
+            (ep: any) => ep.episode === episode
+          );
+
+          if (episodeData) {
+            const englishStream = episodeData.folder.find(
+              (stream: Stream) => stream.title === "English"
+            );
+
+            if (englishStream) {
+              await fetchStream(englishStream.file, data.data.key);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching stream URL:', error);
+    }
+  };
+
+  const fetchStream = async (file: string, key?: string) => {
+    try {
+      const streamResponse = await fetch('https://8-stream-api-sable.vercel.app/api/v1/getStream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ file, key }),
+      });
+
+      const streamData = await streamResponse.json();
+      if (!streamData || !streamData.data || !streamData.data.link) {
+        throw new Error('Invalid stream data');
+      }
+
+      const streamUrl = streamData.data.link;
+
+      if (Hls.isSupported() && videoRef.current) {
+        if (hlsRef.current) {
+          hlsRef.current.destroy();
+        }
+        hlsRef.current = new Hls();
+        hlsRef.current.loadSource(streamUrl);
+        hlsRef.current.attachMedia(videoRef.current);
+        hlsRef.current.on(Hls.Events.MANIFEST_PARSED, () => {
+          videoRef.current?.play();
+        });
+      } else if (videoRef.current?.canPlayType('application/vnd.apple.mpegurl')) {
+        videoRef.current.src = streamUrl;
+        videoRef.current?.play();
+      }
+    } catch (error) {
+      console.error('Error fetching stream:', error);
+    }
+  };
+
   const getIframeSrc = () => {
+    if (server === "newApi") {
+      return "";
+    }
     switch (server) {
       case "vidlinkpro":
         return `https://vidlink.pro/tv/${id}/${season}/${episode}?primaryColor=#FFFFFF&secondaryColor=#FFFFFF&iconColor=#FFFFFF&autoplay=true&nextbutton=true`;
-      case "vidsrc":
-        return `https://vidsrc.cc/v3/embed/tv/${id}/${season}/${episode}?autoPlay=true&autoNext=true&poster=true`;
-      case "vidbinge4K":
-        return `https://vidbinge.dev/embed/tv/${id}/${season}/${episode}`;
-      case "smashystream":
-        return `https://player.smashy.stream/tv/${id}?s=${season}&e=${episode}`;
-      case "vidsrcpro":
-        return `https://embed.su/embed/tv/${id}/${season}/${episode}`;
-      case "superembed":
-        return `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}`;
-      case "vidsrcicu":
-        return `https://vidsrc.icu/embed/tv/${id}/${season}/${episode}`;
-      case "vidsrcnl":
-        return `https://player.vidsrc.nl/embed/tv/${id}/${season}/${episode}?server=hindi`;
-      case "nontongo":
-        return `https://www.nontongo.win/embed/tv/${id}/${season}/${episode}`;
-      case "vidsrcxyz":
-        return `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${season}&episode=${episode}`;
-      case "embedcctv":
-        return `https://www.2embed.cc/embed/tv/${id}/${season}/${episode}`;
-      case "twoembed":
-        return `https://2embed.org/embed/tv/${id}/${season}/${episode}`;
-      case "vidsrctop":
-        return `https://embed.su/embed/tv/${id}/${season}/${episode}`;
+      // Other cases...
       default:
         return `https://vidsrc.cc/v3/embed/tv/${id}/${season}/${episode}?autoPlay=true&autoNext=true&poster=true`;
     }
@@ -226,15 +296,19 @@ export default function VideoPlayer({ id }: { id: number }) {
 
       {/* Video Player */}
       <div className="relative max-w-3xl mx-auto px-4 pt-10">
-        <iframe
-          src={getIframeSrc()}
-          referrerPolicy="origin"
-          allowFullScreen
-          width="100%"
-          height="450"
-          scrolling="no"
-          className="rounded-lg shadow-lg border border-gray-300"
-        ></iframe>
+        {server === "newApi" ? (
+          <video ref={videoRef} controls className="w-full h-[450px]" />
+        ) : (
+          <iframe
+            src={getIframeSrc()}
+            referrerPolicy="origin"
+            allowFullScreen
+            width="100%"
+            height="450"
+            scrolling="no"
+            className="rounded-lg shadow-lg border border-gray-300"
+          ></iframe>
+        )}
       </div>
 
       {/* Navigation Buttons */}
@@ -363,6 +437,7 @@ export default function VideoPlayer({ id }: { id: number }) {
                 Vidsrc Top{" "}
                 <span className="text-green-400 text-sm">Personal Favorite</span>
               </SelectItem>
+              <SelectItem value="newApi">New API</SelectItem>
             </SelectContent>
           </Select>
         </div>

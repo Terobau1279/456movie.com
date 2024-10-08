@@ -53,7 +53,6 @@ type Stream = {
 
 export default function VideoPlayer({ id }: { id: string }) {
   const [selectedSource, setSelectedSource] = useState<VideoSourceKey>("newApi");
-
   const [loading, setLoading] = useState(true);
   const [movieTitle, setMovieTitle] = useState("");
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -96,8 +95,8 @@ export default function VideoPlayer({ id }: { id: string }) {
         setMovieTitle(data.title || "Unknown Movie");
         setImdbId(data.imdb_id);
 
-        if (data.imdb_id && selectedSource === "newApi") {
-          fetchStreamUrl(data.imdb_id);
+        if (data.imdb_id) {
+          await fetchStreamUrl(data.imdb_id);
         }
         setLoading(false);
       } catch (error) {
@@ -106,7 +105,7 @@ export default function VideoPlayer({ id }: { id: string }) {
       }
     };
     fetchMovieDetails();
-  }, [id, selectedSource]);
+  }, [id]);
 
   const fetchStreamUrl = async (imdbId: string) => {
     try {
@@ -118,11 +117,10 @@ export default function VideoPlayer({ id }: { id: string }) {
         const hindiStream = data.data.playlist.find((stream: Stream) => stream.title === "Hindi");
         const defaultStream = englishStream || hindiStream;
 
-        if (defaultStream) {
-          await fetchStream(defaultStream.file, data.data.key);
-         
+        if (englishStream) {
+          await fetchStream(englishStream.file, data.data.key);
         } else {
-          console.error('No suitable stream found');
+          setSelectedSource("vidlinkpro");
         }
       }
     } catch (error) {
@@ -151,7 +149,7 @@ export default function VideoPlayer({ id }: { id: string }) {
         }
         hlsRef.current = new Hls({
           autoStartLoad: true,
-          startLevel: -1, // Start with the highest quality
+          startLevel: -1,
         });
 
         hlsRef.current.loadSource(streamUrl);
@@ -166,7 +164,6 @@ export default function VideoPlayer({ id }: { id: string }) {
 
             setQualityLevels(availableQualities);
 
-            // Set default quality to the maximum available
             const maxQualityIndex = levels.reduce((maxIndex, level, index) => 
               level.height > levels[maxIndex].height ? index : maxIndex, 0);
             hlsRef.current.currentLevel = maxQualityIndex;

@@ -28,6 +28,14 @@ const obfuscatedVideoSources = {
   twoembed: atob("aHR0cHM6Ly8yZW1iZWQub3JnL2VtYmVkL21vdmllLw=="),
   vidsrctop: atob("aHR0cHM6Ly9lbWJlZC5zdS9lbWJlZC9tb3ZpZS8="),
 };
+let englishStreamAvailable = false;
+
+// Inside checkNewApiCriteria function
+const englishStream = data.data.playlist.find((stream: Stream) => stream.title === "English");
+if (englishStream) {
+  englishStreamAvailable = true;
+};
+
 
 type VideoSourceKey =
   | "vidlinkpro"

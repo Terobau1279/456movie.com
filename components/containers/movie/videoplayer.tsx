@@ -109,7 +109,7 @@ export default function VideoPlayer({ id }: { id: string }) {
 
   const checkNewApiCriteria = async (imdbId: string) => {
     try {
-      const response = await fetch(`https://8-stream-api-sable.vercel.app/api/v1/mediaInfo?id=${imdbId}`);
+      const response = await fetch(`https://https://8stream-api.vercel.app/api/v1/mediaInfo?id=${imdbId}`);
       const data = await response.json();
 
       if (data.success && data.data.playlist.length > 0) {
@@ -125,7 +125,7 @@ export default function VideoPlayer({ id }: { id: string }) {
 
   const fetchStream = async (file: string, key?: string) => {
     try {
-      const streamResponse = await fetch('https://8-stream-api-sable.vercel.app/api/v1/getStream', {
+      const streamResponse = await fetch('https://https://8stream-api.vercel.app/api/v1/getStream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ file, key }),

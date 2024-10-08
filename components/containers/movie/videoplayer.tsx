@@ -119,6 +119,9 @@ export default function VideoPlayer({ id }: { id: string }) {
 
         if (defaultStream) {
           await fetchStream(defaultStream.file, data.data.key);
+          if (englishStream) {
+          setSelectedSource("newApi");
+        }
         } else {
           console.error('No suitable stream found');
         }

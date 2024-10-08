@@ -157,6 +157,9 @@ export default function VideoPlayer({ id }: { id: string }) {
         hlsRef.current.on(Hls.Events.MANIFEST_PARSED, () => {
           if (hlsRef.current) {
             setQualityLevels(hlsRef.current.levels.map((level, index) => index));
+            // Set default quality to 1080p if available
+            const defaultQualityIndex = hlsRef.current.levels.findIndex(level => level.height === 1080);
+            hlsRef.current.currentLevel = defaultQualityIndex !== -1 ? defaultQualityIndex : 0;
             setSelectedQuality(hlsRef.current.currentLevel);
             videoRef.current?.play();
           }
@@ -226,11 +229,14 @@ export default function VideoPlayer({ id }: { id: string }) {
                       <SelectValue placeholder="Select quality" />
                     </SelectTrigger>
                     <SelectContent>
-                      {qualityLevels.map((level) => (
-                        <SelectItem key={level} value={level.toString()}>
-                          {`Quality ${level + 1}`}
-                        </SelectItem>
-                      ))}
+                      {qualityLevels.map((level) => {
+                        const quality = hlsRef.current?.levels[level].height;
+                        return (
+                          <SelectItem key={level} value={level.toString()}>
+                            {quality === 1080 ? '1080p' : quality === 720 ? '720p' : '480p'}
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>

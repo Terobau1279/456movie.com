@@ -13,9 +13,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Download } from "lucide-react";
 import Link from "next/link";
 import { API_KEY } from "@/config/url";
-import { MOVIES } from "flixhq-core"; // Importing flixhq-core
-
-const flixhq = new MOVIES.FlixHQ();
 
 interface Season {
   season_number: number;
@@ -35,6 +32,8 @@ export default function VideoPlayer({ id }: { id: number }) {
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [flixhqSources, setFlixhqSources] = React.useState<string[]>([]);
+  const [isFlixhqLoading, setIsFlixhqLoading] = React.useState(false);
+  const [flixhqError, setFlixhqError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     fetchSeasons();
@@ -104,17 +103,33 @@ export default function VideoPlayer({ id }: { id: number }) {
   }
 
   async function fetchFlixHQSources() {
-    setIsLoading(true);
-    setError(null);
+    setIsFlixhqLoading(true);
+    setFlixhqError(null);
     try {
-      const data = await flixhq.fetchEpisodeSources(`tv/watch-${id}`, episode);
+      // Assuming mediaId follows the format 'tv/watch-<id>'
+      const mediaId = `tv/watch-${id}`;
+      const res = await fetch(
+        `/api/flixhq/sources?mediaId=${encodeURIComponent(
+          mediaId
+        )}&episodeId=${encodeURIComponent(episode)}`
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch FlixHQ sources.");
+      }
+
+      const data = await res.json();
+
+      // Assuming data.sources is an array of source URLs
       setFlixhqSources(data.sources || []);
     } catch (error: unknown) {
       console.error("Error fetching FlixHQ sources:", error);
       setFlixhqSources([]);
-      setError(error instanceof Error ? error.message : String(error));
+      setFlixhqError(
+        error instanceof Error ? error.message : "Unknown error occurred."
+      );
     } finally {
-      setIsLoading(false);
+      setIsFlixhqLoading(false);
     }
   }
 
@@ -148,7 +163,7 @@ export default function VideoPlayer({ id }: { id: number }) {
                 disabled={isLoading || seasons.length === 0}
               >
                 <SelectTrigger className="px-4 py-2 rounded-md w-[180px]">
-                  <SelectValue placeholder="Select Video Source" />
+                  <SelectValue placeholder="Select Season" />
                 </SelectTrigger>
                 <SelectContent>
                   {seasons.length > 0
@@ -171,7 +186,7 @@ export default function VideoPlayer({ id }: { id: number }) {
                 disabled={isLoading || episodes.length === 0}
               >
                 <SelectTrigger className="px-4 py-2 rounded-md w-[180px]">
-                  <SelectValue placeholder="Select Video Source" />
+                  <SelectValue placeholder="Select Episode" />
                 </SelectTrigger>
                 <SelectContent>
                   {episodes.length > 0
@@ -263,11 +278,23 @@ export default function VideoPlayer({ id }: { id: number }) {
 
         {/* New FlixHQ Player */}
         <TabsContent value="flixhq">
-          {flixhqSources.length > 0 ? (
-            <video controls className="w-full max-w-3xl h-[450px] mx-auto">
+          {isFlixhqLoading ? (
+            <div className="flex justify-center items-center h-[450px]">
+              <Skeleton className="w-full h-full max-w-3xl" />
+            </div>
+          ) : flixhqError ? (
+            <div className="text-center text-red-500 pt-10">
+              Error: {flixhqError}
+            </div>
+          ) : flixhqSources.length > 0 ? (
+            <video
+              controls
+              className="w-full max-w-3xl h-[450px] mx-auto"
+            >
               {flixhqSources.map((source, index) => (
                 <source key={index} src={source} />
               ))}
+              Your browser does not support the video tag.
             </video>
           ) : (
             <div className="text-center pt-10">No sources available.</div>

@@ -28,13 +28,7 @@ const obfuscatedVideoSources = {
   twoembed: atob("aHR0cHM6Ly8yZW1iZWQub3JnL2VtYmVkL21vdmllLw=="),
   vidsrctop: atob("aHR0cHM6Ly9lbWJlZC5zdS9lbWJlZC9tb3ZpZS8="),
 };
-let englishStreamAvailable = false;
 
-// Inside checkNewApiCriteria function
-const englishStream = data.data.playlist.find((stream: Stream) => stream.title === "English");
-if (englishStream) {
-  englishStreamAvailable = true;
-};
 
 
 type VideoSourceKey =
@@ -60,7 +54,7 @@ type Stream = {
 };
 
 export default function VideoPlayer({ id }: { id: string }) {
-const [selectedSource, setSelectedSource] = useState<VideoSourceKey>(englishStreamAvailable ? "newApi" : "vidsrctop");
+
   const [loading, setLoading] = useState(true);
   const [movieTitle, setMovieTitle] = useState("");
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -150,7 +144,7 @@ const [selectedSource, setSelectedSource] = useState<VideoSourceKey>(englishStre
       }
 
       const streamUrl = streamData.data.link;
-
+const [selectedSource, setSelectedSource] = useState<VideoSourceKey>(englishStreamAvailable ? "newApi" : "vidsrctop");
       if (Hls.isSupported() && videoRef.current) {
         if (hlsRef.current) {
           hlsRef.current.destroy();

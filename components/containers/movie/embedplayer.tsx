@@ -51,7 +51,7 @@ type VideoSourceKey =
 type Stream = {
   file: string;
   title: string;
-  key?: string; // Make key optional if it's not always present
+  key?: string;
 };
 
 export default function VideoPlayer({ id }: any) {

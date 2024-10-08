@@ -13,7 +13,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 const TMDB_API_KEY = 'a46c50a0ccb1bafe2b15665df7fad7e1';
 const READ_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhNDZjNTBhMGNjYjFiYWZlMmIxNTY2NWRmN2ZhZDdlMSIsIm5iZiI6MTcyODMyNzA3Ni43OTE0NTUsInN1YiI6IjY2YTBhNTNmYmNhZGE0NjNhNmJmNjljZCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.BNhRdFagBrpQaazN_AWUNr_SRani4pHlYYuffuf2-Os';
 
-
 const obfuscatedVideoSources = {
   vidlinkpro: atob("aHR0cHM6Ly92aWRsaW5rLnByby9tb3ZpZS8="),
   vidsrccc: atob("aHR0cHM6Ly92aWRzcmMuY2MvdjMvZW1iZWQvbW92aWUv"),
@@ -29,8 +28,6 @@ const obfuscatedVideoSources = {
   twoembed: atob("aHR0cHM6Ly8yZW1iZWQub3JnL2VtYmVkL21vdmllLw=="),
   vidsrctop: atob("aHR0cHM6Ly9lbWJlZC5zdS9lbWJlZC9tb3ZpZS8="),
 };
-
-
 
 type VideoSourceKey =
   | "vidlinkpro"
@@ -55,7 +52,7 @@ type Stream = {
 };
 
 export default function VideoPlayer({ id }: { id: string }) {
-
+  const [selectedSource, setSelectedSource] = useState<VideoSourceKey>("vidsrctop");
   const [loading, setLoading] = useState(true);
   const [movieTitle, setMovieTitle] = useState("");
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -63,7 +60,6 @@ export default function VideoPlayer({ id }: { id: string }) {
   const hlsRef = useRef<Hls | null>(null);
   const [qualityLevels, setQualityLevels] = useState<{ level: number, label: string }[]>([]);
   const [selectedQuality, setSelectedQuality] = useState<number>(-1);
-const [selectedSource, setSelectedSource] = useState<VideoSourceKey>(englishStreamAvailable ? "newApi" : "vidsrctop");
 
   const videoSources: Record<VideoSourceKey, string> = {
     vidlinkpro: `${obfuscatedVideoSources["vidlinkpro"]}${id}`,
@@ -99,8 +95,8 @@ const [selectedSource, setSelectedSource] = useState<VideoSourceKey>(englishStre
         setMovieTitle(data.title || "Unknown Movie");
         setImdbId(data.imdb_id);
 
-        if (data.imdb_id && selectedSource === "newApi") {
-          fetchStreamUrl(data.imdb_id);
+        if (data.imdb_id) {
+          checkNewApiCriteria(data.imdb_id);
         }
         setLoading(false);
       } catch (error) {
@@ -109,32 +105,27 @@ const [selectedSource, setSelectedSource] = useState<VideoSourceKey>(englishStre
       }
     };
     fetchMovieDetails();
-  }, [id, selectedSource]);
+  }, [id]);
 
-  const fetchStreamUrl = async (imdbId: string) => {
+  const checkNewApiCriteria = async (imdbId: string) => {
     try {
-      const response = await fetch(`https://8stream-api.vercel.app/api/v1/mediaInfo?id=${imdbId}`);
+      const response = await fetch(`https://8-stream-api-sable.vercel.app/api/v1/mediaInfo?id=${imdbId}`);
       const data = await response.json();
 
       if (data.success && data.data.playlist.length > 0) {
         const englishStream = data.data.playlist.find((stream: Stream) => stream.title === "English");
-        const hindiStream = data.data.playlist.find((stream: Stream) => stream.title === "Hindi");
-        const defaultStream = englishStream || hindiStream;
-
-        if (defaultStream) {
-          await fetchStream(defaultStream.file, data.data.key);
-        } else {
-          console.error('No suitable stream found');
+        if (englishStream) {
+          setSelectedSource("newApi");
         }
       }
     } catch (error) {
-      console.error('Error fetching stream URL:', error);
+      console.error('Error checking new API criteria:', error);
     }
   };
 
   const fetchStream = async (file: string, key?: string) => {
     try {
-      const streamResponse = await fetch('https://8stream-api.vercel.app/api/v1/getStream', {
+      const streamResponse = await fetch('https://8-stream-api-sable.vercel.app/api/v1/getStream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ file, key }),
@@ -146,13 +137,14 @@ const [selectedSource, setSelectedSource] = useState<VideoSourceKey>(englishStre
       }
 
       const streamUrl = streamData.data.link;
+
       if (Hls.isSupported() && videoRef.current) {
         if (hlsRef.current) {
           hlsRef.current.destroy();
         }
         hlsRef.current = new Hls({
           autoStartLoad: true,
-          startLevel: -1, // Start with the highest quality
+          startLevel: -1,
         });
 
         hlsRef.current.loadSource(streamUrl);
@@ -167,7 +159,6 @@ const [selectedSource, setSelectedSource] = useState<VideoSourceKey>(englishStre
 
             setQualityLevels(availableQualities);
 
-            // Set default quality to the maximum available
             const maxQualityIndex = levels.reduce((maxIndex, level, index) => 
               level.height > levels[maxIndex].height ? index : maxIndex, 0);
             hlsRef.current.currentLevel = maxQualityIndex;

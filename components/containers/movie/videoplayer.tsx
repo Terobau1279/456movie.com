@@ -9,8 +9,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import Image from "next/image";
-import Link from "next/link";
 
 const TMDB_API_KEY = 'a46c50a0ccb1bafe2b15665df7fad7e1';
 const READ_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhNDZjNTBhMGNjYjFiYWZlMmIxNTY2NWRmN2ZhZDdlMSIsIm5iZiI6MTcyODMyNzA3Ni43OTE0NTUsInN1YiI6IjY2YTBhNTNmYmNhZGE0NjNhNmJmNjljZCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.BNhRdFagBrpQaazN_AWUNr_SRani4pHlYYuffuf2-Os';
@@ -57,7 +55,6 @@ export default function VideoPlayer({ id }: { id: string }) {
   const [selectedSource, setSelectedSource] = useState<VideoSourceKey>("vidsrctop");
   const [loading, setLoading] = useState(true);
   const [movieTitle, setMovieTitle] = useState("");
-  const [relatedMovies, setRelatedMovies] = useState<any[]>([]);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [streams, setStreams] = useState<Stream[]>([]);
   const [imdbId, setImdbId] = useState<string | null>(null);
@@ -95,12 +92,6 @@ export default function VideoPlayer({ id }: { id: string }) {
         const data = await response.json();
         setMovieTitle(data.title || "Unknown Movie");
         setImdbId(data.imdb_id);
-
-        const relatedResponse = await fetch(
-          `https://api.themoviedb.org/3/movie/${id}/similar?api_key=${TMDB_API_KEY}`
-        );
-        const relatedData = await relatedResponse.json();
-        setRelatedMovies(relatedData.results.slice(0, 8));
 
         if (data.imdb_id && selectedSource === "newApi") {
           fetchStreamUrl(data.imdb_id);
@@ -168,49 +159,52 @@ export default function VideoPlayer({ id }: { id: string }) {
         <Skeleton className="h-[400px] w-full" />
       ) : (
         <>
-          <h2 className="text-2xl font-bold">{movieTitle}</h2>
-          <Select onValueChange={setSelectedSource} defaultValue={selectedSource}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select Source" />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.keys(videoSources).map((key) => (
-                <SelectItem key={key} value={key}>
-                  {key}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {selectedSource && (
-            <div className="video-container">
-              {streams.length > 0 && selectedSource === "newApi" ? (
-                <video ref={videoRef} className="video-player" controls />
-              ) : (
-                <video ref={videoRef} className="video-player" controls />
-              )}
-            </div>
-          )}
-
-          {relatedMovies.length > 0 && (
-            <div className="related-movies">
-              <h3>Related Movies</h3>
-              <div className="movie-list">
-                {relatedMovies.map((movie) => (
-                  <Link key={movie.id} href={`/movies/${movie.id}`}>
-                    <div className="movie-item">
-                      <Image
-                        src={`https://image.tmdb.org/t/p/w200/${movie.poster_path}`}
-                        alt={movie.title}
-                        width={200}
-                        height={300}
-                      />
-                      <p>{movie.title}</p>
-                    </div>
-                  </Link>
+          <h2 className="text-lg font-semibold">{movieTitle}</h2>
+          <div className="w-full mb-4">
+            <Select
+              value={selectedSource}
+              onValueChange={(value) => setSelectedSource(value as VideoSourceKey)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a source" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.keys(videoSources).map((key) => (
+                  <SelectItem key={key} value={key}>
+                    {key}
+                  </SelectItem>
                 ))}
-              </div>
+              </SelectContent>
+            </Select>
+          </div>
+          {selectedSource === "newApi" ? (
+            <div>
+              {streams.length > 0 && (
+                <div>
+                  <h3>Available Streams:</h3>
+                  {streams.map((stream) => (
+                    <button
+                      key={stream.title}
+                      onClick={() => handleStreamChange(stream.file, stream.key)}
+                      className="block mb-2"
+                    >
+                      {stream.title}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <video
+                ref={videoRef}
+                controls
+                className="w-full h-[400px]"
+              />
             </div>
+          ) : (
+            <iframe
+              src={videoSources[selectedSource]}
+              className="w-full h-[400px]"
+              allowFullScreen
+            />
           )}
         </>
       )}

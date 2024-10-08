@@ -63,7 +63,6 @@ export default function VideoPlayer({ id }: any) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [streams, setStreams] = useState<Stream[]>([]);
   const [imdbId, setImdbId] = useState<string | null>(null);
-  const [englishStreams, setEnglishStreams] = useState<Stream[]>([]);
 
   const videoSources: Record<VideoSourceKey, string> = {
     vidlinkpro: `${obfuscatedVideoSources["vidlinkpro"]}${id}`,
@@ -124,15 +123,10 @@ export default function VideoPlayer({ id }: any) {
 
       if (data.success && data.data.playlist.length > 0) {
         setStreams(data.data.playlist);
-        const englishStreams = data.data.playlist.filter((stream: Stream) => stream.title.toLowerCase().includes('english'))
-          .map((stream: Stream) => ({ ...stream, key: data.data.key }));
-        setEnglishStreams(englishStreams);
 
-        if (englishStreams.length > 0) {
-          const firstStream = englishStreams[0].file;
-          const key = data.data.key;
-          await fetchStream(firstStream, key);
-        }
+        const firstStream = data.data.playlist[0].file;
+        const key = data.data.key;
+        await fetchStream(firstStream, key);
       }
     } catch (error) {
       console.error('Error fetching stream URL:', error);
@@ -192,12 +186,12 @@ export default function VideoPlayer({ id }: any) {
               ))}
             </SelectContent>
           </Select>
-          {selectedSource === "newApi" && englishStreams.length > 0 && (
+          {selectedSource === "newApi" && streams.length > 0 && (
             <select onChange={(e) => {
-              const selected = englishStreams[e.target.selectedIndex];
+              const selected = streams[e.target.selectedIndex];
               handleStreamChange(selected.file, selected.key);
             }}>
-              {englishStreams.map((stream, index) => (
+              {streams.map((stream, index) => (
                 <option key={index} value={stream.file}>{stream.title}</option>
               ))}
             </select>

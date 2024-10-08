@@ -52,8 +52,7 @@ type Stream = {
 };
 
 export default function VideoPlayer({ id }: { id: string }) {
-  const [selectedSource, setSelectedSource] = useState<VideoSourceKey>("newApi");
-
+  const [selectedSource, setSelectedSource] = useState<VideoSourceKey>("vidlinkpro");
   const [loading, setLoading] = useState(true);
   const [movieTitle, setMovieTitle] = useState("");
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -96,7 +95,7 @@ export default function VideoPlayer({ id }: { id: string }) {
         setMovieTitle(data.title || "Unknown Movie");
         setImdbId(data.imdb_id);
 
-        if (data.imdb_id && selectedSource === "newApi") {
+        if (data.imdb_id) {
           fetchStreamUrl(data.imdb_id);
         }
         setLoading(false);
@@ -106,7 +105,7 @@ export default function VideoPlayer({ id }: { id: string }) {
       }
     };
     fetchMovieDetails();
-  }, [id, selectedSource]);
+  }, [id]);
 
   const fetchStreamUrl = async (imdbId: string) => {
     try {
@@ -115,14 +114,12 @@ export default function VideoPlayer({ id }: { id: string }) {
 
       if (data.success && data.data.playlist.length > 0) {
         const englishStream = data.data.playlist.find((stream: Stream) => stream.title === "English");
-        const hindiStream = data.data.playlist.find((stream: Stream) => stream.title === "Hindi");
-        const defaultStream = englishStream || hindiStream;
 
-        if (defaultStream) {
-          await fetchStream(defaultStream.file, data.data.key);
-         
+        if (englishStream) {
+          setSelectedSource("newApi");
+          await fetchStream(englishStream.file, data.data.key);
         } else {
-          console.error('No suitable stream found');
+          setSelectedSource("vidlinkpro");
         }
       }
     } catch (error) {

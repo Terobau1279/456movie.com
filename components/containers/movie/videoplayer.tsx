@@ -169,51 +169,55 @@ export default function VideoPlayer({ id }: any) {
       ) : (
         <>
           <h2 className="text-lg font-semibold">{movieTitle}</h2>
-          <div className="video-container">
-            <video ref={videoRef} controls width="100%" />
-          </div>
-          <Select onValueChange={(value) => setSelectedSource(value as VideoSourceKey)} defaultValue={selectedSource}>
+          <Select
+            value={selectedSource}
+            onValueChange={setSelectedSource}
+            className="w-full mb-4"
+          >
             <SelectTrigger>
-              <SelectValue placeholder="Select Video Source" />
+              <SelectValue placeholder="Select a source" />
             </SelectTrigger>
             <SelectContent>
-              {Object.keys(videoSources).map((source) => (
-                <SelectItem key={source} value={source}>
-                  {source}
+              {Object.keys(videoSources).map((key) => (
+                <SelectItem key={key} value={key}>
+                  {key}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {selectedSource === "newApi" && streams.length > 0 && (
-            <select onChange={(e) => {
-              const selected = streams[e.target.selectedIndex];
-              handleStreamChange(selected.file, selected.key);
-            }}>
-              {streams.map((stream, index) => (
-                <option key={index} value={stream.file}>{stream.title}</option>
+          {selectedSource === "newApi" && (
+            <div>
+              <h3>Available Streams:</h3>
+              {streams.map((stream) => (
+                <button
+                  key={stream.title}
+                  onClick={() => handleStreamChange(stream.file, stream.key)}
+                >
+                  {stream.title}
+                </button>
               ))}
-            </select>
-          )}
-          {relatedMovies.length > 0 && (
-            <div className="related-movies">
-              <h3 className="text-lg font-semibold">Related Movies</h3>
-              <div className="flex overflow-x-auto space-x-4">
-                {relatedMovies.map((movie) => (
-                  <Link key={movie.id} href={`/movie/${movie.id}`}>
-                    <Image
-                      src={`https://image.tmdb.org/t/p/w500/${movie.poster_path}`}
-                      alt={movie.title}
-                      width={150}
-                      height={225}
-                    />
-                  </Link>
-                ))}
-              </div>
             </div>
           )}
+          <video
+            ref={videoRef}
+            controls
+            className="w-full h-[400px]"
+          />
+          <h3>Related Movies:</h3>
+          <div className="related-movies">
+            {relatedMovies.map((movie) => (
+              <Link href={`/movie/${movie.id}`} key={movie.id}>
+                <Image
+                  src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                  alt={movie.title}
+                  width={150}
+                  height={225}
+                />
+              </Link>
+            ))}
+          </div>
         </>
       )}
     </div>
-    
   );
 }

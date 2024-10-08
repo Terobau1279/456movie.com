@@ -95,8 +95,8 @@ export default function VideoPlayer({ id }: { id: string }) {
         setMovieTitle(data.title || "Unknown Movie");
         setImdbId(data.imdb_id);
 
-        if (data.imdb_id) {
-          checkNewApiCriteria(data.imdb_id);
+        if (data.imdb_id && selectedSource === "newApi") {
+          fetchStreamUrl(data.imdb_id);
         }
         setLoading(false);
       } catch (error) {
@@ -105,27 +105,32 @@ export default function VideoPlayer({ id }: { id: string }) {
       }
     };
     fetchMovieDetails();
-  }, [id]);
+  }, [id, selectedSource]);
 
-  const checkNewApiCriteria = async (imdbId: string) => {
+  const fetchStreamUrl = async (imdbId: string) => {
     try {
-      const response = await fetch(`https://https://8stream-api.vercel.app/api/v1/mediaInfo?id=${imdbId}`);
+      const response = await fetch(`https://8-stream-api-sable.vercel.app/api/v1/mediaInfo?id=${imdbId}`);
       const data = await response.json();
 
       if (data.success && data.data.playlist.length > 0) {
         const englishStream = data.data.playlist.find((stream: Stream) => stream.title === "English");
-        if (englishStream) {
-          setSelectedSource("newApi");
+        const hindiStream = data.data.playlist.find((stream: Stream) => stream.title === "Hindi");
+        const defaultStream = englishStream || hindiStream;
+
+        if (defaultStream) {
+          await fetchStream(defaultStream.file, data.data.key);
+        } else {
+          console.error('No suitable stream found');
         }
       }
     } catch (error) {
-      console.error('Error checking new API criteria:', error);
+      console.error('Error fetching stream URL:', error);
     }
   };
 
   const fetchStream = async (file: string, key?: string) => {
     try {
-      const streamResponse = await fetch('https://https://8stream-api.vercel.app/api/v1/getStream', {
+      const streamResponse = await fetch('https://8-stream-api-sable.vercel.app/api/v1/getStream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ file, key }),
@@ -144,7 +149,7 @@ export default function VideoPlayer({ id }: { id: string }) {
         }
         hlsRef.current = new Hls({
           autoStartLoad: true,
-          startLevel: -1,
+          startLevel: -1, // Start with the highest quality
         });
 
         hlsRef.current.loadSource(streamUrl);
@@ -159,6 +164,7 @@ export default function VideoPlayer({ id }: { id: string }) {
 
             setQualityLevels(availableQualities);
 
+            // Set default quality to the maximum available
             const maxQualityIndex = levels.reduce((maxIndex, level, index) => 
               level.height > levels[maxIndex].height ? index : maxIndex, 0);
             hlsRef.current.currentLevel = maxQualityIndex;

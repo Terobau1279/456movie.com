@@ -178,7 +178,7 @@ export default function VideoPlayer({ id }: any) {
           <div className="video-container">
             <video ref={videoRef} controls width="100%" />
           </div>
-          <Select onValueChange={setSelectedSource} defaultValue={selectedSource}>
+          <Select onValueChange={(value) => setSelectedSource(value as VideoSourceKey)} defaultValue={selectedSource}>
             <SelectTrigger>
               <SelectValue placeholder="Select Video Source" />
             </SelectTrigger>

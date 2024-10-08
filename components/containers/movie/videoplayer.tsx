@@ -161,6 +161,14 @@ export default function VideoPlayer({ id }: { id: string }) {
     await fetchStream(file, key || "");
   };
 
+  useEffect(() => {
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+      }
+    };
+  }, []);
+
   return (
     <div className="video-player max-w-3xl mx-auto px-4 pt-6">
       {loading ? (

@@ -102,7 +102,7 @@ export default function VideoPlayer({ id }: any) {
         const relatedData = await relatedResponse.json();
         setRelatedMovies(relatedData.results.slice(0, 8));
 
-        if (data.imdb_id) {
+        if (data.imdb_id && selectedSource === "newApi") {
           fetchStreamUrl(data.imdb_id);
         }
         setLoading(false);
@@ -112,7 +112,7 @@ export default function VideoPlayer({ id }: any) {
       }
     };
     fetchMovieDetails();
-  }, [id]);
+  }, [id, selectedSource]);
 
   const fetchStreamUrl = async (imdbId: string) => {
     try {
@@ -185,13 +185,14 @@ export default function VideoPlayer({ id }: any) {
               ))}
             </SelectContent>
           </Select>
-          {selectedSource === "newApi" && (
+          {selectedSource === "newApi" && streams.length > 0 && (
             <div>
               <h3>Available Streams:</h3>
               {streams.map((stream) => (
                 <button
                   key={stream.title}
                   onClick={() => handleStreamChange(stream.file, stream.key)}
+                  className="block mb-2"
                 >
                   {stream.title}
                 </button>

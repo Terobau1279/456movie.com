@@ -80,7 +80,6 @@ export default function VideoPlayer({ id }: { id: string }) {
 
   useEffect(() => {
     const fetchMovieDetails = async () => {
-      setLoading(true); // Show loading state immediately
       try {
         const response = await fetch(
           `https://api.themoviedb.org/3/movie/${id}?api_key=${TMDB_API_KEY}`,
@@ -92,11 +91,6 @@ export default function VideoPlayer({ id }: { id: string }) {
             }
           }
         );
-        
-        if (!response.ok) {
-          throw new Error(`Error fetching movie details: ${response.statusText}`);
-        }
-
         const data = await response.json();
         setMovieTitle(data.title || "Unknown Movie");
         setImdbId(data.imdb_id);
@@ -104,14 +98,12 @@ export default function VideoPlayer({ id }: { id: string }) {
         if (data.imdb_id && selectedSource === "newApi") {
           fetchStreamUrl(data.imdb_id);
         }
+        setLoading(false);
       } catch (error) {
-        console.error(error);
-        setMovieTitle("Error fetching movie details.");
-      } finally {
-        setLoading(false); // Hide loading state
+        console.error("Error fetching movie details:", error);
+        setLoading(false);
       }
     };
-
     fetchMovieDetails();
   }, [id, selectedSource]);
 
@@ -158,72 +150,93 @@ export default function VideoPlayer({ id }: { id: string }) {
         hlsRef.current.on(Hls.Events.MANIFEST_PARSED, () => {
           videoRef.current?.play();
         });
-      } else if (videoRef.current) {
+      } else if (videoRef.current?.canPlayType('application/vnd.apple.mpegurl')) {
         videoRef.current.src = streamUrl;
-        videoRef.current.addEventListener("loadedmetadata", () => {
-          videoRef.current?.play();
-        });
+        videoRef.current?.play();
       }
     } catch (error) {
-      console.error("Error fetching the stream:", error);
+      console.error('Error fetching stream:', error);
     }
   };
 
-  const handleStreamChange = (key: VideoSourceKey) => {
-    setSelectedSource(key);
-    setSelectedStream("");
-    setStreams([]);
-  };
-
-  const handleStreamSelection = (stream: string) => {
-    setSelectedStream(stream);
+  const handleStreamChange = async (file: string, key?: string) => {
+    setSelectedStream(file);
+    await fetchStream(file, key || "");
   };
 
   useEffect(() => {
-    if (selectedStream) {
-      fetchStream(selectedStream);
-    }
-  }, [selectedStream]);
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+      }
+    };
+  }, []);
 
   return (
-    <div>
+    <div className="video-player max-w-3xl mx-auto px-4 pt-6">
       {loading ? (
-        <Skeleton className="h-96" />
+        <Skeleton className="h-[450px] w-full" />
       ) : (
         <>
-          <h2 className="text-xl font-bold">{movieTitle}</h2>
-          <Select onValueChange={handleStreamChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select Source" />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.keys(videoSources).map((key) => (
-                <SelectItem key={key} value={key}>
-                  {key}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {streams.length > 0 && (
-            <Select onValueChange={handleStreamSelection}>
+          <h2 className="text-lg font-semibold">{movieTitle}</h2>
+          <div className="w-full mb-4">
+            <Select
+              value={selectedSource}
+              onValueChange={(value) => setSelectedSource(value as VideoSourceKey)}
+            >
               <SelectTrigger>
-                <SelectValue placeholder="Select Stream" />
+                <SelectValue placeholder="Select a source" />
               </SelectTrigger>
               <SelectContent>
-                {streams.map((stream, index) => (
-                  <SelectItem key={index} value={stream.file}>
-                    {stream.title}
+                {Object.keys(videoSources).map((key) => (
+                  <SelectItem key={key} value={key}>
+                    {key}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          {selectedSource === "newApi" ? (
+            <div>
+              {streams.length > 0 && (
+                <div className="mb-4">
+                  <h3 className="mb-2">Available Streams:</h3>
+                  <Select
+                    value={selectedStream}
+                    onValueChange={(value) => {
+                      const stream = streams.find((s) => s.file === value);
+                      if (stream) handleStreamChange(stream.file, stream.key);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a stream" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {streams.map((stream) => (
+                        <SelectItem key={stream.title} value={stream.file}>
+                          {stream.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <video
+                ref={videoRef}
+                controls
+                className="w-full h-[450px]"
+              />
+            </div>
+          ) : (
+            <iframe
+              src={videoSources[selectedSource]}
+              allowFullScreen
+              width="100%"
+              height="450"
+              scrolling="no"
+              className="w-full"
+            />
           )}
-
-          <video ref={videoRef} controls className="w-full h-auto">
-            <source src={selectedStream} type="application/x-mpegURL" />
-            Your browser does not support the video tag.
-          </video>
         </>
       )}
     </div>

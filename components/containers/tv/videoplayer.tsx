@@ -101,7 +101,7 @@ export default function VideoPlayer({ id }: { id: number }) {
     setError(null);
     try {
       const response = await fetch(
-        `https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}`
+        `https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}&append_to_response=external_ids`
       );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -117,7 +117,11 @@ export default function VideoPlayer({ id }: { id: number }) {
       if (relevantSeasons.length > 0) {
         setSeason(relevantSeasons[0].season_number.toString());
       }
-      setImdbId(data.external_ids.imdb_id); // Fetch IMDb ID
+      if (data.external_ids && data.external_ids.imdb_id) {
+        setImdbId(data.external_ids.imdb_id);
+      } else {
+        setError("IMDb ID not found");
+      }
     } catch (error: unknown) {
       console.error("Error fetching seasons:", error);
       setError(error instanceof Error ? error.message : String(error));

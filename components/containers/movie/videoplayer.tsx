@@ -114,7 +114,7 @@ export default function VideoPlayer({ id }: { id: string }) {
         setStreams(data.data.playlist);
 
         // Default to English stream
-        const englishStream = data.data.playlist.find(stream => stream.title === "English");
+        const englishStream = data.data.playlist.find((stream: Stream) => stream.title === "English");
         const file = englishStream ? englishStream.file : data.data.playlist[0].file;
         const key = englishStream ? englishStream.key : data.data.key;
         await fetchStream(file, key);

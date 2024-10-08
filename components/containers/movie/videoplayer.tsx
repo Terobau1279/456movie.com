@@ -58,6 +58,7 @@ export default function VideoPlayer({ id }: { id: string }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [streams, setStreams] = useState<Stream[]>([]);
   const [imdbId, setImdbId] = useState<string | null>(null);
+  const [selectedStream, setSelectedStream] = useState<string>("");
 
   const videoSources: Record<VideoSourceKey, string> = {
     vidlinkpro: `${obfuscatedVideoSources["vidlinkpro"]}${id}`,
@@ -115,9 +116,9 @@ export default function VideoPlayer({ id }: { id: string }) {
 
         // Default to English stream
         const englishStream = data.data.playlist.find((stream: Stream) => stream.title === "English");
-        const file = englishStream ? englishStream.file : data.data.playlist[0].file;
-        const key = englishStream ? data.data.key : undefined;
-        await fetchStream(file, key);
+        const defaultStream = englishStream || data.data.playlist[0];
+        setSelectedStream(defaultStream.file);
+        await fetchStream(defaultStream.file, data.data.key);
       }
     } catch (error) {
       console.error('Error fetching stream URL:', error);
@@ -152,6 +153,7 @@ export default function VideoPlayer({ id }: { id: string }) {
   };
 
   const handleStreamChange = async (file: string, key?: string) => {
+    setSelectedStream(file);
     await fetchStream(file, key || "");
   };
 
@@ -184,15 +186,24 @@ export default function VideoPlayer({ id }: { id: string }) {
               {streams.length > 0 && (
                 <div className="mb-4">
                   <h3 className="mb-2">Available Streams:</h3>
-                  {streams.map((stream) => (
-                    <button
-                      key={stream.title}
-                      onClick={() => handleStreamChange(stream.file, stream.key)}
-                      className="block mb-2 p-2 bg-gray-200 rounded hover:bg-gray-300"
-                    >
-                      {stream.title}
-                    </button>
-                  ))}
+                  <Select
+                    value={selectedStream}
+                    onValueChange={(value) => {
+                      const stream = streams.find((s) => s.file === value);
+                      if (stream) handleStreamChange(stream.file, stream.key);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a stream" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {streams.map((stream) => (
+                        <SelectItem key={stream.title} value={stream.file}>
+                          {stream.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
               <video

@@ -59,6 +59,7 @@ export default function VideoPlayer({ id }: { id: string }) {
   const [streams, setStreams] = useState<Stream[]>([]);
   const [imdbId, setImdbId] = useState<string | null>(null);
   const [selectedStream, setSelectedStream] = useState<string>("");
+  const hlsRef = useRef<Hls | null>(null);
 
   const videoSources: Record<VideoSourceKey, string> = {
     vidlinkpro: `${obfuscatedVideoSources["vidlinkpro"]}${id}`,
@@ -137,10 +138,13 @@ export default function VideoPlayer({ id }: { id: string }) {
       const streamUrl = streamData.data.link;
 
       if (Hls.isSupported() && videoRef.current) {
-        const hls = new Hls();
-        hls.loadSource(streamUrl);
-        hls.attachMedia(videoRef.current);
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        if (hlsRef.current) {
+          hlsRef.current.destroy();
+        }
+        hlsRef.current = new Hls();
+        hlsRef.current.loadSource(streamUrl);
+        hlsRef.current.attachMedia(videoRef.current);
+        hlsRef.current.on(Hls.Events.MANIFEST_PARSED, () => {
           videoRef.current?.play();
         });
       } else if (videoRef.current?.canPlayType('application/vnd.apple.mpegurl')) {
@@ -226,5 +230,4 @@ export default function VideoPlayer({ id }: { id: string }) {
       )}
     </div>
   );
-  
 }

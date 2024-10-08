@@ -1,5 +1,6 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import Hls from "hls.js";
 import {
   Select,
   SelectTrigger,
@@ -10,10 +11,10 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import Link from "next/link";
-import Hide from "./hide"; // Import Hide component
-import Hls from "hls.js"; // Import Hls for handling streams
 
-// Obfuscate some video source URLs
+const TMDB_API_KEY = 'a46c50a0ccb1bafe2b15665df7fad7e1';
+const READ_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhNDZjNTBhMGNjYjFiYWZlMmIxNTY2NWRmN2ZhZDdlMSIsIm5iZiI6MTcyODMyNzA3Ni43OTE0NTUsInN1YiI6IjY2YTBhNTNmYmNhZGE0NjNhNmJmNjljZCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.BNhRdFagBrpQaazN_AWUNr_SRani4pHlYYuffuf2-Os';
+
 const obfuscatedVideoSources = {
   vidlinkpro: atob("aHR0cHM6Ly92aWRsaW5rLnByby9tb3ZpZS8="),
   vidsrccc: atob("aHR0cHM6Ly92aWRzcmMuY2MvdjMvZW1iZWQvbW92aWUv"),
@@ -30,7 +31,6 @@ const obfuscatedVideoSources = {
   vidsrctop: atob("aHR0cHM6Ly9lbWJlZC5zdS9lbWJlZC9tb3ZpZS8="),
 };
 
-// Video source keys
 type VideoSourceKey =
   | "vidlinkpro"
   | "vidsrccc"
@@ -45,18 +45,22 @@ type VideoSourceKey =
   | "embedccMovie"
   | "twoembed"
   | "vidsrctop"
-  | "newApi"; // Add a new API option
+  | "newApi";
+
+type Stream = {
+  file: string;
+  title: string;
+  key?: string;
+};
 
 export default function VideoPlayer({ id }: any) {
   const [selectedSource, setSelectedSource] = useState<VideoSourceKey>("vidsrctop");
-  const [loading, setLoading] = useState(true); // Set to true while loading
+  const [loading, setLoading] = useState(true);
   const [movieTitle, setMovieTitle] = useState("");
   const [relatedMovies, setRelatedMovies] = useState<any[]>([]);
-  const [showRelatedMovies, setShowRelatedMovies] = useState(false); // Hide by default
-  const videoRef = useRef<HTMLVideoElement | null>(null); // For the new player
-  const [streams, setStreams] = useState<any[]>([]);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [streams, setStreams] = useState<Stream[]>([]);
   const [imdbId, setImdbId] = useState<string | null>(null);
-  const [englishStreams, setEnglishStreams] = useState<any[]>([]); // To store English streams
 
   const videoSources: Record<VideoSourceKey, string> = {
     vidlinkpro: `${obfuscatedVideoSources["vidlinkpro"]}${id}`,
@@ -72,67 +76,62 @@ export default function VideoPlayer({ id }: any) {
     embedccMovie: `${obfuscatedVideoSources["embedccMovie"]}${id}`,
     twoembed: `${obfuscatedVideoSources["twoembed"]}${id}`,
     vidsrctop: `${obfuscatedVideoSources["vidsrctop"]}${id}`,
-    newApi: "", // Placeholder for new API
+    newApi: "",
   };
 
-  // Fetch movie details from TMDb API
   useEffect(() => {
     const fetchMovieDetails = async () => {
       try {
         const response = await fetch(
-          `https://api.themoviedb.org/3/movie/${id}?api_key=a46c50a0ccb1bafe2b15665df7fad7e1`
+          `https://api.themoviedb.org/3/movie/${id}?api_key=${TMDB_API_KEY}`,
+          {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${READ_ACCESS_TOKEN}`,
+              'Content-Type': 'application/json'
+            }
+          }
         );
         const data = await response.json();
         setMovieTitle(data.title || "Unknown Movie");
-        setImdbId(data.imdb_id); // Set the IMDb ID
+        setImdbId(data.imdb_id);
 
-        // Fetch related movies
         const relatedResponse = await fetch(
-          `https://api.themoviedb.org/3/movie/${id}/similar?api_key=a46c50a0ccb1bafe2b15665df7fad7e1`
+          `https://api.themoviedb.org/3/movie/${id}/similar?api_key=${TMDB_API_KEY}`
         );
         const relatedData = await relatedResponse.json();
-        setRelatedMovies(relatedData.results.slice(0, 8)); // Fetch 8 related movies
+        setRelatedMovies(relatedData.results.slice(0, 8));
 
-        // Check if the newApi option should be fetched
         if (data.imdb_id) {
-          fetchStreamUrl(data.imdb_id); // Fetch streams using the IMDb ID
+          fetchStreamUrl(data.imdb_id);
         }
-        setLoading(false); // Set loading to false after fetching
+        setLoading(false);
       } catch (error) {
         console.error("Error fetching movie details:", error);
-        setLoading(false); // Ensure loading is set to false on error
+        setLoading(false);
       }
     };
     fetchMovieDetails();
   }, [id]);
 
-  // Fetch stream URL for the new API
   const fetchStreamUrl = async (imdbId: string) => {
     try {
       const response = await fetch(`https://8-stream-api-sable.vercel.app/api/v1/mediaInfo?id=${imdbId}`);
       const data = await response.json();
 
       if (data.success && data.data.playlist.length > 0) {
-        setStreams(data.data.playlist); // Store the playlist
-        
-        // Filter for English streams
-        const englishStreams = data.data.playlist.filter(stream => stream.title.toLowerCase().includes('english'));
-        setEnglishStreams(englishStreams);
+        setStreams(data.data.playlist);
 
-        if (englishStreams.length > 0) {
-          const firstStream = englishStreams[0].file; // Default to the first English stream
-          const key = data.data.key;
-
-          await fetchStream(firstStream, key);
-        }
+        const firstStream = data.data.playlist[0].file;
+        const key = data.data.key;
+        await fetchStream(firstStream, key);
       }
     } catch (error) {
       console.error('Error fetching stream URL:', error);
     }
   };
 
-  // Function to fetch individual stream
-  const fetchStream = async (file: string, key: string) => {
+  const fetchStream = async (file: string, key?: string) => {
     try {
       const streamResponse = await fetch('https://8-stream-api-sable.vercel.app/api/v1/getStream', {
         method: 'POST',
@@ -159,6 +158,10 @@ export default function VideoPlayer({ id }: any) {
     }
   };
 
+  const handleStreamChange = async (file: string, key?: string) => {
+    await fetchStream(file, key || "");
+  };
+
   return (
     <div className="video-player">
       {loading ? (
@@ -169,7 +172,7 @@ export default function VideoPlayer({ id }: any) {
           <div className="video-container">
             <video ref={videoRef} controls width="100%" />
           </div>
-          <Select onValueChange={setSelectedSource} defaultValue={selectedSource}>
+          <Select onValueChange={(value) => setSelectedSource(value as VideoSourceKey)} defaultValue={selectedSource}>
             <SelectTrigger>
               <SelectValue placeholder="Select Video Source" />
             </SelectTrigger>
@@ -181,29 +184,36 @@ export default function VideoPlayer({ id }: any) {
               ))}
             </SelectContent>
           </Select>
-          {/* Hide the related movies section unless there are related movies */}
+          {selectedSource === "newApi" && streams.length > 0 && (
+            <select onChange={(e) => {
+              const selected = streams[e.target.selectedIndex];
+              handleStreamChange(selected.file, selected.key);
+            }}>
+              {streams.map((stream, index) => (
+                <option key={index} value={stream.file}>{stream.title}</option>
+              ))}
+            </select>
+          )}
           {relatedMovies.length > 0 && (
             <div className="related-movies">
               <h3 className="text-lg font-semibold">Related Movies</h3>
-              <Hide show={showRelatedMovies} onToggle={() => setShowRelatedMovies((prev) => !prev)}>
-                <div className="flex overflow-x-auto space-x-4">
-                  {relatedMovies.map((movie) => (
-                    <Link key={movie.id} href={`/movie/${movie.id}`}>
-                      <Image
-                        src={`https://image.tmdb.org/t/p/w500/${movie.poster_path}`}
-                        alt={movie.title}
-                        width={150}
-                        height={225}
-                      />
-                    </Link>
-                  ))}
-                </div>
-              </Hide>
+              <div className="flex overflow-x-auto space-x-4">
+                {relatedMovies.map((movie) => (
+                  <Link key={movie.id} href={`/movie/${movie.id}`}>
+                    <Image
+                      src={`https://image.tmdb.org/t/p/w500/${movie.poster_path}`}
+                      alt={movie.title}
+                      width={150}
+                      height={225}
+                    />
+                  </Link>
+                ))}
+              </div>
             </div>
           )}
         </>
       )}
     </div>
+    
   );
-  
 }

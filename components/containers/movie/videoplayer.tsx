@@ -53,7 +53,7 @@ type Stream = {
   key?: string;
 };
 
-export default function VideoPlayer({ id }: any) {
+export default function VideoPlayer({ id }: { id: string }) {
   const [selectedSource, setSelectedSource] = useState<VideoSourceKey>("vidsrctop");
   const [loading, setLoading] = useState(true);
   const [movieTitle, setMovieTitle] = useState("");
@@ -171,7 +171,7 @@ export default function VideoPlayer({ id }: any) {
           <h2 className="text-lg font-semibold">{movieTitle}</h2>
           <Select
             value={selectedSource}
-            onValueChange={setSelectedSource}
+            onValueChange={(value) => setSelectedSource(value as VideoSourceKey)}
             className="w-full mb-4"
           >
             <SelectTrigger>

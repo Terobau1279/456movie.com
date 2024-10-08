@@ -52,7 +52,7 @@ type Stream = {
 };
 
 export default function VideoPlayer({ id }: { id: string }) {
-  const [selectedSource, setSelectedSource] = useState<VideoSourceKey>("vidsrctop");
+const [selectedSource, setSelectedSource] = useState<VideoSourceKey>(englishStreamAvailable ? "newApi" : "vidsrctop");
   const [loading, setLoading] = useState(true);
   const [movieTitle, setMovieTitle] = useState("");
   const videoRef = useRef<HTMLVideoElement | null>(null);

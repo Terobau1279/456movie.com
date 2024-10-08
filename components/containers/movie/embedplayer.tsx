@@ -116,6 +116,7 @@ export default function VideoPlayer({ id }: any) {
     fetchMovieDetails();
   }, [id]);
 
+  
   const fetchStreamUrl = async (imdbId: string) => {
     try {
       const response = await fetch(`https://8-stream-api-sable.vercel.app/api/v1/mediaInfo?id=${imdbId}`);

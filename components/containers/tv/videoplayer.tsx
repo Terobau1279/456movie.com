@@ -11,7 +11,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import Link from "next/link";
-import Hide from "./hide";
 
 const TMDB_API_KEY = 'a46c50a0ccb1bafe2b15665df7fad7e1';
 const READ_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhNDZjNTBhMGNjYjFiYWZlMmIxNTY2NWRmN2ZhZDdlMSIsIm5iZiI6MTcyODMyNzA3Ni43OTE0NTUsInN1YiI6IjY2YTBhNTNmYmNhZGE0NjNhNmJmNjljZCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.BNhRdFagBrpQaazN_AWUNr_SRani4pHlYYuffuf2-Os';
@@ -59,7 +58,6 @@ export default function VideoPlayer({ id }: any) {
   const [loading, setLoading] = useState(true);
   const [movieTitle, setMovieTitle] = useState("");
   const [relatedMovies, setRelatedMovies] = useState<any[]>([]);
-  const [showRelatedMovies, setShowRelatedMovies] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [streams, setStreams] = useState<Stream[]>([]);
   const [imdbId, setImdbId] = useState<string | null>(null);
@@ -116,7 +114,6 @@ export default function VideoPlayer({ id }: any) {
     fetchMovieDetails();
   }, [id]);
 
-  
   const fetchStreamUrl = async (imdbId: string) => {
     try {
       const response = await fetch(`https://8-stream-api-sable.vercel.app/api/v1/mediaInfo?id=${imdbId}`);
@@ -200,25 +197,22 @@ export default function VideoPlayer({ id }: any) {
           {relatedMovies.length > 0 && (
             <div className="related-movies">
               <h3 className="text-lg font-semibold">Related Movies</h3>
-              <Hide show={showRelatedMovies} onToggle={() => setShowRelatedMovies((prev) => !prev)}>
-                <div className="flex overflow-x-auto space-x-4">
-                  {relatedMovies.map((movie) => (
-                    <Link key={movie.id} href={`/movie/${movie.id}`}>
-                      <Image
-                        src={`https://image.tmdb.org/t/p/w500/${movie.poster_path}`}
-                        alt={movie.title}
-                        width={150}
-                        height={225}
-                      />
-                    </Link>
-                  ))}
-                </div>
-              </Hide>
+              <div className="flex overflow-x-auto space-x-4">
+                {relatedMovies.map((movie) => (
+                  <Link key={movie.id} href={`/movie/${movie.id}`}>
+                    <Image
+                      src={`https://image.tmdb.org/t/p/w500/${movie.poster_path}`}
+                      alt={movie.title}
+                      width={150}
+                      height={225}
+                    />
+                  </Link>
+                ))}
+              </div>
             </div>
           )}
         </>
       )}
     </div>
   );
-  
 }

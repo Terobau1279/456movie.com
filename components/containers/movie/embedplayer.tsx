@@ -46,7 +46,12 @@ type VideoSourceKey =
   | "embedccMovie"
   | "twoembed"
   | "vidsrctop"
-  | "newApi"; 
+  | "newApi";
+
+type Stream = {
+  file: string;
+  title: string;
+};
 
 export default function VideoPlayer({ id }: any) {
   const [selectedSource, setSelectedSource] = useState<VideoSourceKey>("vidsrctop");
@@ -55,9 +60,9 @@ export default function VideoPlayer({ id }: any) {
   const [relatedMovies, setRelatedMovies] = useState<any[]>([]);
   const [showRelatedMovies, setShowRelatedMovies] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [streams, setStreams] = useState<any[]>([]);
+  const [streams, setStreams] = useState<Stream[]>([]);
   const [imdbId, setImdbId] = useState<string | null>(null);
-  const [englishStreams, setEnglishStreams] = useState<any[]>([]);
+  const [englishStreams, setEnglishStreams] = useState<Stream[]>([]);
 
   const videoSources: Record<VideoSourceKey, string> = {
     vidlinkpro: `${obfuscatedVideoSources["vidlinkpro"]}${id}`,
@@ -118,7 +123,7 @@ export default function VideoPlayer({ id }: any) {
 
       if (data.success && data.data.playlist.length > 0) {
         setStreams(data.data.playlist);
-        const englishStreams = data.data.playlist.filter(stream => stream.title.toLowerCase().includes('english'));
+        const englishStreams = data.data.playlist.filter((stream: Stream) => stream.title.toLowerCase().includes('english'));
         setEnglishStreams(englishStreams);
 
         if (englishStreams.length > 0) {

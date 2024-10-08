@@ -56,9 +56,7 @@ export default function VideoPlayer({ id }: { id: string }) {
   const [loading, setLoading] = useState(true);
   const [movieTitle, setMovieTitle] = useState("");
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [streams, setStreams] = useState<Stream[]>([]);
   const [imdbId, setImdbId] = useState<string | null>(null);
-  const [selectedStream, setSelectedStream] = useState<string>("");
   const hlsRef = useRef<Hls | null>(null);
 
   const videoSources: Record<VideoSourceKey, string> = {
@@ -113,12 +111,15 @@ export default function VideoPlayer({ id }: { id: string }) {
       const data = await response.json();
 
       if (data.success && data.data.playlist.length > 0) {
-        setStreams(data.data.playlist);
-
         const englishStream = data.data.playlist.find((stream: Stream) => stream.title === "English");
-        const defaultStream = englishStream || data.data.playlist[0];
-        setSelectedStream(defaultStream.file);
-        await fetchStream(defaultStream.file, data.data.key);
+        const hindiStream = data.data.playlist.find((stream: Stream) => stream.title === "Hindi");
+        const defaultStream = englishStream || hindiStream;
+
+        if (defaultStream) {
+          await fetchStream(defaultStream.file, data.data.key);
+        } else {
+          console.error('No suitable stream found');
+        }
       }
     } catch (error) {
       console.error('Error fetching stream URL:', error);
@@ -159,11 +160,6 @@ export default function VideoPlayer({ id }: { id: string }) {
     }
   };
 
-  const handleStreamChange = async (file: string, key?: string) => {
-    setSelectedStream(file);
-    await fetchStream(file, key || "");
-  };
-
   useEffect(() => {
     return () => {
       if (hlsRef.current) {
@@ -197,36 +193,11 @@ export default function VideoPlayer({ id }: { id: string }) {
             </Select>
           </div>
           {selectedSource === "newApi" ? (
-            <div>
-              {streams.length > 0 && (
-                <div className="mb-4">
-                  <h3 className="mb-2">Available Streams:</h3>
-                  <Select
-                    value={selectedStream}
-                    onValueChange={(value) => {
-                      const stream = streams.find((s) => s.file === value);
-                      if (stream) handleStreamChange(stream.file, stream.key);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a stream" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {streams.map((stream) => (
-                        <SelectItem key={stream.title} value={stream.file}>
-                          {stream.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-              <video
-                ref={videoRef}
-                controls
-                className="w-full h-[450px]"
-              />
-            </div>
+            <video
+              ref={videoRef}
+              controls
+              className="w-full h-[450px]"
+            />
           ) : (
             <iframe
               src={videoSources[selectedSource]}

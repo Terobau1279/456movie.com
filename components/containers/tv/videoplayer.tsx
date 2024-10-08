@@ -13,7 +13,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Download } from "lucide-react";
 import Link from "next/link";
 import { API_KEY } from "@/config/url";
-import { MOVIES } from 'flixhq-core';
+import { MOVIES } from "flixhq-core"; // Importing flixhq-core
+
+const flixhq = new MOVIES.FlixHQ();
 
 interface Season {
   season_number: number;
@@ -24,16 +26,15 @@ interface Episode {
   episode_number: number;
   name: string;
 }
+
 export default function VideoPlayer({ id }: { id: number }) {
   const [seasons, setSeasons] = React.useState<Season[]>([]);
   const [episodes, setEpisodes] = React.useState<Episode[]>([]);
   const [season, setSeason] = React.useState("1");
   const [episode, setEpisode] = React.useState("1");
-  const [streamUrl, setStreamUrl] = React.useState<string | null>(null); // New state for the stream URL
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
-  
-  const flixhq = new MOVIES.FlixHQ();  // Initialize the flixhq-core API
+  const [flixhqSources, setFlixhqSources] = React.useState<string[]>([]);
 
   React.useEffect(() => {
     fetchSeasons();
@@ -46,10 +47,10 @@ export default function VideoPlayer({ id }: { id: number }) {
   }, [season]);
 
   React.useEffect(() => {
-    if (season && episode) {
-      fetchStreamUrl(id, season, episode);  // Fetch stream URL when season or episode changes
+    if (episode) {
+      fetchFlixHQSources();
     }
-  }, [season, episode]);
+  }, [episode]);
 
   async function fetchSeasons() {
     setIsLoading(true);
@@ -102,18 +103,18 @@ export default function VideoPlayer({ id }: { id: number }) {
     }
   }
 
-  // Fetch stream URL from FlixHQ
-  async function fetchStreamUrl(mediaId: number, season: string, episode: string) {
+  async function fetchFlixHQSources() {
+    setIsLoading(true);
+    setError(null);
     try {
-      const sources = await flixhq.fetchEpisodeSources(`tv/${mediaId}`, `${season}-${episode}`);
-      if (sources && sources.sources.length > 0) {
-        setStreamUrl(sources.sources[0].url);  // Set the first available source URL
-      } else {
-        setStreamUrl(null);
-      }
-    } catch (error) {
-      console.error("Error fetching stream URL:", error);
-      setStreamUrl(null);
+      const data = await flixhq.fetchEpisodeSources(`tv/watch-${id}`, episode);
+      setFlixhqSources(data.sources || []);
+    } catch (error: unknown) {
+      console.error("Error fetching FlixHQ sources:", error);
+      setFlixhqSources([]);
+      setError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -138,6 +139,7 @@ export default function VideoPlayer({ id }: { id: number }) {
     <div className="py-8">
       <div className="pb-4">
         <div className="flex flex-col text-center items-center justify-center">
+          {/* Season and Episode Select */}
           <div className="rounded-md pl-4 flex w-full max-w-sm items-center space-x-2">
             <div className="flex items-center space-x-2">
               <Select
@@ -146,21 +148,19 @@ export default function VideoPlayer({ id }: { id: number }) {
                 disabled={isLoading || seasons.length === 0}
               >
                 <SelectTrigger className="px-4 py-2 rounded-md w-[180px]">
-                  <SelectValue placeholder="Select Season" />
+                  <SelectValue placeholder="Select Video Source" />
                 </SelectTrigger>
                 <SelectContent>
-                  {seasons.length > 0 ? (
-                    seasons.map((s) => (
-                      <SelectItem
-                        key={s.season_number}
-                        value={s.season_number.toString()}
-                      >
-                        Season {s.season_number}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <></>
-                  )}
+                  {seasons.length > 0
+                    ? seasons.map((s) => (
+                        <SelectItem
+                          key={s.season_number}
+                          value={s.season_number.toString()}
+                        >
+                          Season {s.season_number}
+                        </SelectItem>
+                      ))
+                    : null}
                 </SelectContent>
               </Select>
             </div>
@@ -171,25 +171,24 @@ export default function VideoPlayer({ id }: { id: number }) {
                 disabled={isLoading || episodes.length === 0}
               >
                 <SelectTrigger className="px-4 py-2 rounded-md w-[180px]">
-                  <SelectValue placeholder="Select Episode" />
+                  <SelectValue placeholder="Select Video Source" />
                 </SelectTrigger>
                 <SelectContent>
-                  {episodes.length > 0 ? (
-                    episodes.map((s) => (
-                      <SelectItem
-                        key={s.episode_number}
-                        value={s.episode_number.toString()}
-                      >
-                        Episode {s.episode_number}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <></>
-                  )}
+                  {episodes.length > 0
+                    ? episodes.map((s) => (
+                        <SelectItem
+                          key={s.episode_number}
+                          value={s.episode_number.toString()}
+                        >
+                          Episode {s.episode_number}
+                        </SelectItem>
+                      ))
+                    : null}
                 </SelectContent>
               </Select>
             </div>
           </div>
+
           <div className="pt-2">
             <Link href={`https://dl.vidsrc.vip/tv/${id}/${season}/${episode}`}>
               <Badge
@@ -203,13 +202,20 @@ export default function VideoPlayer({ id }: { id: number }) {
           </div>
         </div>
       </div>
+
+      {/* Tabs for different sources */}
       <Tabs defaultValue="autoembed">
         <div className="flex flex-col items-center">
           <TabsList>
             <TabsTrigger value="autoembed">AutoEmbed</TabsTrigger>
+            <TabsTrigger value="vidsrcpro">VidSrc.Pro</TabsTrigger>
+            <TabsTrigger value="vidsrc">VidSrc</TabsTrigger>
+            <TabsTrigger value="superembed">SuperEmbed</TabsTrigger>
             <TabsTrigger value="flixhq">FlixHQ</TabsTrigger>
           </TabsList>
         </div>
+
+        {/* Existing Players */}
         <TabsContent value="autoembed">
           <iframe
             src={`https://player.autoembed.cc/embed/tv/${id}/${season}/${episode}`}
@@ -221,19 +227,50 @@ export default function VideoPlayer({ id }: { id: number }) {
             className="max-w-3xl mx-auto px-4 pt-10"
           ></iframe>
         </TabsContent>
+        <TabsContent value="vidsrcpro">
+          <iframe
+            src={`https://vidsrc.pro/embed/tv/${id}/${season}/${episode}`}
+            referrerPolicy="origin"
+            allowFullScreen
+            width="100%"
+            height="450"
+            scrolling="no"
+            className="max-w-3xl mx-auto px-4 pt-10"
+          ></iframe>
+        </TabsContent>
+        <TabsContent value="vidsrc">
+          <iframe
+            src={`https://vidsrc.in/embed/tv/${id}/${season}/${episode}`}
+            referrerPolicy="origin"
+            allowFullScreen
+            width="100%"
+            height="450"
+            scrolling="no"
+            className="max-w-3xl mx-auto px-4 pt-10"
+          ></iframe>
+        </TabsContent>
+        <TabsContent value="superembed">
+          <iframe
+            src={`https://multiembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}`}
+            referrerPolicy="origin"
+            allowFullScreen
+            width="100%"
+            height="450"
+            scrolling="no"
+            className="max-w-3xl mx-auto px-4 pt-10"
+          ></iframe>
+        </TabsContent>
+
+        {/* New FlixHQ Player */}
         <TabsContent value="flixhq">
-          {streamUrl ? (
-            <iframe
-              src={streamUrl}
-              referrerPolicy="origin"
-              allowFullScreen
-              width="100%"
-              height="450"
-              scrolling="no"
-              className="max-w-3xl mx-auto px-4 pt-10"
-            ></iframe>
+          {flixhqSources.length > 0 ? (
+            <video controls className="w-full max-w-3xl h-[450px] mx-auto">
+              {flixhqSources.map((source, index) => (
+                <source key={index} src={source} />
+              ))}
+            </video>
           ) : (
-            <div>No streaming source available.</div>
+            <div className="text-center pt-10">No sources available.</div>
           )}
         </TabsContent>
       </Tabs>

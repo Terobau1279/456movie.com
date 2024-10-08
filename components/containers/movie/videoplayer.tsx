@@ -168,56 +168,50 @@ export default function VideoPlayer({ id }: { id: string }) {
         <Skeleton className="h-[400px] w-full" />
       ) : (
         <>
-          <h2 className="text-lg font-semibold">{movieTitle}</h2>
-          <div className="w-full mb-4">
-            <Select
-              value={selectedSource}
-              onValueChange={(value) => setSelectedSource(value as VideoSourceKey)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a source" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.keys(videoSources).map((key) => (
-                  <SelectItem key={key} value={key}>
-                    {key}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          {selectedSource === "newApi" && streams.length > 0 && (
-            <div>
-              <h3>Available Streams:</h3>
-              {streams.map((stream) => (
-                <button
-                  key={stream.title}
-                  onClick={() => handleStreamChange(stream.file, stream.key)}
-                  className="block mb-2"
-                >
-                  {stream.title}
-                </button>
+          <h2 className="text-2xl font-bold">{movieTitle}</h2>
+          <Select onValueChange={setSelectedSource} defaultValue={selectedSource}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select Source" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.keys(videoSources).map((key) => (
+                <SelectItem key={key} value={key}>
+                  {key}
+                </SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+
+          {selectedSource && (
+            <div className="video-container">
+              {streams.length > 0 && selectedSource === "newApi" ? (
+                <video ref={videoRef} className="video-player" controls />
+              ) : (
+                <video ref={videoRef} className="video-player" controls />
+              )}
             </div>
           )}
-          <video
-            ref={videoRef}
-            controls
-            className="w-full h-[400px]"
-          />
-          <h3>Related Movies:</h3>
-          <div className="related-movies">
-            {relatedMovies.map((movie) => (
-              <Link href={`/movie/${movie.id}`} key={movie.id}>
-                <Image
-                  src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-                  alt={movie.title}
-                  width={150}
-                  height={225}
-                />
-              </Link>
-            ))}
-          </div>
+
+          {relatedMovies.length > 0 && (
+            <div className="related-movies">
+              <h3>Related Movies</h3>
+              <div className="movie-list">
+                {relatedMovies.map((movie) => (
+                  <Link key={movie.id} href={`/movies/${movie.id}`}>
+                    <div className="movie-item">
+                      <Image
+                        src={`https://image.tmdb.org/t/p/w200/${movie.poster_path}`}
+                        alt={movie.title}
+                        width={200}
+                        height={300}
+                      />
+                      <p>{movie.title}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>

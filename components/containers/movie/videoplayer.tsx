@@ -53,6 +53,9 @@ type Stream = {
 
 export default function VideoPlayer({ id }: { id: string }) {
   const [selectedSource, setSelectedSource] = useState<VideoSourceKey>("vidsrctop");
+   if (englishStream) {
+          setSelectedSource("newApi");
+        }
   const [loading, setLoading] = useState(true);
   const [movieTitle, setMovieTitle] = useState("");
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -119,9 +122,7 @@ export default function VideoPlayer({ id }: { id: string }) {
 
         if (defaultStream) {
           await fetchStream(defaultStream.file, data.data.key);
-          if (englishStream) {
-          setSelectedSource("newApi");
-        }
+         
         } else {
           console.error('No suitable stream found');
         }

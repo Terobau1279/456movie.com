@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 const TMDB_API_KEY = 'a46c50a0ccb1bafe2b15665df7fad7e1';
 const READ_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhNDZjNTBhMGNjYjFiYWZlMmIxNTY2NWRmN2ZhZDdlMSIsIm5iZiI6MTcyODMyNzA3Ni43OTE0NTUsInN1YiI6IjY2YTBhNTNmYmNhZGE0NjNhNmJmNjljZCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.BNhRdFagBrpQaazN_AWUNr_SRani4pHlYYuffuf2-Os';
 
+
 const obfuscatedVideoSources = {
   vidlinkpro: atob("aHR0cHM6Ly92aWRsaW5rLnByby9tb3ZpZS8="),
   vidsrccc: atob("aHR0cHM6Ly92aWRzcmMuY2MvdjMvZW1iZWQvbW92aWUv"),
@@ -62,6 +63,7 @@ export default function VideoPlayer({ id }: { id: string }) {
   const hlsRef = useRef<Hls | null>(null);
   const [qualityLevels, setQualityLevels] = useState<{ level: number, label: string }[]>([]);
   const [selectedQuality, setSelectedQuality] = useState<number>(-1);
+const [selectedSource, setSelectedSource] = useState<VideoSourceKey>(englishStreamAvailable ? "newApi" : "vidsrctop");
 
   const videoSources: Record<VideoSourceKey, string> = {
     vidlinkpro: `${obfuscatedVideoSources["vidlinkpro"]}${id}`,
@@ -144,7 +146,6 @@ export default function VideoPlayer({ id }: { id: string }) {
       }
 
       const streamUrl = streamData.data.link;
-const [selectedSource, setSelectedSource] = useState<VideoSourceKey>(englishStreamAvailable ? "newApi" : "vidsrctop");
       if (Hls.isSupported() && videoRef.current) {
         if (hlsRef.current) {
           hlsRef.current.destroy();

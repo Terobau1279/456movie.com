@@ -164,10 +164,11 @@ export default function VideoPlayer({ id }: { id: string }) {
 
             setQualityLevels(availableQualities);
 
-            // Set default quality to 1080p if available, otherwise the highest
-            const defaultQualityIndex = levels.findIndex(level => level.height === 1080);
-            hlsRef.current.currentLevel = defaultQualityIndex !== -1 ? defaultQualityIndex : levels.length - 1;
-            setSelectedQuality(hlsRef.current.currentLevel);
+            // Set default quality to the maximum available
+            const maxQualityIndex = levels.reduce((maxIndex, level, index) => 
+              level.height > levels[maxIndex].height ? index : maxIndex, 0);
+            hlsRef.current.currentLevel = maxQualityIndex;
+            setSelectedQuality(maxQualityIndex);
 
             videoRef.current?.play();
           }

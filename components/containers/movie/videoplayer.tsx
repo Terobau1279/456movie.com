@@ -58,6 +58,8 @@ export default function VideoPlayer({ id }: { id: string }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [imdbId, setImdbId] = useState<string | null>(null);
   const hlsRef = useRef<Hls | null>(null);
+  const [qualityLevels, setQualityLevels] = useState<number[]>([]);
+  const [selectedQuality, setSelectedQuality] = useState<number>(-1);
 
   const videoSources: Record<VideoSourceKey, string> = {
     vidlinkpro: `${obfuscatedVideoSources["vidlinkpro"]}${id}`,
@@ -154,9 +156,10 @@ export default function VideoPlayer({ id }: { id: string }) {
         hlsRef.current.attachMedia(videoRef.current);
         hlsRef.current.on(Hls.Events.MANIFEST_PARSED, () => {
           if (hlsRef.current) {
-            hlsRef.current.currentLevel = hlsRef.current.levels.length - 1; // Set to highest quality
+            setQualityLevels(hlsRef.current.levels.map((level, index) => index));
+            setSelectedQuality(hlsRef.current.currentLevel);
+            videoRef.current?.play();
           }
-          videoRef.current?.play();
         });
       } else if (videoRef.current?.canPlayType('application/vnd.apple.mpegurl')) {
         videoRef.current.src = streamUrl;
@@ -164,6 +167,13 @@ export default function VideoPlayer({ id }: { id: string }) {
       }
     } catch (error) {
       console.error('Error fetching stream:', error);
+    }
+  };
+
+  const handleQualityChange = (level: number) => {
+    if (hlsRef.current) {
+      hlsRef.current.currentLevel = level;
+      setSelectedQuality(level);
     }
   };
 
@@ -200,11 +210,32 @@ export default function VideoPlayer({ id }: { id: string }) {
             </Select>
           </div>
           {selectedSource === "newApi" ? (
-            <video
-              ref={videoRef}
-              controls
-              className="w-full h-[450px]"
-            />
+            <div>
+              <video
+                ref={videoRef}
+                controls
+                className="w-full h-[450px]"
+              />
+              {qualityLevels.length > 0 && (
+                <div className="mt-4">
+                  <Select
+                    value={selectedQuality.toString()}
+                    onValueChange={(value) => handleQualityChange(Number(value))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select quality" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {qualityLevels.map((level) => (
+                        <SelectItem key={level} value={level.toString()}>
+                          {`Quality ${level + 1}`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
           ) : (
             <iframe
               src={videoSources[selectedSource]}

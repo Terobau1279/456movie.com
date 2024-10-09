@@ -69,18 +69,15 @@ export default function VideoPlayer({ id }: { id: number }) {
     if (streamUrl && videoRef.current) {
       if (server === "hls" && Hls.isSupported()) {
         hls = new Hls({
-          maxBufferLength: 1200000000000000000,
-          maxBufferSize: 100000000000000000 * 1000 * 1000,
-          maxMaxBufferLength: 180000000000000000000000,
-          capLevelToPlayerSize: true,
-          startLevel: -1,
-          autoStartLoad: true,
+          maxBufferLength: 1200000000000000000, // Larger buffer to avoid rebuffering
+          maxBufferSize: 100000000000000000 * 1000 * 1000, // Increase buffer size to 100MB
+          maxMaxBufferLength: 180000000000000000000000, // Set maximum allowed buffer length to 180 seconds
+          capLevelToPlayerSize: true, // Ensure adaptive quality based on player size
+          startLevel: -1, // Automatically start at the highest quality
+          autoStartLoad: true, // Automatically load and play the stream
         });
         hls.loadSource(streamUrl);
         hls.attachMedia(videoRef.current);
-      } else if (videoRef.current) {
-        // For non-HLS servers, set the iframe source
-        videoRef.current.src = "";
       }
 
       return () => {
@@ -162,6 +159,7 @@ export default function VideoPlayer({ id }: { id: number }) {
   }
 
   const getIframeSrc = () => {
+    if (server === "hls") return ""; // HLS doesn't require an iframe source
     switch (server) {
       case "vidlinkpro":
         return `https://vidlink.pro/tv/${id}/${season}/${episode}?primaryColor=#FFFFFF&secondaryColor=#FFFFFF&iconColor=#FFFFFF&autoplay=true&nextbutton=true`;
@@ -206,20 +204,22 @@ export default function VideoPlayer({ id }: { id: number }) {
               </SelectTrigger>
               <SelectContent>
                 {seasons.map((season) => (
-                  <SelectItem key={season.season_number} value={season.season_number.toString()}>
-                    Season {season.season_number} ({season.episode_count} Episodes)
+                  <SelectItem key={season.season_number} value={String(season.season_number)}>
+                    Season {season.season_number}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div className="rounded-md pl-4 flex w-full max-w-sm items-center space-x-2">
             <Select onValueChange={setEpisode} defaultValue={episode}>
               <SelectTrigger>
                 <SelectValue placeholder="Select Episode" />
               </SelectTrigger>
               <SelectContent>
-                {episodes.map((ep) => (
-                  <SelectItem key={ep.episode_number} value={ep.episode_number.toString()}>
-                    {ep.name}
+                {episodes.map((episode) => (
+                  <SelectItem key={episode.episode_number} value={String(episode.episode_number)}>
+                    Episode {episode.episode_number}: {episode.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -228,34 +228,50 @@ export default function VideoPlayer({ id }: { id: number }) {
         </div>
       </div>
 
-      {/* Video Player Section */}
-      <div className="flex justify-center">
-        {server === "hls" ? (
-          <video
-            ref={videoRef}
-            controls
-            style={{ width: "100%", height: "100%" }}
-            className="aspect-video"
-          >
-            Your browser does not support the video tag.
-          </video>
+      {/* Video Player */}
+      <div className="relative">
+        {streamUrl ? (
+          <>
+            <video
+              ref={videoRef}
+              className="w-full h-auto"
+              controls
+              autoPlay
+              playsInline
+              controlsList="nodownload"
+              poster={`https://image.tmdb.org/t/p/w500/${id}.jpg`}
+            />
+            {server !== "hls" && (
+              <iframe
+                src={getIframeSrc()}
+                width="100%"
+                height="500"
+                style={{ border: "none" }}
+                title="Video Player"
+                allowFullScreen
+              />
+            )}
+          </>
         ) : (
-          <iframe
-            src={getIframeSrc()}
-            title={`Video Player for Episode ${episode}`}
-            width="100%"
-            height="500"
-            frameBorder="0"
-            allowFullScreen
-          />
+          <p>{isStreamLoading ? "Loading stream..." : streamError || "No stream available."}</p>
         )}
-      </div>
 
-      {/* Error and Loading States */}
-      {isLoading && <p>Loading...</p>}
-      {error && <p>Error: {error}</p>}
-      {isStreamLoading && <p>Loading stream...</p>}
-      {streamError && <p>Stream Error: {streamError}</p>}
+        {/* Server Selection */}
+        <div className="flex justify-center mt-4">
+          <Select onValueChange={setServer} defaultValue={server}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select Server" />
+            </SelectTrigger>
+            <SelectContent>
+              {servers.map((server) => (
+                <SelectItem key={server.value} value={server.value}>
+                  {server.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
     </div>
   );
 }

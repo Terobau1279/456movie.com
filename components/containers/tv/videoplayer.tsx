@@ -18,6 +18,23 @@ interface Episode {
   name: string;
 }
 
+const servers = [
+  { label: "HLS Stream", value: "hls" },
+  { label: "VidLink Pro", value: "vidlinkpro" },
+  { label: "Vidsrc", value: "vidsrc" },
+  { label: "VidBinge 4K", value: "vidbinge4K" },
+  { label: "Smashy Stream", value: "smashystream" },
+  { label: "Vidsrc Pro", value: "vidsrcpro" },
+  { label: "Super Embed", value: "superembed" },
+  { label: "Vidsrc ICU", value: "vidsrcicu" },
+  { label: "Vidsrc NL", value: "vidsrcnl" },
+  { label: "Nontongo", value: "nontongo" },
+  { label: "Vidsrc XYZ", value: "vidsrcxyz" },
+  { label: "2Embed CC TV", value: "embedcctv" },
+  { label: "Two Embed", value: "twoembed" },
+  { label: "Vidsrc Top", value: "vidsrctop" },
+];
+
 export default function VideoPlayer({ id }: { id: number }) {
   const [seasons, setSeasons] = React.useState<Season[]>([]);
   const [episodes, setEpisodes] = React.useState<Episode[]>([]);
@@ -28,6 +45,7 @@ export default function VideoPlayer({ id }: { id: number }) {
   const [streamUrl, setStreamUrl] = React.useState<string | null>(null);
   const [isStreamLoading, setIsStreamLoading] = React.useState(false);
   const [streamError, setStreamError] = React.useState<string | null>(null);
+  const [server, setServer] = React.useState("hls"); // Default to HLS stream
   const videoRef = React.useRef<HTMLVideoElement>(null);
   let hls: Hls | null = null;
 
@@ -45,12 +63,11 @@ export default function VideoPlayer({ id }: { id: number }) {
     if (episode) {
       fetchStreamUrl();
     }
-  }, [episode]);
+  }, [episode, server]); // Fetch stream URL on server change
 
-  
   React.useEffect(() => {
     if (streamUrl && videoRef.current) {
-      if (Hls.isSupported()) {
+      if (server === "hls" && Hls.isSupported()) {
         hls = new Hls({
           maxBufferLength: 1200000000000000000, // Larger buffer to avoid rebuffering
           maxBufferSize: 100000000000000000 * 1000 * 1000, // Increase buffer size to 100MB
@@ -61,6 +78,8 @@ export default function VideoPlayer({ id }: { id: number }) {
         });
         hls.loadSource(streamUrl);
         hls.attachMedia(videoRef.current);
+      } else if (server !== "hls" && videoRef.current) {
+        videoRef.current.src = getIframeSrc();
       } else if (videoRef.current.canPlayType("application/vnd.apple.mpegurl")) {
         videoRef.current.src = streamUrl;
       }
@@ -71,7 +90,7 @@ export default function VideoPlayer({ id }: { id: number }) {
         }
       };
     }
-  }, [streamUrl]);
+  }, [streamUrl, server]);
 
   async function fetchSeasons() {
     setIsLoading(true);
@@ -122,14 +141,19 @@ export default function VideoPlayer({ id }: { id: number }) {
     setIsStreamLoading(true);
     setStreamError(null);
     try {
-      const res = await fetch(
-        `https://hehebwaiiiijqsdfioaf.vercel.app/vidlink/watch?isMovie=false&id=${id}&episode=${episode}&season=${season}`
-      );
-      if (!res.ok) {
-        throw new Error("Failed to fetch stream.");
+      if (server === "hls") {
+        const res = await fetch(
+          `https://hehebwaiiiijqsdfioaf.vercel.app/vidlink/watch?isMovie=false&id=${id}&episode=${episode}&season=${season}`
+        );
+        if (!res.ok) {
+          throw new Error("Failed to fetch stream.");
+        }
+        const data = await res.json();
+        setStreamUrl(data.stream.playlist);
+      } else {
+        // For iframe sources, no need to fetch here
+        setStreamUrl(null);
       }
-      const data = await res.json();
-      setStreamUrl(data.stream.playlist);
     } catch (error: unknown) {
       setStreamUrl(null);
       setStreamError(error instanceof Error ? error.message : "Unknown error occurred.");
@@ -138,63 +162,107 @@ export default function VideoPlayer({ id }: { id: number }) {
     }
   }
 
+  const getIframeSrc = () => {
+    switch (server) {
+      case "vidlinkpro":
+        return `https://vidlink.pro/tv/${id}/${season}/${episode}?primaryColor=#FFFFFF&secondaryColor=#FFFFFF&iconColor=#FFFFFF&autoplay=true&nextbutton=true`;
+      case "vidsrc":
+        return `https://vidsrc.cc/v3/embed/tv/${id}/${season}/${episode}?autoPlay=true&autoNext=true&poster=true`;
+      case "vidbinge4K":
+        return `https://vidbinge.dev/embed/tv/${id}/${season}/${episode}`;
+      case "smashystream":
+        return `https://player.smashy.stream/tv/${id}?s=${season}&e=${episode}`;
+      case "vidsrcpro":
+        return `https://embed.su/embed/tv/${id}/${season}/${episode}`;
+      case "superembed":
+        return `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}`;
+      case "vidsrcicu":
+        return `https://vidsrc.icu/embed/tv/${id}/${season}/${episode}`;
+      case "vidsrcnl":
+        return `https://player.vidsrc.nl/embed/tv/${id}/${season}/${episode}?server=hindi`;
+      case "nontongo":
+        return `https://www.nontongo.win/embed/tv/${id}/${season}/${episode}`;
+      case "vidsrcxyz":
+        return `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${season}&episode=${episode}`;
+      case "embedcctv":
+        return `https://www.2embed.cc/embed/tv/${id}/${season}/${episode}`;
+      case "twoembed":
+        return `https://2embed.org/embed/tv/${id}/${season}/${episode}`;
+      case "vidsrctop":
+        return `https://embed.su/embed/tv/${id}/${season}/${episode}`;
+      default:
+        return `https://vidsrc.cc/v3/embed/tv/${id}/${season}/${episode}?autoPlay=true&autoNext=true&poster=true`;
+    }
+  };
+
   return (
     <div className="py-8">
       {/* Season and Episode Select */}
       <div className="pb-4">
         <div className="flex flex-col text-center items-center justify-center">
           <div className="rounded-md pl-4 flex w-full max-w-sm items-center space-x-2">
-            {/* Season Selector */}
-            <Select value={season} onValueChange={(e) => setSeason(e)} disabled={isLoading || seasons.length === 0}>
-              <SelectTrigger className="px-4 py-2 rounded-md w-[180px]">
+            <Select onValueChange={setSeason} defaultValue={season}>
+              <SelectTrigger>
                 <SelectValue placeholder="Select Season" />
               </SelectTrigger>
               <SelectContent>
-                {seasons.map((s) => (
-                  <SelectItem key={s.season_number} value={s.season_number.toString()}>
-                    Season {s.season_number}
+                {seasons.map((season) => (
+                  <SelectItem key={season.season_number} value={season.season_number.toString()}>
+                    {season.name || `Season ${season.season_number}`}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-
-            {/* Episode Selector */}
-            <Select value={episode} onValueChange={(e) => setEpisode(e)} disabled={isLoading || episodes.length === 0}>
-              <SelectTrigger className="px-4 py-2 rounded-md w-[180px]">
+            <Select onValueChange={setEpisode} defaultValue={episode}>
+              <SelectTrigger>
                 <SelectValue placeholder="Select Episode" />
               </SelectTrigger>
               <SelectContent>
-                {episodes.map((e) => (
-                  <SelectItem key={e.episode_number} value={e.episode_number.toString()}>
-                    Episode {e.episode_number}
+                {episodes.map((episode) => (
+                  <SelectItem key={episode.episode_number} value={episode.episode_number.toString()}>
+                    {episode.name || `Episode ${episode.episode_number}`}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          </div>
-
-          <div className="pt-2">
-            <Link href={`https://dl.vidsrc.vip/tv/${id}/${season}/${episode}`}>
-              <Badge variant="outline" className="cursor-pointer whitespace-nowrap">
-                <Download className="mr-1.5" size={12} />
-                Download {season}-{episode}
-              </Badge>
-            </Link>
           </div>
         </div>
       </div>
 
-      
-      {/* HLS Player */}
-      {isStreamLoading ? (
-        <div>Loading stream...</div>
-      ) : streamError ? (
-        <div className="text-center text-red-500">{streamError}</div>
-      ) : streamUrl ? (
-        <video ref={videoRef} controls className="w-full h-auto max-w-3xl mx-auto" />
-      ) : (
-        <div>No stream available</div>
-      )}
+      {/* Stream Selector */}
+      <div className="pb-4">
+        <div className="flex flex-col text-center items-center justify-center">
+          <Select onValueChange={setServer} defaultValue={server}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select Stream Server" />
+            </SelectTrigger>
+            <SelectContent>
+              {servers.map((server) => (
+                <SelectItem key={server.value} value={server.value}>
+                  {server.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Video Player */}
+      <div className="flex justify-center">
+        {isLoading ? (
+          <p>Loading...</p>
+        ) : error ? (
+          <p>Error: {error}</p>
+        ) : (
+          <div className="w-full max-w-4xl">
+            <video ref={videoRef} className="w-full rounded-md" controls>
+              <track kind="subtitles" />
+            </video>
+            {streamError && <p>Error: {streamError}</p>}
+            {isStreamLoading && <p>Loading stream...</p>}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

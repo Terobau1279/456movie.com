@@ -1,10 +1,6 @@
 "use client";
 import * as React from "react";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Download } from "lucide-react";
-import Link from "next/link";
-import Hls from "hls.js";
 import { API_KEY } from "@/config/url";
 
 interface Season {
@@ -42,12 +38,8 @@ export default function VideoPlayer({ id }: { id: number }) {
   const [episode, setEpisode] = React.useState("1");
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
-  const [streamUrl, setStreamUrl] = React.useState<string | null>(null);
-  const [isStreamLoading, setIsStreamLoading] = React.useState(false);
-  const [streamError, setStreamError] = React.useState<string | null>(null);
   const [server, setServer] = React.useState("hls"); // Default to HLS stream
   const videoRef = React.useRef<HTMLVideoElement>(null);
-  let hls: Hls | null = null;
 
   React.useEffect(() => {
     fetchSeasons();
@@ -59,42 +51,38 @@ export default function VideoPlayer({ id }: { id: number }) {
     }
   }, [season]);
 
-  React.useEffect(() => {
-    if (episode) {
-      fetchStreamUrl();
+  const getIframeSrc = () => {
+    switch (server) {
+      case "vidlinkpro":
+        return `https://vidlink.pro/tv/${id}/${season}/${episode}?primaryColor=#FFFFFF&secondaryColor=#FFFFFF&iconColor=#FFFFFF&autoplay=true&nextbutton=true`;
+      case "vidsrc":
+        return `https://vidsrc.cc/v3/embed/tv/${id}/${season}/${episode}?autoPlay=true&autoNext=true&poster=true`;
+      case "vidbinge4K":
+        return `https://vidbinge.dev/embed/tv/${id}/${season}/${episode}`;
+      case "smashystream":
+        return `https://player.smashy.stream/tv/${id}?s=${season}&e=${episode}`;
+      case "vidsrcpro":
+        return `https://embed.su/embed/tv/${id}/${season}/${episode}`;
+      case "superembed":
+        return `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}`;
+      case "vidsrcicu":
+        return `https://vidsrc.icu/embed/tv/${id}/${season}/${episode}`;
+      case "vidsrcnl":
+        return `https://player.vidsrc.nl/embed/tv/${id}/${season}/${episode}?server=hindi`;
+      case "nontongo":
+        return `https://www.nontongo.win/embed/tv/${id}/${season}/${episode}`;
+      case "vidsrcxyz":
+        return `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${season}&episode=${episode}`;
+      case "embedcctv":
+        return `https://www.2embed.cc/embed/tv/${id}/${season}/${episode}`;
+      case "twoembed":
+        return `https://2embed.org/embed/tv/${id}/${season}/${episode}`;
+      case "vidsrctop":
+        return `https://embed.su/embed/tv/${id}/${season}/${episode}`;
+      default:
+        return null; // Or a default URL if needed
     }
-  }, [episode, server]); // Fetch stream URL on server change
-
-  React.useEffect(() => {
-    if (streamUrl && videoRef.current) {
-      if (server === "hls" && Hls.isSupported()) {
-        hls = new Hls({
-          maxBufferLength: 1200000000000000000, // Larger buffer to avoid rebuffering
-          maxBufferSize: 100000000000000000 * 1000 * 1000, // Increase buffer size to 100MB
-          maxMaxBufferLength: 180000000000000000000000, // Set maximum allowed buffer length to 180 seconds
-          capLevelToPlayerSize: true, // Ensure adaptive quality based on player size
-          startLevel: -1, // Automatically start at the highest quality
-          autoStartLoad: true, // Automatically load and play the stream
-        });
-        hls.loadSource(streamUrl);
-        hls.attachMedia(videoRef.current);
-      } else {
-        // Destroy HLS if it exists when not using HLS server
-        if (hls) {
-          hls.destroy();
-          hls = null; // Reset HLS instance
-        }
-        // For iframe sources
-        videoRef.current.src = getIframeSrc();
-      }
-
-      return () => {
-        if (hls) {
-          hls.destroy();
-        }
-      };
-    }
-  }, [streamUrl, server]);
+  };
 
   async function fetchSeasons() {
     setIsLoading(true);
@@ -141,64 +129,6 @@ export default function VideoPlayer({ id }: { id: number }) {
     }
   }
 
-  async function fetchStreamUrl() {
-    setIsStreamLoading(true);
-    setStreamError(null);
-    try {
-      if (server === "hls") {
-        const res = await fetch(
-          `https://hehebwaiiiijqsdfioaf.vercel.app/vidlink/watch?isMovie=false&id=${id}&episode=${episode}&season=${season}`
-        );
-        if (!res.ok) {
-          throw new Error("Failed to fetch stream.");
-        }
-        const data = await res.json();
-        setStreamUrl(data.stream.playlist);
-      } else {
-        // For iframe sources, no need to fetch here
-        setStreamUrl(null);
-      }
-    } catch (error: unknown) {
-      setStreamUrl(null);
-      setStreamError(error instanceof Error ? error.message : "Unknown error occurred.");
-    } finally {
-      setIsStreamLoading(false);
-    }
-  }
-
-  const getIframeSrc = () => {
-    switch (server) {
-      case "vidlinkpro":
-        return `https://vidlink.pro/tv/${id}/${season}/${episode}?primaryColor=#FFFFFF&secondaryColor=#FFFFFF&iconColor=#FFFFFF&autoplay=true&nextbutton=true`;
-      case "vidsrc":
-        return `https://vidsrc.cc/v3/embed/tv/${id}/${season}/${episode}?autoPlay=true&autoNext=true&poster=true`;
-      case "vidbinge4K":
-        return `https://vidbinge.dev/embed/tv/${id}/${season}/${episode}`;
-      case "smashystream":
-        return `https://player.smashy.stream/tv/${id}?s=${season}&e=${episode}`;
-      case "vidsrcpro":
-        return `https://embed.su/embed/tv/${id}/${season}/${episode}`;
-      case "superembed":
-        return `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}`;
-      case "vidsrcicu":
-        return `https://vidsrc.icu/embed/tv/${id}/${season}/${episode}`;
-      case "vidsrcnl":
-        return `https://player.vidsrc.nl/embed/tv/${id}/${season}/${episode}?server=hindi`;
-      case "nontongo":
-        return `https://www.nontongo.win/embed/tv/${id}/${season}/${episode}`;
-      case "vidsrcxyz":
-        return `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${season}&episode=${episode}`;
-      case "embedcctv":
-        return `https://www.2embed.cc/embed/tv/${id}/${season}/${episode}`;
-      case "twoembed":
-        return `https://2embed.org/embed/tv/${id}/${season}/${episode}`;
-      case "vidsrctop":
-        return `https://embed.su/embed/tv/${id}/${season}/${episode}`;
-      default:
-        return `https://vidsrc.cc/v3/embed/tv/${id}/${season}/${episode}?autoPlay=true&autoNext=true&poster=true`;
-    }
-  };
-
   return (
     <div className="flex flex-col items-center">
       {isLoading && <p>Loading seasons...</p>}
@@ -229,9 +159,6 @@ export default function VideoPlayer({ id }: { id: number }) {
           />
         )}
       </div>
-
-      {isStreamLoading && <p>Loading stream...</p>}
-      {streamError && <p>Error: {streamError}</p>}
 
       <div>
         <h2>Select Season:</h2>

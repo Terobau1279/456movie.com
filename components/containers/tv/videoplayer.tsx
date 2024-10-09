@@ -1,14 +1,11 @@
 "use client";
 import * as React from "react";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "@/components/ui/select";
-import { API_KEY } from "@/config/url";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Download } from "lucide-react";
+import Link from "next/link";
 import Hls from "hls.js";
+import { API_KEY } from "@/config/url";
 
 interface Season {
   season_number: number;
@@ -48,7 +45,7 @@ export default function VideoPlayer({ id }: { id: number }) {
   const [streamUrl, setStreamUrl] = React.useState<string | null>(null);
   const [isStreamLoading, setIsStreamLoading] = React.useState(false);
   const [streamError, setStreamError] = React.useState<string | null>(null);
-  const [server, setServer] = React.useState("hls");
+  const [server, setServer] = React.useState("hls"); // Default to HLS stream
   const videoRef = React.useRef<HTMLVideoElement>(null);
   let hls: Hls | null = null;
 
@@ -66,54 +63,50 @@ export default function VideoPlayer({ id }: { id: number }) {
     if (episode) {
       fetchStreamUrl();
     }
-  }, [episode, server]);
+  }, [episode, server]); // Fetch stream URL on server change
 
   React.useEffect(() => {
-    if (streamUrl && videoRef.current && server === "hls") {
-      if (Hls.isSupported()) {
-        hls = new Hls();
+    if (streamUrl && videoRef.current) {
+      if (server === "hls" && Hls.isSupported()) {
+        hls = new Hls({
+          maxBufferLength: 1200000000000000000,
+          maxBufferSize: 100000000000000000 * 1000 * 1000,
+          maxMaxBufferLength: 180000000000000000000000,
+          capLevelToPlayerSize: true,
+          startLevel: -1,
+          autoStartLoad: true,
+        });
         hls.loadSource(streamUrl);
         hls.attachMedia(videoRef.current);
-        hls.on(Hls.Events.MANIFEST_PARSED, function () {
-          videoRef.current?.play();
-        });
-      } else if (videoRef.current.canPlayType("application/vnd.apple.mpegurl")) {
-        videoRef.current.src = streamUrl; // For Safari support
-        videoRef.current.addEventListener("loadedmetadata", function () {
-          videoRef.current?.play();
-        });
+      } else if (videoRef.current) {
+        // For non-HLS servers, set the iframe source
+        videoRef.current.src = "";
       }
-    }
 
-    return () => {
-      if (hls) {
-        hls.destroy();
-      }
-    };
+      return () => {
+        if (hls) {
+          hls.destroy();
+        }
+      };
+    }
   }, [streamUrl, server]);
 
   async function fetchSeasons() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(
-        `https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}`
-      );
+      const response = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}`);
       const data = await response.json();
       if (data.success === false) {
         throw new Error(data.status_message || "Failed to fetch seasons");
       }
-      const relevantSeasons = data.seasons.filter(
-        (s: any) => s.season_number > 0
-      );
+      const relevantSeasons = data.seasons.filter((s: any) => s.season_number > 0);
       setSeasons(relevantSeasons || []);
       if (relevantSeasons.length > 0) {
         setSeason(relevantSeasons[0].season_number.toString());
       }
     } catch (error: unknown) {
-      setError(
-        error instanceof Error ? error.message : String(error)
-      );
+      setError(error instanceof Error ? error.message : String(error));
       setSeasons([]);
     } finally {
       setIsLoading(false);
@@ -136,9 +129,7 @@ export default function VideoPlayer({ id }: { id: number }) {
         setEpisode(data.episodes[0].episode_number.toString());
       }
     } catch (error: unknown) {
-      setError(
-        error instanceof Error ? error.message : String(error)
-      );
+      setError(error instanceof Error ? error.message : String(error));
       setEpisodes([]);
     } finally {
       setIsLoading(false);
@@ -164,9 +155,7 @@ export default function VideoPlayer({ id }: { id: number }) {
       }
     } catch (error: unknown) {
       setStreamUrl(null);
-      setStreamError(
-        error instanceof Error ? error.message : "Unknown error occurred."
-      );
+      setStreamError(error instanceof Error ? error.message : "Unknown error occurred.");
     } finally {
       setIsStreamLoading(false);
     }
@@ -218,7 +207,7 @@ export default function VideoPlayer({ id }: { id: number }) {
               <SelectContent>
                 {seasons.map((season) => (
                   <SelectItem key={season.season_number} value={season.season_number.toString()}>
-                    Season {season.season_number} - {season.name}
+                    Season {season.season_number} ({season.episode_count} Episodes)
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -230,19 +219,7 @@ export default function VideoPlayer({ id }: { id: number }) {
               <SelectContent>
                 {episodes.map((ep) => (
                   <SelectItem key={ep.episode_number} value={ep.episode_number.toString()}>
-                    Episode {ep.episode_number} - {ep.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select onValueChange={setServer} defaultValue={server}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Server" />
-              </SelectTrigger>
-              <SelectContent>
-                {servers.map((server) => (
-                  <SelectItem key={server.value} value={server.value}>
-                    {server.label}
+                    {ep.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -251,35 +228,34 @@ export default function VideoPlayer({ id }: { id: number }) {
         </div>
       </div>
 
-      {/* Video Player */}
-      {isLoading ? (
-        <div>Loading...</div>
-      ) : error ? (
-        <div>{error}</div>
-      ) : (
-        <div className="relative w-full aspect-w-16 aspect-h-9">
-          {server === "hls" ? (
-            <video
-              ref={videoRef}
-              controls
-              autoPlay
-              className="absolute top-0 left-0 w-full h-full"
-            >
-              Your browser does not support the video tag.
-            </video>
-          ) : (
-            <iframe
-              src={getIframeSrc()}
-              frameBorder="0"
-              allowFullScreen
-              title="Video Player"
-              className="absolute top-0 left-0 w-full h-full"
-            />
-          )}
-          {isStreamLoading && <div>Loading stream...</div>}
-          {streamError && <div>{streamError}</div>}
-        </div>
-      )}
+      {/* Video Player Section */}
+      <div className="flex justify-center">
+        {server === "hls" ? (
+          <video
+            ref={videoRef}
+            controls
+            style={{ width: "100%", height: "100%" }}
+            className="aspect-video"
+          >
+            Your browser does not support the video tag.
+          </video>
+        ) : (
+          <iframe
+            src={getIframeSrc()}
+            title={`Video Player for Episode ${episode}`}
+            width="100%"
+            height="500"
+            frameBorder="0"
+            allowFullScreen
+          />
+        )}
+      </div>
+
+      {/* Error and Loading States */}
+      {isLoading && <p>Loading...</p>}
+      {error && <p>Error: {error}</p>}
+      {isStreamLoading && <p>Loading stream...</p>}
+      {streamError && <p>Stream Error: {streamError}</p>}
     </div>
   );
 }

@@ -29,6 +29,7 @@ export default function VideoPlayer({ id }: { id: number }) {
   const [isStreamLoading, setIsStreamLoading] = React.useState(false);
   const [streamError, setStreamError] = React.useState<string | null>(null);
   const videoRef = React.useRef<HTMLVideoElement>(null);
+  let hls: Hls | null = null;
 
   React.useEffect(() => {
     fetchSeasons();
@@ -47,16 +48,27 @@ export default function VideoPlayer({ id }: { id: number }) {
   }, [episode]);
 
   React.useEffect(() => {
-    if (streamUrl && videoRef.current && Hls.isSupported()) {
-      const hls = new Hls();
-      hls.loadSource(streamUrl);
-      hls.attachMedia(videoRef.current);
+    if (streamUrl && videoRef.current) {
+      if (Hls.isSupported()) {
+        hls = new Hls({
+          maxBufferLength: 1200, // Larger buffer to avoid rebuffering
+          maxBufferSize: 1000 * 1000 * 1000, // Increase buffer size to 100MB
+          maxMaxBufferLength: 1800, // Set maximum allowed buffer length to 180 seconds
+          capLevelToPlayerSize: true, // Ensure adaptive quality based on player size
+          startLevel: -1, // Automatically start at the highest quality
+          autoStartLoad: true, // Automatically load and play the stream
+        });
+        hls.loadSource(streamUrl);
+        hls.attachMedia(videoRef.current);
+      } else if (videoRef.current.canPlayType("application/vnd.apple.mpegurl")) {
+        videoRef.current.src = streamUrl;
+      }
 
       return () => {
-        hls.destroy();
+        if (hls) {
+          hls.destroy();
+        }
       };
-    } else if (videoRef.current) {
-      videoRef.current.src = streamUrl || "";
     }
   }, [streamUrl]);
 

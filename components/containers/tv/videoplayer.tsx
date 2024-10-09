@@ -51,9 +51,9 @@ export default function VideoPlayer({ id }: { id: number }) {
     if (streamUrl && videoRef.current) {
       if (Hls.isSupported()) {
         hls = new Hls({
-          maxBufferLength: 1200000000000000000, // Larger buffer to avoid rebuffering
-          maxBufferSize: 100000000000000000 * 1000 * 1000, // Increase buffer size to 100MB
-          maxMaxBufferLength: 180000000000000000000000, // Set maximum allowed buffer length to 180 seconds
+          maxBufferLength: 12000, // Larger buffer to avoid rebuffering
+          maxBufferSize: 10000 * 1000 * 1000, // Increase buffer size to 100MB
+          maxMaxBufferLength: 18000, // Set maximum allowed buffer length to 180 seconds
           capLevelToPlayerSize: true, // Ensure adaptive quality based on player size
           startLevel: -1, // Automatically start at the highest quality
           autoStartLoad: true, // Automatically load and play the stream

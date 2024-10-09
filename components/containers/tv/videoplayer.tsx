@@ -51,15 +51,12 @@ export default function VideoPlayer({ id }: { id: number }) {
     if (streamUrl && videoRef.current) {
       if (Hls.isSupported()) {
         hls = new Hls({
-          maxBufferLength: 6000000000, // Buffer 10 minutes of video to prevent rebuffering
-          maxBufferSize: 300000 * 1000 * 1000, // Increase buffer size to 300MB
-          maxMaxBufferLength: 1200000, // Set max buffer length to 20 minutes
-          liveSyncDuration: 400, // Sync time-based duration (4 seconds)
-          liveMaxLatencyDuration: 1000, // Set max latency duration greater than liveSyncDuration
-          capLevelToPlayerSize: true, // Automatically adjust quality based on player size
-          startLevel: -1, // Automatically start at the best possible quality
-          autoStartLoad: true, // Start loading the video automatically
-          lowLatencyMode: true, // Enable low-latency mode for live content
+        maxBufferLength: 1200, // Larger buffer to avoid rebuffering
+          maxBufferSize: 1000 * 1000 * 1000, // Increase buffer size to 100MB
+          maxMaxBufferLength: 1800, // Set maximum allowed buffer length to 180 seconds
+        
+         
+          autoStartLoad: true, // Automatically load and play the stream
         });
         hls.loadSource(streamUrl);
         hls.attachMedia(videoRef.current);

@@ -57,9 +57,33 @@ export default function VideoPlayer({ id }: { id: number }) {
           capLevelToPlayerSize: true, // Ensure adaptive quality based on player size
           startLevel: -1, // Automatically start at the highest quality
           autoStartLoad: true, // Automatically load and play the stream
+          liveSyncDurationCount: 3, // How many segments to sync to live
+          bufferFlushingTime: 0.5, // Buffer flushing time
         });
         hls.loadSource(streamUrl);
         hls.attachMedia(videoRef.current);
+
+        hls.on(Hls.Events.ERROR, function (event, data) {
+          if (data.fatal) {
+            switch (data.fatal) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                console.error("A network error occurred.");
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                console.error("A media error occurred.");
+                break;
+              case Hls.ErrorTypes.OTHER_ERROR:
+                console.error("An unknown error occurred.");
+                break;
+              default:
+                break;
+            }
+            setStreamError("Error loading stream. Retrying...");
+            setTimeout(() => {
+              fetchStreamUrl(); // Retry fetching the stream after an error
+            }, 5000); // Retry after 5 seconds
+          }
+        });
       } else if (videoRef.current.canPlayType("application/vnd.apple.mpegurl")) {
         videoRef.current.src = streamUrl;
       }

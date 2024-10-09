@@ -55,7 +55,7 @@ export default function VideoPlayer({ id }: { id: number }) {
           maxBufferSize: 300 * 1000 * 1000, // Increase buffer size to 300MB
           maxMaxBufferLength: 1200, // Set max buffer length to 20 minutes
           liveSyncDuration: 4, // Sync time-based duration (4 seconds)
-          liveMaxLatencyDuration: 2, // Max time-based latency of 2 seconds
+          liveMaxLatencyDuration: 10, // Set max latency duration greater than liveSyncDuration
           capLevelToPlayerSize: true, // Automatically adjust quality based on player size
           startLevel: -1, // Automatically start at the best possible quality
           autoStartLoad: true, // Start loading the video automatically

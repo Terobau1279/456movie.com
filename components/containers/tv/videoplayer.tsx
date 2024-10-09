@@ -1,11 +1,8 @@
 "use client";
 import * as React from "react";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Download } from "lucide-react";
-import Link from "next/link";
-import Hls from "hls.js";
 import { API_KEY } from "@/config/url";
+import Hls from "hls.js";
 
 interface Season {
   season_number: number;
@@ -66,26 +63,21 @@ export default function VideoPlayer({ id }: { id: number }) {
   }, [episode, server]); // Fetch stream URL on server change
 
   React.useEffect(() => {
-    if (streamUrl && videoRef.current) {
-      if (server === "hls" && Hls.isSupported()) {
-        hls = new Hls({
-          maxBufferLength: 1200000000000000000, // Larger buffer to avoid rebuffering
-          maxBufferSize: 100000000000000000 * 1000 * 1000, // Increase buffer size to 100MB
-          maxMaxBufferLength: 180000000000000000000000, // Set maximum allowed buffer length to 180 seconds
-          capLevelToPlayerSize: true, // Ensure adaptive quality based on player size
-          startLevel: -1, // Automatically start at the highest quality
-          autoStartLoad: true, // Automatically load and play the stream
-        });
+    if (streamUrl && videoRef.current && server === "hls") {
+      // Initialize HLS.js if the server is HLS
+      if (Hls.isSupported()) {
+        hls = new Hls();
         hls.loadSource(streamUrl);
         hls.attachMedia(videoRef.current);
       }
-
-      return () => {
-        if (hls) {
-          hls.destroy();
-        }
-      };
     }
+
+    return () => {
+      // Destroy HLS instance on cleanup
+      if (hls) {
+        hls.destroy();
+      }
+    };
   }, [streamUrl, server]);
 
   async function fetchSeasons() {
@@ -232,16 +224,17 @@ export default function VideoPlayer({ id }: { id: number }) {
       <div className="relative">
         {streamUrl ? (
           <>
-            <video
-              ref={videoRef}
-              className="w-full h-auto"
-              controls
-              autoPlay
-              playsInline
-              controlsList="nodownload"
-              poster={`https://image.tmdb.org/t/p/w500/${id}.jpg`}
-            />
-            {server !== "hls" && (
+            {server === "hls" ? (
+              <video
+                ref={videoRef}
+                className="w-full h-auto"
+                controls
+                autoPlay
+                playsInline
+                controlsList="nodownload"
+                poster={`https://image.tmdb.org/t/p/w500/${id}.jpg`}
+              />
+            ) : (
               <iframe
                 src={getIframeSrc()}
                 width="100%"

@@ -133,18 +133,21 @@ export default function VideoPlayer({ id }: { id: number }) {
     <div className="flex flex-col items-center">
       {isLoading && <p>Loading seasons...</p>}
       {error && <p>Error: {error}</p>}
-      <Select onValueChange={setServer} defaultValue={server} className="mb-4">
-        <SelectTrigger>
-          <SelectValue placeholder="Select a server" />
-        </SelectTrigger>
-        <SelectContent>
-          {servers.map((srv) => (
-            <SelectItem key={srv.value} value={srv.value}>
-              {srv.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+
+      <div className="mb-4">
+        <Select onValueChange={setServer} defaultValue={server}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select a server" />
+          </SelectTrigger>
+          <SelectContent>
+            {servers.map((srv) => (
+              <SelectItem key={srv.value} value={srv.value}>
+                {srv.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       <div className="video-player">
         {server === "hls" ? (

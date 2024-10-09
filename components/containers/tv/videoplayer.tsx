@@ -38,6 +38,7 @@ export default function VideoPlayer({ id }: { id: number }) {
   const [premiumStreamUrl, setPremiumStreamUrl] = React.useState<string | null>(null);
   const [isPremiumLoading, setIsPremiumLoading] = React.useState(false);
   const [premiumError, setPremiumError] = React.useState<string | null>(null);
+  const videoRef = React.useRef<HTMLVideoElement>(null);
 
   React.useEffect(() => {
     fetchSeasons();
@@ -55,6 +56,20 @@ export default function VideoPlayer({ id }: { id: number }) {
       fetchPremiumStream();
     }
   }, [episode]);
+
+  React.useEffect(() => {
+    if (premiumStreamUrl && videoRef.current && Hls.isSupported()) {
+      const hls = new Hls();
+      hls.loadSource(premiumStreamUrl);
+      hls.attachMedia(videoRef.current);
+
+      return () => {
+        hls.destroy();
+      };
+    } else if (videoRef.current) {
+      videoRef.current.src = premiumStreamUrl || "";
+    }
+  }, [premiumStreamUrl]);
 
   async function fetchSeasons() {
     setIsLoading(true);
@@ -156,47 +171,6 @@ export default function VideoPlayer({ id }: { id: number }) {
     }
   }
 
-  function renderHlsPlayer(streamUrl: string) {
-    const videoRef = React.useRef<HTMLVideoElement>(null);
-
-    React.useEffect(() => {
-      if (videoRef.current && Hls.isSupported()) {
-        const hls = new Hls();
-        hls.loadSource(streamUrl);
-        hls.attachMedia(videoRef.current);
-      } else if (videoRef.current) {
-        videoRef.current.src = streamUrl;
-      }
-    }, [streamUrl]);
-
-    return (
-      <video
-        ref={videoRef}
-        controls
-        className="w-full max-w-3xl h-[450px] mx-auto"
-      >
-        Your browser does not support the video tag.
-      </video>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="py-8 mx-auto max-w-5xl">
-        <Skeleton className="mx-auto px-4 pt-6 w-full h-[500px]" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="py-8 mx-auto max-w-5xl">
-        <Skeleton className="mx-auto px-4 pt-6 w-full h-[500px]" />{" "}
-        <div className="text-center text-red-500">Error: {error}</div>
-      </div>
-    );
-  }
-
   return (
     <div className="py-8">
       {/* Season and Episode Select */}
@@ -282,7 +256,7 @@ export default function VideoPlayer({ id }: { id: number }) {
           ) : premiumError ? (
             <div className="text-center text-red-500">{premiumError}</div>
           ) : premiumStreamUrl ? (
-            renderHlsPlayer(premiumStreamUrl)
+            <video ref={videoRef} controls className="w-full h-auto max-w-3xl mx-auto" />
           ) : (
             <div>No premium stream available</div>
           )}

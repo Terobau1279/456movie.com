@@ -1,8 +1,11 @@
 "use client";
 import * as React from "react";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
-import { API_KEY } from "@/config/url";
+import { Badge } from "@/components/ui/badge";
+import { Download } from "lucide-react";
+import Link from "next/link";
 import Hls from "hls.js";
+import { API_KEY } from "@/config/url";
 
 interface Season {
   season_number: number;
@@ -63,21 +66,34 @@ export default function VideoPlayer({ id }: { id: number }) {
   }, [episode, server]); // Fetch stream URL on server change
 
   React.useEffect(() => {
-    if (streamUrl && videoRef.current && server === "hls") {
-      // Initialize HLS.js if the server is HLS
-      if (Hls.isSupported()) {
-        hls = new Hls();
+    if (streamUrl && videoRef.current) {
+      if (server === "hls" && Hls.isSupported()) {
+        hls = new Hls({
+          maxBufferLength: 1200000000000000000, // Larger buffer to avoid rebuffering
+          maxBufferSize: 100000000000000000 * 1000 * 1000, // Increase buffer size to 100MB
+          maxMaxBufferLength: 180000000000000000000000, // Set maximum allowed buffer length to 180 seconds
+          capLevelToPlayerSize: true, // Ensure adaptive quality based on player size
+          startLevel: -1, // Automatically start at the highest quality
+          autoStartLoad: true, // Automatically load and play the stream
+        });
         hls.loadSource(streamUrl);
         hls.attachMedia(videoRef.current);
+      } else {
+        // Destroy HLS if it exists when not using HLS server
+        if (hls) {
+          hls.destroy();
+          hls = null; // Reset HLS instance
+        }
+        // For iframe sources
+        videoRef.current.src = getIframeSrc();
       }
-    }
 
-    return () => {
-      // Destroy HLS instance on cleanup
-      if (hls) {
-        hls.destroy();
-      }
-    };
+      return () => {
+        if (hls) {
+          hls.destroy();
+        }
+      };
+    }
   }, [streamUrl, server]);
 
   async function fetchSeasons() {
@@ -151,7 +167,6 @@ export default function VideoPlayer({ id }: { id: number }) {
   }
 
   const getIframeSrc = () => {
-    if (server === "hls") return ""; // HLS doesn't require an iframe source
     switch (server) {
       case "vidlinkpro":
         return `https://vidlink.pro/tv/${id}/${season}/${episode}?primaryColor=#FFFFFF&secondaryColor=#FFFFFF&iconColor=#FFFFFF&autoplay=true&nextbutton=true`;
@@ -185,85 +200,55 @@ export default function VideoPlayer({ id }: { id: number }) {
   };
 
   return (
-    <div className="py-8">
-      {/* Season and Episode Select */}
-      <div className="pb-4">
-        <div className="flex flex-col text-center items-center justify-center">
-          <div className="rounded-md pl-4 flex w-full max-w-sm items-center space-x-2">
-            <Select onValueChange={setSeason} defaultValue={season}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Season" />
-              </SelectTrigger>
-              <SelectContent>
-                {seasons.map((season) => (
-                  <SelectItem key={season.season_number} value={String(season.season_number)}>
-                    Season {season.season_number}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="rounded-md pl-4 flex w-full max-w-sm items-center space-x-2">
-            <Select onValueChange={setEpisode} defaultValue={episode}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Episode" />
-              </SelectTrigger>
-              <SelectContent>
-                {episodes.map((episode) => (
-                  <SelectItem key={episode.episode_number} value={String(episode.episode_number)}>
-                    Episode {episode.episode_number}: {episode.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+    <div className="flex flex-col items-center">
+      {isLoading && <p>Loading seasons...</p>}
+      {error && <p>Error: {error}</p>}
+      <Select onValueChange={setServer} defaultValue={server} className="mb-4">
+        <SelectTrigger>
+          <SelectValue placeholder="Select a server" />
+        </SelectTrigger>
+        <SelectContent>
+          {servers.map((srv) => (
+            <SelectItem key={srv.value} value={srv.value}>
+              {srv.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <div className="video-player">
+        {server === "hls" ? (
+          <video ref={videoRef} controls autoPlay style={{ width: "100%", height: "auto" }} />
+        ) : (
+          <iframe
+            title="Video Player"
+            src={getIframeSrc()}
+            frameBorder="0"
+            allowFullScreen
+            style={{ width: "100%", height: "auto" }}
+          />
+        )}
       </div>
 
-      {/* Video Player */}
-      <div className="relative">
-        {streamUrl ? (
-          <>
-            {server === "hls" ? (
-              <video
-                ref={videoRef}
-                className="w-full h-auto"
-                controls
-                autoPlay
-                playsInline
-                controlsList="nodownload"
-                poster={`https://image.tmdb.org/t/p/w500/${id}.jpg`}
-              />
-            ) : (
-              <iframe
-                src={getIframeSrc()}
-                width="100%"
-                height="500"
-                style={{ border: "none" }}
-                title="Video Player"
-                allowFullScreen
-              />
-            )}
-          </>
-        ) : (
-          <p>{isStreamLoading ? "Loading stream..." : streamError || "No stream available."}</p>
-        )}
+      {isStreamLoading && <p>Loading stream...</p>}
+      {streamError && <p>Error: {streamError}</p>}
 
-        {/* Server Selection */}
-        <div className="flex justify-center mt-4">
-          <Select onValueChange={setServer} defaultValue={server}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select Server" />
-            </SelectTrigger>
-            <SelectContent>
-              {servers.map((server) => (
-                <SelectItem key={server.value} value={server.value}>
-                  {server.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div>
+        <h2>Select Season:</h2>
+        {seasons.map((season) => (
+          <button key={season.season_number} onClick={() => setSeason(season.season_number.toString())}>
+            {season.name}
+          </button>
+        ))}
+      </div>
+
+      <div>
+        <h2>Select Episode:</h2>
+        {episodes.map((episode) => (
+          <button key={episode.episode_number} onClick={() => setEpisode(episode.episode_number.toString())}>
+            {episode.name}
+          </button>
+        ))}
       </div>
     </div>
   );

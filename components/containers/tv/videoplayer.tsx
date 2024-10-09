@@ -23,6 +23,7 @@ export default function VideoPlayer({ id }: { id: number }) {
   const [episodes, setEpisodes] = React.useState<Episode[]>([]);
   const [season, setSeason] = React.useState("1");
   const [episode, setEpisode] = React.useState("1");
+  const [quality, setQuality] = React.useState("auto"); // Default quality to auto
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [streamUrl, setStreamUrl] = React.useState<string | null>(null);
@@ -45,7 +46,7 @@ export default function VideoPlayer({ id }: { id: number }) {
     if (episode) {
       fetchStreamUrl();
     }
-  }, [episode]);
+  }, [episode, quality]); // Fetch stream URL again when quality changes
 
   React.useEffect(() => {
     if (streamUrl && videoRef.current) {
@@ -55,7 +56,7 @@ export default function VideoPlayer({ id }: { id: number }) {
           maxBufferSize: 1000 * 1000 * 1000, // Increase buffer size to 100MB
           maxMaxBufferLength: 1800, // Set maximum allowed buffer length to 180 seconds
           capLevelToPlayerSize: true, // Ensure adaptive quality based on player size
-          startLevel: -1, // Automatically start at the highest quality
+          startLevel: quality === "auto" ? -1 : parseInt(quality) - 1, // Set quality based on selection
           autoStartLoad: true, // Automatically load and play the stream
           liveSyncDurationCount: 3, // How many segments to sync to live
           bufferFlushingTime: 0.5, // Buffer flushing time
@@ -194,6 +195,20 @@ export default function VideoPlayer({ id }: { id: number }) {
                 ))}
               </SelectContent>
             </Select>
+
+            {/* Quality Selector */}
+            <Select value={quality} onValueChange={(e) => setQuality(e)} disabled={isLoading}>
+              <SelectTrigger className="px-4 py-2 rounded-md w-[180px]">
+                <SelectValue placeholder="Select Quality" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="auto">Auto</SelectItem>
+                <SelectItem value="1">360p</SelectItem>
+                <SelectItem value="2">480p</SelectItem>
+                <SelectItem value="3">720p</SelectItem>
+                <SelectItem value="4">1080p</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="pt-2">
@@ -213,7 +228,7 @@ export default function VideoPlayer({ id }: { id: number }) {
       ) : streamError ? (
         <div className="text-center text-red-500">{streamError}</div>
       ) : streamUrl ? (
-        <video ref={videoRef} controls className="w-full h-auto max-w-3xl mx-auto" />
+        <video ref={videoRef} controls className="w-full" />
       ) : (
         <div>No stream available</div>
       )}

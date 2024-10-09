@@ -80,7 +80,7 @@ export default function VideoPlayer({ id }: { id: number }) {
       case "vidsrctop":
         return `https://embed.su/embed/tv/${id}/${season}/${episode}`;
       default:
-        return null; // Or a default URL if needed
+        return undefined; // Ensure undefined if no valid server is selected
     }
   };
 
@@ -133,21 +133,18 @@ export default function VideoPlayer({ id }: { id: number }) {
     <div className="flex flex-col items-center">
       {isLoading && <p>Loading seasons...</p>}
       {error && <p>Error: {error}</p>}
-      
-      <div className="mb-4"> {/* Wrapper div for styling */}
-        <Select onValueChange={setServer} defaultValue={server}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select a server" />
-          </SelectTrigger>
-          <SelectContent>
-            {servers.map((srv) => (
-              <SelectItem key={srv.value} value={srv.value}>
-                {srv.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <Select onValueChange={setServer} defaultValue={server} className="mb-4">
+        <SelectTrigger>
+          <SelectValue placeholder="Select a server" />
+        </SelectTrigger>
+        <SelectContent>
+          {servers.map((srv) => (
+            <SelectItem key={srv.value} value={srv.value}>
+              {srv.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
       <div className="video-player">
         {server === "hls" ? (
@@ -155,7 +152,7 @@ export default function VideoPlayer({ id }: { id: number }) {
         ) : (
           <iframe
             title="Video Player"
-            src={getIframeSrc()}
+            src={getIframeSrc() || undefined}  // Handle null and use undefined if no valid URL
             frameBorder="0"
             allowFullScreen
             style={{ width: "100%", height: "auto" }}

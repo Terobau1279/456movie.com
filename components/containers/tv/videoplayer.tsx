@@ -51,38 +51,38 @@ export default function VideoPlayer({ id }: { id: number }) {
     if (streamUrl && videoRef.current) {
       if (Hls.isSupported()) {
         hls = new Hls({
-          // Optimal HLS.js settings for smooth streaming
-          maxBufferLength: 60 * 10, // Buffer for 10 minutes of video
+          maxBufferLength: 600, // Buffer 10 minutes of video to prevent rebuffering
           maxBufferSize: 300 * 1000 * 1000, // Increase buffer size to 300MB
-          maxMaxBufferLength: 60 * 20, // Max buffer length set to 20 minutes
-          liveSyncDurationCount: 4, // Better live sync duration
-          capLevelToPlayerSize: true, // Adjust quality to match player's size
-          startLevel: -1, // Automatically start with the best quality
-          autoStartLoad: true, // Start loading automatically
-          lowLatencyMode: true, // Enable low-latency mode for quick streaming
-          maxLoadingDelay: 4, // Reduce delay in loading next segments
-          liveMaxLatencyDuration: 2, // Reduce live latency for faster streams
-          highBufferWatchdogPeriod: 2, // Flush buffers more aggressively to avoid clogging
+          maxMaxBufferLength: 1200, // Set max buffer length to 20 minutes
+          liveSyncDuration: 4, // Sync time-based duration (4 seconds)
+          liveMaxLatencyDuration: 2, // Max time-based latency of 2 seconds
+          capLevelToPlayerSize: true, // Automatically adjust quality based on player size
+          startLevel: -1, // Automatically start at the best possible quality
+          autoStartLoad: true, // Start loading the video automatically
+          lowLatencyMode: true, // Enable low-latency mode for live content
         });
-        
         hls.loadSource(streamUrl);
         hls.attachMedia(videoRef.current);
 
-        hls.on(Hls.Events.ERROR, (event, data) => {
+        hls.on(Hls.Events.ERROR, function (event, data) {
           if (data.fatal) {
             switch (data.type) {
               case Hls.ErrorTypes.NETWORK_ERROR:
-                console.error("A network error occurred. Retrying...");
+                console.error("A network error occurred.");
                 break;
               case Hls.ErrorTypes.MEDIA_ERROR:
-                console.error("A media error occurred. Retrying...");
+                console.error("A media error occurred.");
+                break;
+              case Hls.ErrorTypes.OTHER_ERROR:
+                console.error("An unknown error occurred.");
                 break;
               default:
-                console.error("An unknown error occurred.");
                 break;
             }
             setStreamError("Error loading stream. Retrying...");
-            setTimeout(() => fetchStreamUrl(), 5000); // Retry after 5 seconds
+            setTimeout(() => {
+              fetchStreamUrl(); // Retry after 5 seconds
+            }, 5000);
           }
         });
       } else if (videoRef.current.canPlayType("application/vnd.apple.mpegurl")) {

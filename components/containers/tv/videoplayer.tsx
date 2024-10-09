@@ -7,11 +7,8 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Download } from "lucide-react";
-import Link from "next/link";
-import Hls from "hls.js";
 import { API_KEY } from "@/config/url";
+import Hls from "hls.js";
 
 interface Season {
   season_number: number;
@@ -51,7 +48,7 @@ export default function VideoPlayer({ id }: { id: number }) {
   const [streamUrl, setStreamUrl] = React.useState<string | null>(null);
   const [isStreamLoading, setIsStreamLoading] = React.useState(false);
   const [streamError, setStreamError] = React.useState<string | null>(null);
-  const [server, setServer] = React.useState("hls"); // Default to HLS stream
+  const [server, setServer] = React.useState("hls");
   const videoRef = React.useRef<HTMLVideoElement>(null);
   let hls: Hls | null = null;
 
@@ -69,29 +66,30 @@ export default function VideoPlayer({ id }: { id: number }) {
     if (episode) {
       fetchStreamUrl();
     }
-  }, [episode, server]); // Fetch stream URL on server change
+  }, [episode, server]);
 
   React.useEffect(() => {
-    if (streamUrl && videoRef.current) {
-      if (server === "hls" && Hls.isSupported()) {
-        hls = new Hls({
-          maxBufferLength: 1200000000000000000,
-          maxBufferSize: 1200000000000000000 * 1000 * 1000, // Increase buffer size to 100MB
-          maxMaxBufferLength: 180000000000000000000000, // Set maximum allowed buffer length to 180 seconds
-          capLevelToPlayerSize: true, // Ensure adaptive quality based on player size
-          startLevel: -1, // Automatically start at the highest quality
-          autoStartLoad: true, // Automatically load and play the stream
-        });
+    if (streamUrl && videoRef.current && server === "hls") {
+      if (Hls.isSupported()) {
+        hls = new Hls();
         hls.loadSource(streamUrl);
         hls.attachMedia(videoRef.current);
+        hls.on(Hls.Events.MANIFEST_PARSED, function () {
+          videoRef.current?.play();
+        });
+      } else if (videoRef.current.canPlayType("application/vnd.apple.mpegurl")) {
+        videoRef.current.src = streamUrl; // For Safari support
+        videoRef.current.addEventListener("loadedmetadata", function () {
+          videoRef.current?.play();
+        });
       }
-
-      return () => {
-        if (hls) {
-          hls.destroy();
-        }
-      };
     }
+
+    return () => {
+      if (hls) {
+        hls.destroy();
+      }
+    };
   }, [streamUrl, server]);
 
   async function fetchSeasons() {
@@ -260,20 +258,24 @@ export default function VideoPlayer({ id }: { id: number }) {
         <div>{error}</div>
       ) : (
         <div className="relative w-full aspect-w-16 aspect-h-9">
-          <video
-            ref={videoRef}
-            controls
-            autoPlay
-            className="absolute top-0 left-0 w-full h-full"
-          >
-            {server === "hls" ? null : (
-              <source src={getIframeSrc()} type="video/mp4" />
-            )}
-            {streamUrl && server === "hls" ? (
-              <source src={streamUrl} type="application/x-mpegURL" />
-            ) : null}
-            Your browser does not support the video tag.
-          </video>
+          {server === "hls" ? (
+            <video
+              ref={videoRef}
+              controls
+              autoPlay
+              className="absolute top-0 left-0 w-full h-full"
+            >
+              Your browser does not support the video tag.
+            </video>
+          ) : (
+            <iframe
+              src={getIframeSrc()}
+              frameBorder="0"
+              allowFullScreen
+              title="Video Player"
+              className="absolute top-0 left-0 w-full h-full"
+            />
+          )}
           {isStreamLoading && <div>Loading stream...</div>}
           {streamError && <div>{streamError}</div>}
         </div>

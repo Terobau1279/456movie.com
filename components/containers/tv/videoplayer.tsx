@@ -34,7 +34,7 @@ export default function VideoPlayer({ id }: { id: number }) {
   const [episode, setEpisode] = React.useState("1");
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
-  const [server, setServer] = React.useState("vidlinkpro");
+  const [server, setServer] = React.useState("hls");
   const [streamUrl, setStreamUrl] = React.useState<string | null>(null);
   const videoRef = React.useRef<HTMLVideoElement | null>(null);
 
@@ -429,7 +429,7 @@ export default function VideoPlayer({ id }: { id: number }) {
                 <span className="text-green-400 text-sm">Personal Favorite</span>
               </SelectItem>
               <SelectItem value="hls">
-                HLS Player
+                Premium
                 <span className="ml-2 text-sm text-green-500">
                   Adaptive Streaming
                 </span>

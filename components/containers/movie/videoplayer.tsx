@@ -1,270 +1,98 @@
-"use client";
-import React, { useState, useEffect, useRef } from "react";
-import Hls from "hls.js";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
+'use client';
+import React, { useEffect, useRef, useState } from 'react';
+import Hls from 'hls.js';
 
-const TMDB_API_KEY = 'a46c50a0ccb1bafe2b15665df7fad7e1';
-const READ_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhNDZjNTBhMGNjYjFiYWZlMmIxNTY2NWRmN2ZhZDdlMSIsIm5iZiI6MTcyODMyNzA3Ni43OTE0NTUsInN1YiI6IjY2YTBhNTNmYmNhZGE0NjNhNmJmNjljZCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.BNhRdFagBrpQaazN_AWUNr_SRani4pHlYYuffuf2-Os';
+interface EmbedPlayerProps {
+  id: string; // TMDb ID for the episode or movie
+  isMovie: boolean; // Is it a movie or a TV show?
+  episode?: number; // For TV shows: episode number
+  season?: number;  // For TV shows: season number
+}
 
-const obfuscatedVideoSources = {
-  vidlinkpro: atob("aHR0cHM6Ly92aWRsaW5rLnByby9tb3ZpZS8="),
-  vidsrccc: atob("aHR0cHM6Ly92aWRzcmMuY2MvdjMvZW1iZWQvbW92aWUv"),
-  vidsrcpro: atob("aHR0cHM6Ly92aWRzcmMucHJvL2VtYmVkL21vdmllLw=="),
-  superembed: atob("aHR0cHM6Ly9tdWx0aWVtYmVkLm1vdi8/dmlkZW9faWQ9"),
-  vidbinge4K: atob("aHR0cHM6Ly92aWRiaW5nZS5kZXYvZW1iZWQvbW92aWUv"),
-  smashystream: atob("aHR0cHM6Ly9wbGF5ZXIuc21hc2h5LnN0cmVhbS9tb3ZpZS8="),
-  vidsrcicu: atob("aHR0cHM6Ly92aWRzcmMuaWN1L2VtYmVkL21vdmllLw=="),
-  vidsrcnl: atob("aHR0cHM6Ly9wbGF5ZXIudmlkc3JjLm5sL2VtYmVkL21vdmllLw=="),
-  nontongo: atob("aHR0cHM6Ly93d3cubm9udG9uZ28ud2luL2VtYmVkL21vdmllLw=="),
-  vidsrcxyz: atob("aHR0cHM6Ly92aWRzcmMueHl6L2VtYmVkL21vdmllP3RtZGI9"),
-  embedccMovie: atob("aHR0cHM6Ly93d3cuMmVtYmVkLmNjL2VtYmVkLw=="),
-  twoembed: atob("aHR0cHM6Ly8yZW1iZWQub3JnL2VtYmVkL21vdmllLw=="),
-  vidsrctop: atob("aHR0cHM6Ly9lbWJlZC5zdS9lbWJlZC9tb3ZpZS8="),
-};
+const EmbedPlayer: React.FC<EmbedPlayerProps> = ({ id = '94997', isMovie = false, episode = 1, season = 1 }) => {
+  const [streamUrl, setStreamUrl] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const apiBaseURL = "https://hehebwaiiiijqsdfioaf.vercel.app"; // Base URL for your Vidlink API
 
-type VideoSourceKey =
-  | "vidlinkpro"
-  | "vidsrccc"
-  | "vidsrcpro"
-  | "superembed"
-  | "vidbinge4K"
-  | "smashystream"
-  | "vidsrcicu"
-  | "vidsrcnl"
-  | "nontongo"
-  | "vidsrcxyz"
-  | "embedccMovie"
-  | "twoembed"
-  | "vidsrctop"
-  | "newApi";
-
-type Stream = {
-  file: string;
-  title: string;
-  key?: string;
-};
-
-export default function VideoPlayer({ id }: { id: string }) {
-  const [selectedSource, setSelectedSource] = useState<VideoSourceKey>("vidlinkpro");
-  const [loading, setLoading] = useState(true);
-  const [movieTitle, setMovieTitle] = useState("");
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [imdbId, setImdbId] = useState<string | null>(null);
-  const hlsRef = useRef<Hls | null>(null);
-  const [qualityLevels, setQualityLevels] = useState<{ level: number, label: string }[]>([]);
-  const [selectedQuality, setSelectedQuality] = useState<number>(-1);
-
-  const videoSources: Record<VideoSourceKey, string> = {
-    vidlinkpro: `${obfuscatedVideoSources["vidlinkpro"]}${id}`,
-    vidsrccc: `${obfuscatedVideoSources["vidsrccc"]}${id}`,
-    vidsrcpro: `${obfuscatedVideoSources["vidsrcpro"]}${id}`,
-    superembed: `${obfuscatedVideoSources["superembed"]}${id}&tmdb=1`,
-    vidbinge4K: `${obfuscatedVideoSources["vidbinge4K"]}${id}`,
-    smashystream: `${obfuscatedVideoSources["smashystream"]}${id}`,
-    vidsrcicu: `${obfuscatedVideoSources["vidsrcicu"]}${id}`,
-    vidsrcnl: `${obfuscatedVideoSources["vidsrcnl"]}${id}?server=hindi`,
-    nontongo: `${obfuscatedVideoSources["nontongo"]}${id}`,
-    vidsrcxyz: `${obfuscatedVideoSources["vidsrcxyz"]}${id}`,
-    embedccMovie: `${obfuscatedVideoSources["embedccMovie"]}${id}`,
-    twoembed: `${obfuscatedVideoSources["twoembed"]}${id}`,
-    vidsrctop: `${obfuscatedVideoSources["vidsrctop"]}${id}`,
-    newApi: "",
-  };
-
-  useEffect(() => {
-    const fetchMovieDetails = async () => {
-      try {
-        const response = await fetch(
-          `https://api.themoviedb.org/3/movie/${id}?api_key=${TMDB_API_KEY}`,
-          {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${READ_ACCESS_TOKEN}`,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-        const data = await response.json();
-        setMovieTitle(data.title || "Unknown Movie");
-        setImdbId(data.imdb_id);
-
-        if (data.imdb_id) {
-          fetchStreamUrl(data.imdb_id);
-        }
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching movie details:", error);
-        setLoading(false);
-      }
-    };
-    fetchMovieDetails();
-  }, [id]);
-
-  const fetchStreamUrl = async (imdbId: string) => {
+  // Fetch the HLS stream URL from the Vidlink API
+  const fetchStreamUrl = async (isMovie: boolean, id: string, episode: number, season: number) => {
     try {
-      const response = await fetch(`https://8-stream-api-sable.vercel.app/api/v1/mediaInfo?id=${imdbId}`);
-      const data = await response.json();
+      const response = await fetch(`${apiBaseURL}/vidlink/watch?isMovie=${isMovie}&id=${id}&episode=${episode}&season=${season}`);
+      const data = await response.json(); // Parse JSON response
 
-      if (data.success && data.data.playlist.length > 0) {
-        const englishStream = data.data.playlist.find((stream: Stream) => stream.title === "English");
+      console.log('Vidlink API response:', data);
 
-        if (englishStream) {
-          setSelectedSource("newApi");
-          await fetchStream(englishStream.file, data.data.key);
-        } else {
-          setSelectedSource("vidlinkpro");
-        }
+      if (data.stream && data.stream.playlist) {
+        setStreamUrl(data.stream.playlist);
+      } else {
+        console.error('Playlist not found in response. Check the structure of the response data.');
+        throw new Error('Playlist not found in response');
       }
     } catch (error) {
       console.error('Error fetching stream URL:', error);
     }
   };
 
-  const fetchStream = async (file: string, key?: string) => {
-    try {
-      const streamResponse = await fetch('https://8-stream-api-sable.vercel.app/api/v1/getStream', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ file, key }),
-      });
+  useEffect(() => {
+    fetchStreamUrl(isMovie, id, episode, season); // Fetch stream URL for the specified episode or movie
+  }, [id, episode, season]);
 
-      const streamData = await streamResponse.json();
-      if (!streamData || !streamData.data || !streamData.data.link) {
-        throw new Error('Invalid stream data');
-      }
+  // Initialize HLS.js player when stream URL is available
+  useEffect(() => {
+    if (streamUrl && videoRef.current) {
+      let hls: Hls | null = null;
 
-      const streamUrl = streamData.data.link;
-
-      if (Hls.isSupported() && videoRef.current) {
-        if (hlsRef.current) {
-          hlsRef.current.destroy();
-        }
-        hlsRef.current = new Hls({
-          autoStartLoad: true,
-          startLevel: -1, // Start with the highest quality
+      if (Hls.isSupported()) {
+        hls = new Hls({
+          lowLatencyMode: true, // Enable low-latency mode for faster seek time
+          maxBufferLength: 120, // Aggressive buffer length for smooth seeking
+          maxBufferSize: 200 * 1000 * 1000, // Larger buffer size for smoother streaming (200MB)
+          maxMaxBufferLength: 240, // Max buffer length for large videos
+          startLevel: -1, // Automatically start at the best available quality
+          liveSyncDurationCount: 1, // Ensure minimal latency for live streams (if any)
+          enableWorker: true, // Enable HLS.js worker for performance optimization
+          appendErrorMaxRetry: 10, // More retries for buffer append failures
+          capLevelOnFPSDrop: true, // Avoid dropping frames under high quality
+          maxFragLookUpTolerance: 0.3, // Fine-tune the seeking tolerance
         });
 
-        hlsRef.current.loadSource(streamUrl);
-        hlsRef.current.attachMedia(videoRef.current);
-        hlsRef.current.on(Hls.Events.MANIFEST_PARSED, () => {
-          if (hlsRef.current) {
-            const levels = hlsRef.current.levels;
-            const availableQualities = levels.map((level, index) => ({
-              level: index,
-              label: `${level.height}p`
-            }));
+        hls.loadSource(streamUrl); // Load the HLS stream into HLS.js
+        hls.attachMedia(videoRef.current);
 
-            setQualityLevels(availableQualities);
+        // Play the video when metadata is loaded
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          videoRef.current?.play();
+        });
 
-            // Set default quality to the maximum available
-            const maxQualityIndex = levels.reduce((maxIndex, level, index) => 
-              level.height > levels[maxIndex].height ? index : maxIndex, 0);
-            hlsRef.current.currentLevel = maxQualityIndex;
-            setSelectedQuality(maxQualityIndex);
-
-            videoRef.current?.play();
+        // Handle seeking to reduce buffering when jumping around
+        hls.on(Hls.Events.FRAG_BUFFERED, () => {
+          if (videoRef.current) {
+            videoRef.current.play();
           }
         });
-      } else if (videoRef.current?.canPlayType('application/vnd.apple.mpegurl')) {
-        videoRef.current.src = streamUrl;
-        videoRef.current?.play();
+
+        hls.on(Hls.Events.BUFFER_APPENDING, () => {
+          console.log("Buffer is being appended to reduce buffering issues.");
+        });
+
+        // Clean up HLS instance on component unmount
+        return () => {
+          if (hls) hls.destroy();
+        };
+      } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
+        videoRef.current.src = streamUrl; // For Safari (supports HLS natively)
+        videoRef.current.addEventListener('loadedmetadata', () => {
+          videoRef.current?.play();
+        });
       }
-    } catch (error) {
-      console.error('Error fetching stream:', error);
     }
-  };
-
-  const handleQualityChange = (level: number) => {
-    if (hlsRef.current) {
-      hlsRef.current.currentLevel = level;
-      setSelectedQuality(level);
-    }
-  };
-
-  useEffect(() => {
-    if (selectedSource === "newApi" && imdbId) {
-      fetchStreamUrl(imdbId);
-    }
-  }, [selectedSource, imdbId]);
-
-  useEffect(() => {
-    return () => {
-      if (hlsRef.current) {
-        hlsRef.current.destroy();
-      }
-    };
-  }, []);
+  }, [streamUrl]);
 
   return (
-    <div className="video-player max-w-3xl mx-auto px-4 pt-6">
-      {loading ? (
-        <Skeleton className="h-[450px] w-full" />
-      ) : (
-        <>
-          <h2 className="text-lg font-semibold">{movieTitle}</h2>
-          <div className="w-full mb-4">
-            <Select
-              value={selectedSource}
-              onValueChange={(value) => setSelectedSource(value as VideoSourceKey)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a source" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.keys(videoSources).map((key) => (
-                  <SelectItem key={key} value={key}>
-                    {key}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          {selectedSource === "newApi" ? (
-            <div>
-              <video
-                ref={videoRef}
-                controls
-                className="w-full h-[450px]"
-              />
-              {qualityLevels.length > 0 && (
-                <div className="mt-4">
-                  <Select
-                    value={selectedQuality.toString()}
-                    onValueChange={(value) => handleQualityChange(Number(value))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select quality" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {qualityLevels.map(({ level, label }) => (
-                        <SelectItem key={level} value={level.toString()}>
-                          {label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-            </div>
-          ) : (
-            <iframe
-              src={videoSources[selectedSource]}
-              allowFullScreen
-              width="100%"
-              height="450"
-              scrolling="no"
-              className="w-full"
-            />
-          )}
-        </>
-      )}
+    <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'black', zIndex: 9999 }}>
+      <video ref={videoRef} controls style={{ width: '100%', height: '100%' }} preload="auto" />
     </div>
   );
-}
+};
+
+export default EmbedPlayer;

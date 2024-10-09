@@ -23,7 +23,6 @@ export default function VideoPlayer({ id }: { id: number }) {
   const [episodes, setEpisodes] = React.useState<Episode[]>([]);
   const [season, setSeason] = React.useState("1");
   const [episode, setEpisode] = React.useState("1");
-  const [quality, setQuality] = React.useState("auto"); // Default quality to auto
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [streamUrl, setStreamUrl] = React.useState<string | null>(null);
@@ -46,42 +45,44 @@ export default function VideoPlayer({ id }: { id: number }) {
     if (episode) {
       fetchStreamUrl();
     }
-  }, [episode, quality]); // Fetch stream URL again when quality changes
+  }, [episode]);
 
   React.useEffect(() => {
     if (streamUrl && videoRef.current) {
       if (Hls.isSupported()) {
         hls = new Hls({
-          maxBufferLength: 1200, // Larger buffer to avoid rebuffering
-          maxBufferSize: 1000 * 1000 * 1000, // Increase buffer size to 100MB
-          maxMaxBufferLength: 1800, // Set maximum allowed buffer length to 180 seconds
-          capLevelToPlayerSize: true, // Ensure adaptive quality based on player size
-          startLevel: quality === "auto" ? -1 : parseInt(quality) - 1, // Set quality based on selection
-          autoStartLoad: true, // Automatically load and play the stream
-          liveSyncDurationCount: 3, // How many segments to sync to live
+          // Optimal HLS.js settings for smooth streaming
+          maxBufferLength: 60 * 10, // Buffer for 10 minutes of video
+          maxBufferSize: 300 * 1000 * 1000, // Increase buffer size to 300MB
+          maxMaxBufferLength: 60 * 20, // Max buffer length set to 20 minutes
+          liveSyncDurationCount: 4, // Better live sync duration
+          capLevelToPlayerSize: true, // Adjust quality to match player's size
+          startLevel: -1, // Automatically start with the best quality
+          autoStartLoad: true, // Start loading automatically
+          lowLatencyMode: true, // Enable low-latency mode for quick streaming
+          maxLoadingDelay: 4, // Reduce delay in loading next segments
+          liveMaxLatencyDuration: 2, // Reduce live latency for faster streams
+          highBufferWatchdogPeriod: 2, // Flush buffers more aggressively to avoid clogging
         });
+        
         hls.loadSource(streamUrl);
         hls.attachMedia(videoRef.current);
 
-        hls.on(Hls.Events.ERROR, function (event, data) {
+        hls.on(Hls.Events.ERROR, (event, data) => {
           if (data.fatal) {
-            switch (data.fatal) {
+            switch (data.type) {
               case Hls.ErrorTypes.NETWORK_ERROR:
-                console.error("A network error occurred.");
+                console.error("A network error occurred. Retrying...");
                 break;
               case Hls.ErrorTypes.MEDIA_ERROR:
-                console.error("A media error occurred.");
-                break;
-              case Hls.ErrorTypes.OTHER_ERROR:
-                console.error("An unknown error occurred.");
+                console.error("A media error occurred. Retrying...");
                 break;
               default:
+                console.error("An unknown error occurred.");
                 break;
             }
             setStreamError("Error loading stream. Retrying...");
-            setTimeout(() => {
-              fetchStreamUrl(); // Retry fetching the stream after an error
-            }, 5000); // Retry after 5 seconds
+            setTimeout(() => fetchStreamUrl(), 5000); // Retry after 5 seconds
           }
         });
       } else if (videoRef.current.canPlayType("application/vnd.apple.mpegurl")) {
@@ -194,20 +195,6 @@ export default function VideoPlayer({ id }: { id: number }) {
                 ))}
               </SelectContent>
             </Select>
-
-            {/* Quality Selector */}
-            <Select value={quality} onValueChange={(e) => setQuality(e)} disabled={isLoading}>
-              <SelectTrigger className="px-4 py-2 rounded-md w-[180px]">
-                <SelectValue placeholder="Select Quality" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="auto">Auto</SelectItem>
-                <SelectItem value="1">360p</SelectItem>
-                <SelectItem value="2">480p</SelectItem>
-                <SelectItem value="3">720p</SelectItem>
-                <SelectItem value="4">1080p</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
 
           <div className="pt-2">
@@ -221,20 +208,16 @@ export default function VideoPlayer({ id }: { id: number }) {
         </div>
       </div>
 
-      {/* Video Player */}
-      <div>
-        {isStreamLoading ? (
-          <div>Loading stream...</div>
-        ) : streamError ? (
-          <div>{streamError}</div>
-        ) : streamUrl ? (
-          <video ref={videoRef} controls className="w-full aspect-video">
-            Your browser does not support the video tag.
-          </video>
-        ) : (
-          <div>No stream available</div>
-        )}
-      </div>
+      {/* HLS Player */}
+      {isStreamLoading ? (
+        <div>Loading stream...</div>
+      ) : streamError ? (
+        <div className="text-center text-red-500">{streamError}</div>
+      ) : streamUrl ? (
+        <video ref={videoRef} controls className="w-full h-auto max-w-3xl mx-auto" />
+      ) : (
+        <div>No stream available</div>
+      )}
     </div>
   );
 }

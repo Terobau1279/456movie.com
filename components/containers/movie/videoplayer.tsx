@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const TMDB_API_KEY = "a46c50a0ccb1bafe2b15665df7fad7e1";
+const TMDB_API_KEY = 'a46c50a0ccb1bafe2b15665df7fad7e1';
 const READ_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhNDZjNTBhMGNjYjFiYWZlMmIxNTY2NWRmN2ZhZDdlMSIsIm5iZiI6MTcyODMyNzA3Ni43OTE0NTUsInN1YiI6IjY2YTBhNTNmYmNhZGE0NjNhNmJmNjljZCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.BNhRdFagBrpQaazN_AWUNr_SRani4pHlYYuffuf2-Os';
 
 const obfuscatedVideoSources = {
@@ -129,17 +129,17 @@ export default function VideoPlayer({ id }: { id: string }) {
     }
   };
 
-  const fetchPremium2StreamUrl = async (tmdbId: string) => {
+  const fetchPremium2Stream = async (tmdbId: string) => {
     try {
       const response = await fetch(`https://hehebwaiiiijqsdfioaf.vercel.app/vidlink/watch?isMovie=true&id=${tmdbId}`);
       const data = await response.json();
 
-      if (data.stream && data.stream.playlist) {
-        setSelectedSource("Premium2");
-        await fetchStream(data.stream.playlist);
+      if (data.stream && data.stream.type === "hls") {
+        const streamUrl = data.stream.playlist;
+        await playStream(streamUrl);
       }
     } catch (error) {
-      console.error('Error fetching Premium 2 stream URL:', error);
+      console.error('Error fetching Premium 2 stream:', error);
     }
   };
 
@@ -157,43 +157,46 @@ export default function VideoPlayer({ id }: { id: string }) {
       }
 
       const streamUrl = streamData.data.link;
-
-      if (Hls.isSupported() && videoRef.current) {
-        if (hlsRef.current) {
-          hlsRef.current.destroy();
-        }
-        hlsRef.current = new Hls({
-          autoStartLoad: true,
-          startLevel: -1, // Start with the highest quality
-        });
-
-        hlsRef.current.loadSource(streamUrl);
-        hlsRef.current.attachMedia(videoRef.current);
-        hlsRef.current.on(Hls.Events.MANIFEST_PARSED, () => {
-          if (hlsRef.current) {
-            const levels = hlsRef.current.levels;
-            const availableQualities = levels.map((level, index) => ({
-              level: index,
-              label: `${level.height}p`
-            }));
-
-            setQualityLevels(availableQualities);
-
-            // Set default quality to the maximum available
-            const maxQualityIndex = levels.reduce((maxIndex, level, index) => 
-              level.height > levels[maxIndex].height ? index : maxIndex, 0);
-            hlsRef.current.currentLevel = maxQualityIndex;
-            setSelectedQuality(maxQualityIndex);
-
-            videoRef.current?.play();
-          }
-        });
-      } else if (videoRef.current?.canPlayType('application/vnd.apple.mpegurl')) {
-        videoRef.current.src = streamUrl;
-        videoRef.current?.play();
-      }
+      await playStream(streamUrl);
     } catch (error) {
       console.error('Error fetching stream:', error);
+    }
+  };
+
+  const playStream = async (streamUrl: string) => {
+    if (Hls.isSupported() && videoRef.current) {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+      }
+      hlsRef.current = new Hls({
+        autoStartLoad: true,
+        startLevel: -1, // Start with the highest quality
+      });
+
+      hlsRef.current.loadSource(streamUrl);
+      hlsRef.current.attachMedia(videoRef.current);
+      hlsRef.current.on(Hls.Events.MANIFEST_PARSED, () => {
+        if (hlsRef.current) {
+          const levels = hlsRef.current.levels;
+          const availableQualities = levels.map((level, index) => ({
+            level: index,
+            label: `${level.height}p`
+          }));
+
+          setQualityLevels(availableQualities);
+
+          // Set default quality to the maximum available
+          const maxQualityIndex = levels.reduce((maxIndex, level, index) => 
+            level.height > levels[maxIndex].height ? index : maxIndex, 0);
+          hlsRef.current.currentLevel = maxQualityIndex;
+          setSelectedQuality(maxQualityIndex);
+
+          videoRef.current?.play();
+        }
+      });
+    } else if (videoRef.current?.canPlayType('application/vnd.apple.mpegurl')) {
+      videoRef.current.src = streamUrl;
+      videoRef.current?.play();
     }
   };
 
@@ -208,7 +211,7 @@ export default function VideoPlayer({ id }: { id: string }) {
     if (selectedSource === "Premium" && imdbId) {
       fetchStreamUrl(imdbId);
     } else if (selectedSource === "Premium2" && imdbId) {
-      fetchPremium2StreamUrl(imdbId);
+      fetchPremium2Stream(imdbId);
     }
   }, [selectedSource, imdbId]);
 

@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const TMDB_API_KEY = "[REDACTED:Generic API Key]";
+const TMDB_API_KEY = 'a46c50a0ccb1bafe2b15665df7fad7e1';
 const READ_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhNDZjNTBhMGNjYjFiYWZlMmIxNTY2NWRmN2ZhZDdlMSIsIm5iZiI6MTcyODMyNzA3Ni43OTE0NTUsInN1YiI6IjY2YTBhNTNmYmNhZGE0NjNhNmJmNjljZCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.BNhRdFagBrpQaazN_AWUNr_SRani4pHlYYuffuf2-Os';
 
 const obfuscatedVideoSources = {
@@ -134,9 +134,43 @@ export default function VideoPlayer({ id }: { id: string }) {
       const response = await fetch(`https://hehebwaiiiijqsdfioaf.vercel.app/vidlink/watch?isMovie=true&id=${tmdbId}`);
       const data = await response.json();
 
-      if (data.stream && data.stream.type === "hls") {
+      if (data && data.stream && data.stream.playlist) {
         const streamUrl = data.stream.playlist;
-        await playStream(streamUrl, "Premium2");
+
+        if (Hls.isSupported() && videoRef.current) {
+          if (hlsRef.current) {
+            hlsRef.current.destroy();
+          }
+          hlsRef.current = new Hls({
+            autoStartLoad: true,
+            startLevel: -1, // Start with the highest quality
+          });
+
+          hlsRef.current.loadSource(streamUrl);
+          hlsRef.current.attachMedia(videoRef.current);
+          hlsRef.current.on(Hls.Events.MANIFEST_PARSED, () => {
+            if (hlsRef.current) {
+              const levels = hlsRef.current.levels;
+              const availableQualities = levels.map((level, index) => ({
+                level: index,
+                label: `${level.height}p`
+              }));
+
+              setQualityLevels(availableQualities);
+
+              // Set default quality to the maximum available
+              const maxQualityIndex = levels.reduce((maxIndex, level, index) => 
+                level.height > levels[maxIndex].height ? index : maxIndex, 0);
+              hlsRef.current.currentLevel = maxQualityIndex;
+              setSelectedQuality(maxQualityIndex);
+
+              videoRef.current?.play();
+            }
+          });
+        } else if (videoRef.current?.canPlayType('application/vnd.apple.mpegurl')) {
+          videoRef.current.src = streamUrl;
+          videoRef.current?.play();
+        }
       }
     } catch (error) {
       console.error('Error fetching Premium 2 stream:', error);
@@ -157,25 +191,14 @@ export default function VideoPlayer({ id }: { id: string }) {
       }
 
       const streamUrl = streamData.data.link;
-      await playStream(streamUrl, "Premium");
-    } catch (error) {
-      console.error('Error fetching stream:', error);
-    }
-  };
 
-  const playStream = async (streamUrl: string, server: string) => {
-    if (streamUrl && videoRef.current) {
-      if (server === "Premium2" && Hls.isSupported()) {
+      if (Hls.isSupported() && videoRef.current) {
         if (hlsRef.current) {
           hlsRef.current.destroy();
         }
         hlsRef.current = new Hls({
-          maxBufferLength: 12000000000000000000000000000000000000000000000,
-          maxBufferSize: 10000000000000000000000000000000000000000000000 * 1000 * 1000,
-          maxMaxBufferLength: 180000000000000000000000000000000000000000000,
-          capLevelToPlayerSize: true,
-          startLevel: -1,
           autoStartLoad: true,
+          startLevel: -1, // Start with the highest quality
         });
 
         hlsRef.current.loadSource(streamUrl);
@@ -203,6 +226,8 @@ export default function VideoPlayer({ id }: { id: string }) {
         videoRef.current.src = streamUrl;
         videoRef.current?.play();
       }
+    } catch (error) {
+      console.error('Error fetching stream:', error);
     }
   };
 
@@ -253,7 +278,7 @@ export default function VideoPlayer({ id }: { id: string }) {
               </SelectContent>
             </Select>
           </div>
-          {selectedSource === "Premium" || selectedSource === "Premium2" ? (
+          {(selectedSource === "Premium" || selectedSource === "Premium2") ? (
             <div>
               <video
                 ref={videoRef}

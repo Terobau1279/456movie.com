@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Download } from "lucide-react";
 import Link from "next/link";
 import { API_KEY } from "@/config/url";
+import Hls from "hls.js";
 
 interface Season {
   season_number: number;
@@ -34,6 +35,9 @@ export default function VideoPlayer({ id }: { id: number }) {
   const [flixhqSources, setFlixhqSources] = React.useState<string[]>([]);
   const [isFlixhqLoading, setIsFlixhqLoading] = React.useState(false);
   const [flixhqError, setFlixhqError] = React.useState<string | null>(null);
+  const [premiumStreamUrl, setPremiumStreamUrl] = React.useState<string | null>(null);
+  const [isPremiumLoading, setIsPremiumLoading] = React.useState(false);
+  const [premiumError, setPremiumError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     fetchSeasons();
@@ -48,6 +52,7 @@ export default function VideoPlayer({ id }: { id: number }) {
   React.useEffect(() => {
     if (episode) {
       fetchFlixHQSources();
+      fetchPremiumStream();
     }
   }, [episode]);
 
@@ -106,21 +111,16 @@ export default function VideoPlayer({ id }: { id: number }) {
     setIsFlixhqLoading(true);
     setFlixhqError(null);
     try {
-      // Assuming mediaId follows the format 'tv/watch-<id>'
       const mediaId = `tv/watch-${id}`;
       const res = await fetch(
         `/api/flixhq/sources?mediaId=${encodeURIComponent(
           mediaId
         )}&episodeId=${encodeURIComponent(episode)}`
       );
-
       if (!res.ok) {
         throw new Error("Failed to fetch FlixHQ sources.");
       }
-
       const data = await res.json();
-
-      // Assuming data.sources is an array of source URLs
       setFlixhqSources(data.sources || []);
     } catch (error: unknown) {
       console.error("Error fetching FlixHQ sources:", error);
@@ -131,6 +131,53 @@ export default function VideoPlayer({ id }: { id: number }) {
     } finally {
       setIsFlixhqLoading(false);
     }
+  }
+
+  async function fetchPremiumStream() {
+    setIsPremiumLoading(true);
+    setPremiumError(null);
+    try {
+      const res = await fetch(
+        `https://hehebwaiiiijqsdfioaf.vercel.app/vidlink/watch?isMovie=false&id=${id}&season=${season}&episode=${episode}`
+      );
+      if (!res.ok) {
+        throw new Error("Failed to fetch premium stream.");
+      }
+      const data = await res.json();
+      setPremiumStreamUrl(data.stream.playlist);
+    } catch (error: unknown) {
+      console.error("Error fetching premium stream:", error);
+      setPremiumStreamUrl(null);
+      setPremiumError(
+        error instanceof Error ? error.message : "Unknown error occurred."
+      );
+    } finally {
+      setIsPremiumLoading(false);
+    }
+  }
+
+  function renderHlsPlayer(streamUrl: string) {
+    const videoRef = React.useRef<HTMLVideoElement>(null);
+
+    React.useEffect(() => {
+      if (videoRef.current && Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(streamUrl);
+        hls.attachMedia(videoRef.current);
+      } else if (videoRef.current) {
+        videoRef.current.src = streamUrl;
+      }
+    }, [streamUrl]);
+
+    return (
+      <video
+        ref={videoRef}
+        controls
+        className="w-full max-w-3xl h-[450px] mx-auto"
+      >
+        Your browser does not support the video tag.
+      </video>
+    );
   }
 
   if (isLoading) {
@@ -152,56 +199,45 @@ export default function VideoPlayer({ id }: { id: number }) {
 
   return (
     <div className="py-8">
+      {/* Season and Episode Select */}
       <div className="pb-4">
         <div className="flex flex-col text-center items-center justify-center">
-          {/* Season and Episode Select */}
           <div className="rounded-md pl-4 flex w-full max-w-sm items-center space-x-2">
-            <div className="flex items-center space-x-2">
-              <Select
-                value={season}
-                onValueChange={(e) => setSeason(e)}
-                disabled={isLoading || seasons.length === 0}
-              >
-                <SelectTrigger className="px-4 py-2 rounded-md w-[180px]">
-                  <SelectValue placeholder="Select Season" />
-                </SelectTrigger>
-                <SelectContent>
-                  {seasons.length > 0
-                    ? seasons.map((s) => (
-                        <SelectItem
-                          key={s.season_number}
-                          value={s.season_number.toString()}
-                        >
-                          Season {s.season_number}
-                        </SelectItem>
-                      ))
-                    : null}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Select
-                value={episode}
-                onValueChange={(e) => setEpisode(e)}
-                disabled={isLoading || episodes.length === 0}
-              >
-                <SelectTrigger className="px-4 py-2 rounded-md w-[180px]">
-                  <SelectValue placeholder="Select Episode" />
-                </SelectTrigger>
-                <SelectContent>
-                  {episodes.length > 0
-                    ? episodes.map((s) => (
-                        <SelectItem
-                          key={s.episode_number}
-                          value={s.episode_number.toString()}
-                        >
-                          Episode {s.episode_number}
-                        </SelectItem>
-                      ))
-                    : null}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Season Selector */}
+            <Select
+              value={season}
+              onValueChange={(e) => setSeason(e)}
+              disabled={isLoading || seasons.length === 0}
+            >
+              <SelectTrigger className="px-4 py-2 rounded-md w-[180px]">
+                <SelectValue placeholder="Select Season" />
+              </SelectTrigger>
+              <SelectContent>
+                {seasons.map((s) => (
+                  <SelectItem key={s.season_number} value={s.season_number.toString()}>
+                    Season {s.season_number}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Episode Selector */}
+            <Select
+              value={episode}
+              onValueChange={(e) => setEpisode(e)}
+              disabled={isLoading || episodes.length === 0}
+            >
+              <SelectTrigger className="px-4 py-2 rounded-md w-[180px]">
+                <SelectValue placeholder="Select Episode" />
+              </SelectTrigger>
+              <SelectContent>
+                {episodes.map((e) => (
+                  <SelectItem key={e.episode_number} value={e.episode_number.toString()}>
+                    Episode {e.episode_number}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="pt-2">
@@ -219,85 +255,36 @@ export default function VideoPlayer({ id }: { id: number }) {
       </div>
 
       {/* Tabs for different sources */}
-      <Tabs defaultValue="autoembed">
-        <div className="flex flex-col items-center">
-          <TabsList>
-            <TabsTrigger value="autoembed">AutoEmbed</TabsTrigger>
-            <TabsTrigger value="vidsrcpro">VidSrc.Pro</TabsTrigger>
-            <TabsTrigger value="vidsrc">VidSrc</TabsTrigger>
-            <TabsTrigger value="superembed">SuperEmbed</TabsTrigger>
-            <TabsTrigger value="flixhq">FlixHQ</TabsTrigger>
-          </TabsList>
-        </div>
+      <Tabs defaultValue="flixhq">
+        <TabsList className="mb-4">
+          <TabsTrigger value="flixhq">FlixHQ</TabsTrigger>
+          <TabsTrigger value="premium">Premium</TabsTrigger>
+        </TabsList>
 
-        {/* Existing Players */}
-        <TabsContent value="autoembed">
-          <iframe
-            src={`https://player.autoembed.cc/embed/tv/${id}/${season}/${episode}`}
-            referrerPolicy="origin"
-            allowFullScreen
-            width="100%"
-            height="450"
-            scrolling="no"
-            className="max-w-3xl mx-auto px-4 pt-10"
-          ></iframe>
-        </TabsContent>
-        <TabsContent value="vidsrcpro">
-          <iframe
-            src={`https://vidsrc.pro/embed/tv/${id}/${season}/${episode}`}
-            referrerPolicy="origin"
-            allowFullScreen
-            width="100%"
-            height="450"
-            scrolling="no"
-            className="max-w-3xl mx-auto px-4 pt-10"
-          ></iframe>
-        </TabsContent>
-        <TabsContent value="vidsrc">
-          <iframe
-            src={`https://vidsrc.in/embed/tv/${id}/${season}/${episode}`}
-            referrerPolicy="origin"
-            allowFullScreen
-            width="100%"
-            height="450"
-            scrolling="no"
-            className="max-w-3xl mx-auto px-4 pt-10"
-          ></iframe>
-        </TabsContent>
-        <TabsContent value="superembed">
-          <iframe
-            src={`https://multiembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}`}
-            referrerPolicy="origin"
-            allowFullScreen
-            width="100%"
-            height="450"
-            scrolling="no"
-            className="max-w-3xl mx-auto px-4 pt-10"
-          ></iframe>
-        </TabsContent>
-
-        {/* New FlixHQ Player */}
+        {/* FlixHQ Source */}
         <TabsContent value="flixhq">
           {isFlixhqLoading ? (
-            <div className="flex justify-center items-center h-[450px]">
-              <Skeleton className="w-full h-full max-w-3xl" />
-            </div>
+            <Skeleton className="w-full max-w-3xl h-[450px] mx-auto" />
           ) : flixhqError ? (
-            <div className="text-center text-red-500 pt-10">
-              Error: {flixhqError}
-            </div>
+            <div className="text-center text-red-500">{flixhqError}</div>
           ) : flixhqSources.length > 0 ? (
-            <video
-              controls
-              className="w-full max-w-3xl h-[450px] mx-auto"
-            >
-              {flixhqSources.map((source, index) => (
-                <source key={index} src={source} />
-              ))}
-              Your browser does not support the video tag.
-            </video>
+            // Assuming you already have code for handling flixhq sources
+            <div className="flixhq-player">FlixHQ player goes here</div>
           ) : (
-            <div className="text-center pt-10">No sources available.</div>
+            <div>No sources available</div>
+          )}
+        </TabsContent>
+
+        {/* Premium API Source */}
+        <TabsContent value="premium">
+          {isPremiumLoading ? (
+            <Skeleton className="w-full max-w-3xl h-[450px] mx-auto" />
+          ) : premiumError ? (
+            <div className="text-center text-red-500">{premiumError}</div>
+          ) : premiumStreamUrl ? (
+            renderHlsPlayer(premiumStreamUrl)
+          ) : (
+            <div>No premium stream available</div>
           )}
         </TabsContent>
       </Tabs>

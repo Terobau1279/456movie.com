@@ -59,7 +59,6 @@ export default function VideoPlayer({ id }: { id: number }) {
           startLevel: quality === "auto" ? -1 : parseInt(quality) - 1, // Set quality based on selection
           autoStartLoad: true, // Automatically load and play the stream
           liveSyncDurationCount: 3, // How many segments to sync to live
-          bufferFlushingTime: 0.5, // Buffer flushing time
         });
         hls.loadSource(streamUrl);
         hls.attachMedia(videoRef.current);
@@ -222,16 +221,20 @@ export default function VideoPlayer({ id }: { id: number }) {
         </div>
       </div>
 
-      {/* HLS Player */}
-      {isStreamLoading ? (
-        <div>Loading stream...</div>
-      ) : streamError ? (
-        <div className="text-center text-red-500">{streamError}</div>
-      ) : streamUrl ? (
-        <video ref={videoRef} controls className="w-full" />
-      ) : (
-        <div>No stream available</div>
-      )}
+      {/* Video Player */}
+      <div>
+        {isStreamLoading ? (
+          <div>Loading stream...</div>
+        ) : streamError ? (
+          <div>{streamError}</div>
+        ) : streamUrl ? (
+          <video ref={videoRef} controls className="w-full aspect-video">
+            Your browser does not support the video tag.
+          </video>
+        ) : (
+          <div>No stream available</div>
+        )}
+      </div>
     </div>
   );
 }

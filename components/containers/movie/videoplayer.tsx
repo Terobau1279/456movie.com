@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const TMDB_API_KEY = "[REDACTED:Generic API Key]";
+const TMDB_API_KEY = 'a46c50a0ccb1bafe2b15665df7fad7e1';
 const READ_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhNDZjNTBhMGNjYjFiYWZlMmIxNTY2NWRmN2ZhZDdlMSIsIm5iZiI6MTcyODMyNzA3Ni43OTE0NTUsInN1YiI6IjY2YTBhNTNmYmNhZGE0NjNhNmJmNjljZCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.BNhRdFagBrpQaazN_AWUNr_SRani4pHlYYuffuf2-Os';
 
 const obfuscatedVideoSources = {
@@ -142,12 +142,8 @@ export default function VideoPlayer({ id }: { id: string }) {
             hlsRef.current.destroy();
           }
           hlsRef.current = new Hls({
-            maxBufferLength: 12000000000000000000000000000000000000000000000,
-            maxBufferSize: 10000000000000000000000000000000000000000000000 * 1000 * 1000,
-            maxMaxBufferLength: 180000000000000000000000000000000000000000000,
-            capLevelToPlayerSize: true,
-            startLevel: -1,
             autoStartLoad: true,
+            startLevel: -1, // Start with the highest quality
           });
 
           hlsRef.current.loadSource(streamUrl);

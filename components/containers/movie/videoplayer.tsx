@@ -53,7 +53,7 @@ type Stream = {
 };
 
 export default function VideoPlayer({ id }: { id: string }) {
-  const [selectedSource, setSelectedSource] = useState<VideoSourceKey>("vidlinkpro");
+  const [selectedSource, setSelectedSource] = useState<VideoSourceKey>("Premium2");
   const [loading, setLoading] = useState(true);
   const [movieTitle, setMovieTitle] = useState("");
   const videoRef = useRef<HTMLVideoElement | null>(null);

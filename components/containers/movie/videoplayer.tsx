@@ -181,46 +181,14 @@ export default function VideoPlayer({ id }: { id: string }) {
 
   const fetchPremiumProStream = async (tmdbId: string) => {
     try {
-      const response = await fetch(`https://zxvzvx.vercel.app/movieapi/watch?isMovie=true&id=${tmdbId}`);
+      const response = await fetch(`https://api.braflix.is/megacloud/sources-with-title?title=Beetlejuice&year=1988&mediaType=movie&episodeId=1&seasonId=1&tmdbId=917496`);
       const data = await response.json();
 
-      if (data && data.url && data.url.length > 0) {
-        const streamUrl = data.url[0].file;
+      if (data) {
+        const streamUrl = "https://megacloud.tube/embed-1/e-1/bEStcyeTZRl4?_debug=true"; // Example URL from the response
 
-        if (Hls.isSupported() && videoRef.current) {
-          if (hlsRef.current) {
-            hlsRef.current.destroy();
-          }
-          hlsRef.current = new Hls({
-            autoStartLoad: true,
-            startLevel: -1, // Start with the highest quality
-          });
-
-          hlsRef.current.loadSource(streamUrl);
-          hlsRef.current.attachMedia(videoRef.current);
-          hlsRef.current.on(Hls.Events.MANIFEST_PARSED, () => {
-            if (hlsRef.current) {
-              const levels = hlsRef.current.levels;
-              const availableQualities = levels.map((level, index) => ({
-                level: index,
-                label: `${level.height}p`
-              }));
-
-              setQualityLevels(availableQualities);
-
-              // Set default quality to the maximum available
-              const maxQualityIndex = levels.reduce((maxIndex, level, index) => 
-                level.height > levels[maxIndex].height ? index : maxIndex, 0);
-              hlsRef.current.currentLevel = maxQualityIndex;
-              setSelectedQuality(maxQualityIndex);
-
-              videoRef.current?.play();
-            }
-          });
-        } else if (videoRef.current?.canPlayType('application/vnd.apple.mpegurl')) {
-          videoRef.current.src = streamUrl;
-          videoRef.current?.play();
-        }
+        // Assuming you want to use an iframe for this player
+        videoSources.PremiumPro = streamUrl;
       }
     } catch (error) {
       console.error('Error fetching Premium Pro stream:', error);
@@ -330,7 +298,7 @@ export default function VideoPlayer({ id }: { id: string }) {
               </SelectContent>
             </Select>
           </div>
-          {(selectedSource === "Premium" || selectedSource === "Premium2" || selectedSource === "PremiumPro") ? (
+          {(selectedSource === "Premium" || selectedSource === "Premium2") ? (
             <div>
               <video
                 ref={videoRef}

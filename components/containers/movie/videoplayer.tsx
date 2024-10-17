@@ -1,4 +1,4 @@
-use client;
+"use client";
 import React, { useState, useEffect, useRef } from "react";
 import Hls from "hls.js";
 import {
@@ -27,9 +27,6 @@ const obfuscatedVideoSources = {
   embedccMovie: atob("aHR0cHM6Ly93d3cuMmVtYmVkLmNjL2VtYmVkLw=="),
   twoembed: atob("aHR0cHM6Ly8yZW1iZWQub3JnL2VtYmVkL21vdmllLw=="),
   vidsrctop: atob("aHR0cHM6Ly9lbWJlZC5zdS9lbWJlZC9tb3ZpZS8="),
-  Premium: "",
-  Premium2: "",
-  PremiumPro: "https://zxvzvx.vercel.app/movieapi/watch?isMovie=true&id=" // Assuming the ID is dynamic
 };
 
 type VideoSourceKey =
@@ -65,6 +62,25 @@ export default function VideoPlayer({ id }: { id: string }) {
   const hlsRef = useRef<Hls | null>(null);
   const [qualityLevels, setQualityLevels] = useState<{ level: number, label: string }[]>([]);
   const [selectedQuality, setSelectedQuality] = useState<number>(-1);
+
+  const videoSources: Record<VideoSourceKey, string> = {
+    vidlinkpro: `${obfuscatedVideoSources["vidlinkpro"]}${id}`,
+    vidsrccc: `${obfuscatedVideoSources["vidsrccc"]}${id}`,
+    vidsrcpro: `${obfuscatedVideoSources["vidsrcpro"]}${id}`,
+    superembed: `${obfuscatedVideoSources["superembed"]}${id}&tmdb=1`,
+    vidbinge4K: `${obfuscatedVideoSources["vidbinge4K"]}${id}`,
+    smashystream: `${obfuscatedVideoSources["smashystream"]}${id}`,
+    vidsrcicu: `${obfuscatedVideoSources["vidsrcicu"]}${id}`,
+    vidsrcnl: `${obfuscatedVideoSources["vidsrcnl"]}${id}?server=hindi`,
+    nontongo: `${obfuscatedVideoSources["nontongo"]}${id}`,
+    vidsrcxyz: `${obfuscatedVideoSources["vidsrcxyz"]}${id}`,
+    embedccMovie: `${obfuscatedVideoSources["embedccMovie"]}${id}`,
+    twoembed: `${obfuscatedVideoSources["twoembed"]}${id}`,
+    vidsrctop: `${obfuscatedVideoSources["vidsrctop"]}${id}`,
+    Premium: "",
+    Premium2: "",
+    PremiumPro: "",
+  };
 
   useEffect(() => {
     const fetchMovieDetails = async () => {
@@ -112,6 +128,102 @@ export default function VideoPlayer({ id }: { id: string }) {
       }
     } catch (error) {
       console.error('Error fetching stream URL:', error);
+    }
+  };
+
+  const fetchPremium2Stream = async (tmdbId: string) => {
+    try {
+      const response = await fetch(`https://hehebwaiiiijqsdfioaf.vercel.app/vidlink/watch?isMovie=true&id=${tmdbId}`);
+      const data = await response.json();
+
+      if (data && data.stream && data.stream.playlist) {
+        const streamUrl = data.stream.playlist;
+
+        if (Hls.isSupported() && videoRef.current) {
+          if (hlsRef.current) {
+            hlsRef.current.destroy();
+          }
+          hlsRef.current = new Hls({
+            autoStartLoad: true,
+            startLevel: -1, // Start with the highest quality
+          });
+
+          hlsRef.current.loadSource(streamUrl);
+          hlsRef.current.attachMedia(videoRef.current);
+          hlsRef.current.on(Hls.Events.MANIFEST_PARSED, () => {
+            if (hlsRef.current) {
+              const levels = hlsRef.current.levels;
+              const availableQualities = levels.map((level, index) => ({
+                level: index,
+                label: `${level.height}p`
+              }));
+
+              setQualityLevels(availableQualities);
+
+              // Set default quality to the maximum available
+              const maxQualityIndex = levels.reduce((maxIndex, level, index) => 
+                level.height > levels[maxIndex].height ? index : maxIndex, 0);
+              hlsRef.current.currentLevel = maxQualityIndex;
+              setSelectedQuality(maxQualityIndex);
+
+              videoRef.current?.play();
+            }
+          });
+        } else if (videoRef.current?.canPlayType('application/vnd.apple.mpegurl')) {
+          videoRef.current.src = streamUrl;
+          videoRef.current?.play();
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching Premium 2 stream:', error);
+    }
+  };
+
+  const fetchPremiumProStream = async (tmdbId: string) => {
+    try {
+      const response = await fetch(`https://zxvzvx.vercel.app/movieapi/watch?isMovie=true&id=${tmdbId}`);
+      const data = await response.json();
+
+      if (data && data.url && data.url.length > 0) {
+        const streamUrl = data.url[0].file;
+
+        if (Hls.isSupported() && videoRef.current) {
+          if (hlsRef.current) {
+            hlsRef.current.destroy();
+          }
+          hlsRef.current = new Hls({
+            autoStartLoad: true,
+            startLevel: -1, // Start with the highest quality
+          });
+
+          hlsRef.current.loadSource(streamUrl);
+          hlsRef.current.attachMedia(videoRef.current);
+          hlsRef.current.on(Hls.Events.MANIFEST_PARSED, () => {
+            if (hlsRef.current) {
+              const levels = hlsRef.current.levels;
+              const availableQualities = levels.map((level, index) => ({
+                level: index,
+                label: `${level.height}p`
+              }));
+
+              setQualityLevels(availableQualities);
+
+              // Set default quality to the maximum available
+              const maxQualityIndex = levels.reduce((maxIndex, level, index) => 
+                level.height > levels[maxIndex].height ? index : maxIndex, 0);
+              hlsRef.current.currentLevel = maxQualityIndex;
+              setSelectedQuality(maxQualityIndex);
+
+              videoRef.current?.play();
+            }
+          });
+        } else if (videoRef.current?.canPlayType('application/vnd.apple.mpegurl')) {
+          videoRef.current.src = streamUrl;
+          videoRef.current?.play();
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching Premium Pro stream:', error);
     }
   };
 
@@ -181,6 +293,8 @@ export default function VideoPlayer({ id }: { id: string }) {
       fetchStreamUrl(imdbId);
     } else if (selectedSource === "Premium2" && imdbId) {
       fetchPremium2Stream(imdbId);
+    } else if (selectedSource === "PremiumPro" && imdbId) {
+      fetchPremiumProStream(imdbId);
     }
   }, [selectedSource, imdbId]);
 
